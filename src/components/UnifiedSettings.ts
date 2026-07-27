@@ -141,11 +141,6 @@ export class UnifiedSettings {
         return;
       }
 
-      if (target.closest('.upgrade-pro-cta')) {
-        this.handleUpgradeClick();
-        return;
-      }
-
       if (target.closest('.upgrade-to-business-btn')) {
         // Self-serve Starter→Business upgrade (#4634): open the Dodo customer
         // portal, which surfaces the prorated plan change via the product
@@ -414,8 +409,7 @@ export class UnifiedSettings {
     // Without this timer, the signed-in-free branch of renderUpgradeSection
     // would show a blank placeholder for the entire session. 12s > the 10s
     // auth timeout so the healthy-but-slow path lands on the real state;
-    // any later path falls back to "Upgrade to Pro" with handleUpgradeClick
-    // defensively re-checking isEntitled() at click time.
+    // any later path falls back to neutral account help instead.
     if (this.entitlementReadyTimer) clearTimeout(this.entitlementReadyTimer);
     if (!this.entitlementReady) {
       this.entitlementReadyTimer = setTimeout(() => {
@@ -438,6 +432,15 @@ export class UnifiedSettings {
     setTrustedHtml(fresh, trustedHtml(this.renderUpgradeSection().trim(), "legacy direct innerHTML migration"));
     const next = fresh.content.firstElementChild;
     if (next) upgradeSection.replaceWith(next);
+  }
+
+  private renderSettingsHelpSection(): string {
+    return `
+      <div class="upgrade-pro-section upgrade-pro-help">
+        <div class="upgrade-pro-title">Account Access</div>
+        <div class="upgrade-pro-desc">Manage dashboard preferences here. API Keys and MCP Clients have their own tabs when those capabilities are available for your account.</div>
+      </div>
+    `;
   }
 
   public close(): void {
@@ -569,8 +572,8 @@ export class UnifiedSettings {
           <button class="${tabClass('panels')}" tabindex="${this.activeTab === 'panels' ? 0 : -1}" data-tab="panels" role="tab" aria-selected="${this.activeTab === 'panels'}" id="us-tab-panels" aria-controls="us-tab-panel-panels">${t('header.tabPanels')}</button>
           <button class="${tabClass('sources')}" tabindex="${this.activeTab === 'sources' ? 0 : -1}" data-tab="sources" role="tab" aria-selected="${this.activeTab === 'sources'}" id="us-tab-sources" aria-controls="us-tab-panel-sources">${t('header.tabSources')}</button>
           ${showNotificationsTab ? `<button class="${tabClass('notifications')}" tabindex="${this.activeTab === 'notifications' ? 0 : -1}" data-tab="notifications" role="tab" aria-selected="${this.activeTab === 'notifications'}" id="us-tab-notifications" aria-controls="us-tab-panel-notifications">${t('header.tabNotifications')}</button>` : ''}
-          <button class="${tabClass('api-keys')}" tabindex="${this.activeTab === 'api-keys' ? 0 : -1}" data-tab="api-keys" role="tab" aria-selected="${this.activeTab === 'api-keys'}" id="us-tab-api-keys" aria-controls="us-tab-panel-api-keys">API Keys <span class="panel-pro-badge">PRO</span></button>
-          ${showMcpClientsTab ? `<button class="${tabClass('mcp-clients')}" tabindex="${this.activeTab === 'mcp-clients' ? 0 : -1}" data-tab="mcp-clients" role="tab" aria-selected="${this.activeTab === 'mcp-clients'}" id="us-tab-mcp-clients" aria-controls="us-tab-panel-mcp-clients">MCP Clients <span class="panel-pro-badge">PRO</span></button>` : ''}
+          <button class="${tabClass('api-keys')}" tabindex="${this.activeTab === 'api-keys' ? 0 : -1}" data-tab="api-keys" role="tab" aria-selected="${this.activeTab === 'api-keys'}" id="us-tab-api-keys" aria-controls="us-tab-panel-api-keys">API Keys</button>
+          ${showMcpClientsTab ? `<button class="${tabClass('mcp-clients')}" tabindex="${this.activeTab === 'mcp-clients' ? 0 : -1}" data-tab="mcp-clients" role="tab" aria-selected="${this.activeTab === 'mcp-clients'}" id="us-tab-mcp-clients" aria-controls="us-tab-panel-mcp-clients">MCP Clients</button>` : ''}
         </div>
         <div class="unified-settings-tab-panel${this.activeTab === 'settings' ? ' active' : ''}" data-panel-id="settings" id="us-tab-panel-settings" role="tabpanel" aria-labelledby="us-tab-settings">
           ${prefs.html}
@@ -697,12 +700,11 @@ export class UnifiedSettings {
 
   private renderUpgradeSection(): string {
     // Non-Dodo premium (API key / tester key / Clerk pro role without a
-    // Convex subscription): neither "Upgrade" nor "Manage Billing" is
-    // actionable. Checked FIRST so these users don't get stuck on the
-    // loading placeholder below — their Convex entitlement snapshot may
-    // never arrive at all.
+    // Convex subscription): generic upsell copy is not actionable here.
+    // Checked first so these users don't get stuck on the loading
+    // placeholder below when a Convex entitlement snapshot never arrives.
     if (!isEntitled() && hasPremiumAccess()) {
-      return '<div class="upgrade-pro-section upgrade-pro-hidden" hidden></div>';
+      return this.renderSettingsHelpSection();
     }
     const sub = getSubscription();
     const billingState = deriveBillingUxState(sub, getEntitlementState(), Date.now());
@@ -717,15 +719,9 @@ export class UnifiedSettings {
       `;
     }
     // Signed-in user whose Convex entitlement snapshot has not arrived yet
-    // AND whose bounded-wait window has not expired. Rendering "Upgrade to
-    // Pro" in this window is how paying users click through to
-    // /api/create-checkout and hit 409 duplicate_subscription — same race
-    // as the 2026-04-17/18 panel-overlay incident fixed in panel-gating.ts,
-    // different surface. The entitlementReady flag is flipped either by
-    // the onEntitlementChange listener (healthy path) or by a 12s fallback
-    // timer in open() (Convex-disabled / auth-timeout / init-fail paths
-    // where currentState would otherwise stay null forever and strand a
-    // signed-in free user on an empty placeholder).
+    // AND whose bounded-wait window has not expired. Keep the section hidden
+    // during this window so we don't flash stale account copy before the
+    // entitlement state settles.
     if (!this.entitlementReady && getAuthState().user && getEntitlementState() === null) {
       // `hidden` so the browser's default `[hidden] { display: none }`
       // suppresses the empty card — without it, the base `.upgrade-pro-
@@ -785,67 +781,17 @@ export class UnifiedSettings {
 
     // Fallback branch: 12s timer fired but Convex never delivered a
     // snapshot. entitlementReady===true does NOT prove the user is free —
-    // it just means we've given up waiting. A paying user whose auth/query
-    // is simply very slow (beyond the 10s waitForConvexAuth timeout) would
-    // otherwise race into in-modal startCheckout here and reproduce the
-    // 409 duplicate_subscription cascade this PR exists to eliminate.
-    // Render the card with a plain anchor to /pro instead: /pro has its
-    // own entitlement gating on fresh page load, and navigating away is a
-    // no-op for backend subscription state. The `upgrade-pro-cta-link`
-    // class does NOT match the `.upgrade-pro-cta` delegated click handler
-    // (line ~95), so the browser handles the navigation natively.
+    // it just means we've given up waiting. Show neutral account help
+    // instead of a generic upsell in this ambiguous state.
     if (getAuthState().user && getEntitlementState() === null) {
-      return `
-        <div class="upgrade-pro-section upgrade-pro-fallback">
-          <div class="upgrade-pro-title">Upgrade to Pro</div>
-          <div class="upgrade-pro-desc">Unlock all panels, AI analysis, and priority data refresh.</div>
-          <a class="upgrade-pro-cta-link" href="/pro" target="_blank" rel="noopener">View plans →</a>
-        </div>
-      `;
+      return this.renderSettingsHelpSection();
     }
 
-    return `
-      <div class="upgrade-pro-section">
-        <div class="upgrade-pro-title">Upgrade to Pro</div>
-        <div class="upgrade-pro-desc">Unlock all panels, AI analysis, and priority data refresh.</div>
-        <button class="upgrade-pro-cta">Upgrade to Pro</button>
-      </div>
-    `;
+    return this.renderSettingsHelpSection();
   }
 
   // Business Pro seats (#4634/#4635) state/render/handlers live in
   // BusinessSeatsSection — see this.businessSeatsSection.
-
-  private handleUpgradeClick(): void {
-    // Defense in depth: the upgrade CTA can only be clicked when either (a)
-    // the user is genuinely free-tier, or (b) the 12s fallback timer fired
-    // before the Convex snapshot arrived. In (b), the snapshot might land
-    // AFTER the timer but BEFORE the click — re-check isEntitled() here so
-    // a late-arriving "you're a paying user" state routes to the billing
-    // portal instead of triggering /api/create-checkout against an active
-    // subscription (which would 409 and re-enter the duplicate_subscription
-    // → getCustomerPortalUrl cascade this PR is trying to eliminate).
-    if (isEntitled()) {
-      this.close();
-      const reservedWin = prereserveBillingPortalTab();
-      void openBillingPortal(reservedWin).then((result) => {
-        if (result.outcome === 'no-customer') {
-          showToast(
-            'Subscription is managed outside Dodo. Email support@worldmonitor.app for help.',
-          );
-        }
-      });
-      return;
-    }
-    this.close();
-    if (this.config.isDesktopApp) {
-      window.open('https://worldmonitor.app/pro', '_blank', 'noopener,noreferrer');
-      return;
-    }
-    import('@/services/checkout').then(m => import('@/config/products').then(p => m.startCheckout(p.DEFAULT_UPGRADE_PRODUCT))).catch(() => {
-      window.open('https://worldmonitor.app/pro', '_blank', 'noopener,noreferrer');
-    });
-  }
 
   private categoryMatchesVariant(catDef: { variants?: string[] }): boolean {
     return !catDef.variants || catDef.variants.includes(SITE_VARIANT);
@@ -915,7 +861,7 @@ export class UnifiedSettings {
       const displayName = this.config.getLocalizedPanelName(key, resolvedPanel.name ?? panel.name);
       const a11yState = getPanelToggleA11yState(locked, panel.enabled, displayName);
       return `
-        <button type="button" class="panel-toggle-item ${panel.enabled && !locked ? 'active' : ''}${changed ? ' changed' : ''}${locked ? ' pro-locked' : ''}" data-panel="${escapeHtml(key)}" ${a11yState.ariaPressed === null ? '' : `aria-pressed="${a11yState.ariaPressed}"`} ${a11yState.ariaLabel === null ? '' : `aria-label="${escapeHtml(a11yState.ariaLabel)}"`} ${locked ? 'data-pro-locked="1"' : ''}>
+        <button type="button" class="panel-toggle-item ${panel.enabled && !locked ? 'active' : ''}${changed ? ' changed' : ''}${locked ? ' locked' : ''}" data-panel="${escapeHtml(key)}" ${a11yState.ariaPressed === null ? '' : `aria-pressed="${a11yState.ariaPressed}"`} ${a11yState.ariaLabel === null ? '' : `aria-label="${escapeHtml(a11yState.ariaLabel)}"`} ${locked ? 'data-locked="1"' : ''}>
           <div  class="panel-toggle-checkbox" aria-hidden="true">${panel.enabled && !locked ? '\u2713' : ''}${locked ? '\uD83D\uDD12' : ''}</div>
           <span class="panel-toggle-label">${escapeHtml(displayName)}</span>
         </button>
@@ -1208,7 +1154,7 @@ export class UnifiedSettings {
       // getCheckoutBlockingSubscription only blocks a same-tierGroup duplicate
       // (#4797) — so startCheckout would STACK a second live subscription and
       // double-charge. Route entitled users to the billing portal instead (same
-      // precedent as handleUpgradeClick); its no-customer outcome surfaces the
+      // precedent as the old generic upgrade CTA); its no-customer outcome surfaces the
       // support path for a subscription managed outside Dodo.
       if (isEntitled()) {
         const reservedWin = prereserveBillingPortalTab();
@@ -1619,7 +1565,7 @@ export class UnifiedSettings {
       setTrustedHtml(container, trustedHtml(`
         <div class="mcp-clients-empty">
           <div class="mcp-clients-empty-title">No connected MCP clients yet</div>
-          <div class="mcp-clients-empty-desc">To connect Claude Desktop or another AI client, paste this URL into the client's MCP server settings and sign in with your WorldMonitor Pro account:</div>
+          <div class="mcp-clients-empty-desc">To connect Claude Desktop or another AI client, paste this URL into the client's MCP server settings and sign in with your WorldMonitor account:</div>
           <div class="mcp-clients-empty-url">
             <code>${escapeHtml(mcpUrl)}</code>
             <button class="btn btn-secondary mcp-clients-copy-url-btn" data-copy-value="${escapeHtml(mcpUrl)}">Copy URL</button>

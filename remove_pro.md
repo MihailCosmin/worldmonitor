@@ -478,7 +478,7 @@ These surfaces already have real feature logic, data structures, or fetch/render
 
 These should be addressed after the real feature ungating work above.
 
-### [ ] S1. Remove `PRO` badges from panel settings once panel locks are gone
+### [x] S1. Remove `PRO` badges from panel settings once panel locks are gone
 
 - Files:
   - `src/components/UnifiedSettings.ts`
@@ -487,7 +487,7 @@ These should be addressed after the real feature ungating work above.
 - Task:
   - Remove `PRO` badges from panel toggles after each gated panel is made available.
 
-### [ ] S2. Rework `API Keys` and `MCP Clients` tab labeling
+### [x] S2. Rework `API Keys` and `MCP Clients` tab labeling
 
 - Files:
   - `src/components/UnifiedSettings.ts`
@@ -505,7 +505,7 @@ These should be addressed after the real feature ungating work above.
 - Acceptance:
   - These tabs do not mislabel API or MCP access as generic `PRO`.
 
-### [ ] S3. Remove the generic settings upgrade cards
+### [x] S3. Remove the generic settings upgrade cards
 
 - Files:
   - `src/components/UnifiedSettings.ts`

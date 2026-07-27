@@ -75,12 +75,12 @@ describe('panel toggles are real buttons', () => {
     );
   });
 
-  it('locked Pro panels are upgrade actions rather than false toggles', () => {
+  it('locked panels are announced as unavailable actions rather than false toggles', () => {
     assert.deepEqual(
       getPanelToggleA11yState(true, false, 'Force posture'),
       {
         ariaPressed: null,
-        ariaLabel: 'Upgrade to Pro to use Force posture',
+        ariaLabel: 'Locked: Force posture',
       },
     );
     assert.match(
