@@ -429,8 +429,8 @@ describe('gateway telemetry payload — bearer identity propagation', () => {
 
     const handler = createDomainGateway([
       {
-        method: 'GET',
-        path: '/api/resilience/v1/get-resilience-score',
+        method: 'POST',
+        path: '/api/forecast/v1/trigger-simulation',
         handler: async () => new Response('{"ok":true}', { status: 200 }),
       },
     ]);
@@ -438,11 +438,14 @@ describe('gateway telemetry payload — bearer identity propagation', () => {
     const token = await signToken({ sub: 'user_pro', plan: 'pro' });
     const recorder = makeRecordingCtx();
     const res = await handler(
-      new Request('https://worldmonitor.app/api/resilience/v1/get-resilience-score?countryCode=US', {
+      new Request('https://worldmonitor.app/api/forecast/v1/trigger-simulation', {
+        method: 'POST',
         headers: {
           Origin: 'https://worldmonitor.app',
           Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
         },
+        body: JSON.stringify({ scenarioId: 'telemetry-test' }),
       }),
       recorder.ctx,
     );
@@ -456,12 +459,12 @@ describe('gateway telemetry payload — bearer identity propagation', () => {
     // The whole point of fix #2: pre-fix this would have been null/anon.
     assert.equal(ev.customer_id, 'user_pro', 'customer_id should be the bearer subject');
     assert.equal(ev.auth_kind, 'clerk_jwt');
-    assert.equal(ev.domain, 'resilience');
+    assert.equal(ev.domain, 'forecast');
     assert.equal(ev.status, 200);
   });
 
-  it("records tier=2 for an entitlement-gated success (the path the round-1 P2 fix targets)", async () => {
-    // /api/sanctions/v1/list-sanctions-pressure stays entitlement-gated.
+  it("records tier=2 for a remaining entitlement-gated success", async () => {
+    // /api/intelligence/v1/classify-event stays entitlement-gated.
     // Pre-fix: usage.tier stayed null → emitted as 0. Post-fix: gateway re-reads
     // entitlements after checkEntitlement allows the request, so tier=2 lands on
     // the wire. We exercise this by stubbing the Convex entitlements fallback —
@@ -489,7 +492,7 @@ describe('gateway telemetry payload — bearer identity propagation', () => {
     const handler = createDomainGateway([
       {
         method: 'GET',
-        path: '/api/sanctions/v1/list-sanctions-pressure',
+        path: '/api/intelligence/v1/classify-event',
         handler: async () => new Response('{"ok":true}', { status: 200 }),
       },
     ]);
@@ -499,7 +502,7 @@ describe('gateway telemetry payload — bearer identity propagation', () => {
     const token = await signToken({ sub: 'user_api', plan: 'api' });
     const recorder = makeRecordingCtx();
     const res = await handler(
-      new Request('https://worldmonitor.app/api/sanctions/v1/list-sanctions-pressure?countryCode=US', {
+      new Request('https://worldmonitor.app/api/intelligence/v1/classify-event?title=Example', {
         headers: {
           Origin: 'https://worldmonitor.app',
           Authorization: `Bearer ${token}`,
@@ -519,8 +522,8 @@ describe('gateway telemetry payload — bearer identity propagation', () => {
     assert.equal(ev.tier, 2, `tier should reflect resolved entitlement, got ${ev.tier}`);
     assert.equal(ev.customer_id, 'user_api');
     assert.equal(ev.auth_kind, 'clerk_jwt');
-    assert.equal(ev.domain, 'sanctions');
-    assert.equal(ev.route, '/api/sanctions/v1/list-sanctions-pressure');
+    assert.equal(ev.domain, 'intelligence');
+    assert.equal(ev.route, '/api/intelligence/v1/classify-event');
   });
 
   it('records plan_key for user API-key requests rejected by entitlement gate', async () => {
@@ -550,14 +553,14 @@ describe('gateway telemetry payload — bearer identity propagation', () => {
     const handler = createDomainGateway([
       {
         method: 'GET',
-        path: '/api/sanctions/v1/list-sanctions-pressure',
+        path: '/api/intelligence/v1/classify-event',
         handler: async () => new Response('{"ok":true}', { status: 200 }),
       },
     ]);
 
     const recorder = makeRecordingCtx();
     const res = await handler(
-      new Request('https://worldmonitor.app/api/sanctions/v1/list-sanctions-pressure?countryCode=US', {
+      new Request('https://worldmonitor.app/api/intelligence/v1/classify-event?title=Example', {
         headers: {
           Origin: 'https://worldmonitor.app',
           'X-Api-Key': TELEMETRY_FREE_USER_KEY,

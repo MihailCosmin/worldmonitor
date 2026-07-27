@@ -56,9 +56,9 @@ export type CountryProductsResponse = GetCountryProductsResponse;
 export type MultiSectorShockResponse = GetMultiSectorCostShockResponse;
 export type MultiSectorShock = MultiSectorCostShock;
 
-// premiumFetch for the whole client still covers the remaining gated
-// supply-chain methods (for example get-country-cost-shock) while
-// no-oping safely on the now-public reads in this module.
+// Keep premiumFetch at the client boundary so the remaining gated
+// supply-chain routes still attach Clerk auth, while now-public reads in
+// this module fall through to the normal wm-session/browser path.
 const client = new SupplyChainServiceClient(getRpcBaseUrl(), { fetch: premiumFetch });
 
 const shippingBreaker = createCircuitBreaker<GetShippingRatesResponse>({ name: 'Shipping Rates', cacheTtlMs: 60 * 60 * 1000, persistCache: true });

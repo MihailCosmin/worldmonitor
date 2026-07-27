@@ -4,7 +4,7 @@
  * - bypass-corridors.ts: data integrity + BYPASS_CORRIDORS_BY_CHOKEPOINT index
  * - _insurance-tier.ts: threatLevelToInsurancePremiumBps pure function
  * - get-bypass-options handler: bypass corridor ranking on public data
- * - get-country-cost-shock handler: unauthenticated returns zeros
+ * - get-country-cost-shock handler: public path returns live data
  * - gateway.ts: new slow-browser entries for both RPCs
  * - premium-paths.ts: remaining premium supply-chain routes stay registered
  * - proto: new messages in generated types
@@ -199,9 +199,9 @@ describe('get-bypass-options handler source code', () => {
 describe('get-country-cost-shock handler source code', () => {
   const src = readSrc('server/worldmonitor/supply-chain/v1/get-country-cost-shock.ts');
 
-  it('calls isCallerPremium and returns empty when not PRO', () => {
-    assert.match(src, /isCallerPremium/);
-    assert.match(src, /if \(!isPro\) return empty/);
+  it('does not short-circuit on premium access', () => {
+    assert.doesNotMatch(src, /isCallerPremium/);
+    assert.doesNotMatch(src, /if \(!isPro\) return empty/);
   });
 
   it('uses warRiskTierToInsurancePremiumBps for premium calculation', () => {
@@ -272,8 +272,8 @@ describe('Premium paths registration', () => {
     assert.doesNotMatch(src, /\/api\/supply-chain\/v1\/get-bypass-options/);
   });
 
-  it('get-country-cost-shock is in PREMIUM_RPC_PATHS', () => {
-    assert.match(src, /\/api\/supply-chain\/v1\/get-country-cost-shock/);
+  it('get-country-cost-shock is not in PREMIUM_RPC_PATHS', () => {
+    assert.doesNotMatch(src, /\/api\/supply-chain\/v1\/get-country-cost-shock/);
   });
 
   it('get-sector-dependency is not in PREMIUM_RPC_PATHS', () => {

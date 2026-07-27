@@ -60,6 +60,10 @@ const DIRECT_LLM_PREMIUM_BYPASS_ALLOWLIST: Record<string, string> = {
     'stock-analysis.ts calls the generated client through premiumFetch with ' +
     'forcePremium so signed-in free users attach Clerk auth without treating ' +
     'the whole route as premium-gated.',
+  '/api/intelligence/v1/get-country-intel-brief':
+    'country-intel.ts calls premiumFetch with forcePremium so signed-in free ' +
+    'users attach Clerk auth for per-account quota metering without treating ' +
+    'the shared brief route as premium-gated.',
   '/api/intelligence/v1/deduct-situation':
     'DeductionPanel.ts and correlation-engine/engine.ts call the generated ' +
     'client through premiumFetch with forcePremium so signed-in free users ' +
@@ -216,10 +220,11 @@ describe('premium-paths guard — browser direct-LLM routes cannot trigger wm-se
     }
   });
 
-  it('country-intel sends the direct-LLM brief request through premiumFetch', () => {
+  it('country-intel forces premiumFetch auth on the public direct-LLM brief route', () => {
     const source = readFileSync(join(repoRoot, 'src/app/country-intel.ts'), 'utf8');
     const ast = ts.createSourceFile('country-intel.ts', source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
     let usesPremiumFetch = false;
+    let forcesPremium = false;
 
     function visitPremiumFetch(node: ts.Node): void {
       if (
@@ -237,6 +242,14 @@ describe('premium-paths guard — browser direct-LLM routes cannot trigger wm-se
             route.text.startsWith('/api/intelligence/v1/get-country-intel-brief?'))
         ) {
           usesPremiumFetch = true;
+          const optionsArg = node.arguments[1];
+          if (optionsArg && ts.isObjectLiteralExpression(optionsArg)) {
+            forcesPremium = optionsArg.properties.some((property) => (
+              ts.isPropertyAssignment(property)
+              && property.name.getText(ast) === 'forcePremium'
+              && property.initializer.getText(ast) === 'true'
+            ));
+          }
         }
       }
       ts.forEachChild(node, visitPremiumFetch);
@@ -259,6 +272,11 @@ describe('premium-paths guard — browser direct-LLM routes cannot trigger wm-se
       usesPremiumFetch,
       true,
       'The country-intel call site must attach Clerk auth through premiumFetch.',
+    );
+    assert.equal(
+      forcesPremium,
+      true,
+      'The country-intel call site must force premiumFetch auth on the public quota path.',
     );
   });
 

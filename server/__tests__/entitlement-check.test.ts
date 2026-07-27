@@ -111,13 +111,16 @@ async function withConvexEntitlementFetch<T>(
 describe("gateway entitlement check", () => {
   test.each([
     "/api/intelligence/v1/classify-event",
-    "/api/intelligence/v1/get-country-intel-brief",
   ])("getRequiredTier returns 1 for %s (regression-lock against tier-2 revert)", (path) => {
     expect(getRequiredTier(path)).toBe(1);
   });
 
   test("getRequiredTier returns null for ungated endpoint", () => {
     expect(getRequiredTier("/api/seismology/v1/list-earthquakes")).toBeNull();
+  });
+
+  test("getRequiredTier returns null for the public country brief route", () => {
+    expect(getRequiredTier("/api/intelligence/v1/get-country-intel-brief")).toBeNull();
   });
 
   test("getRequiredTier returns null for unlocked stock-analysis endpoints", () => {
@@ -132,6 +135,11 @@ describe("gateway entitlement check", () => {
 
   test("checkEntitlement returns null for ungated endpoint", async () => {
     const result = await checkEntitlement(null, "/api/seismology/v1/list-earthquakes", {});
+    expect(result).toBeNull();
+  });
+
+  test("checkEntitlement returns null for the public country brief route", async () => {
+    const result = await checkEntitlement(null, "/api/intelligence/v1/get-country-intel-brief", {});
     expect(result).toBeNull();
   });
 

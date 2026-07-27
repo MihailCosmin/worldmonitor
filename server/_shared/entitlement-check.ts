@@ -95,16 +95,10 @@ export interface EntitlementCheckOptions {
  *
  * Adding a new gated endpoint = adding one line to this map.
  * Endpoints NOT in this map are unrestricted.
- *
- * The remaining intelligence/supply-chain surfaces stay tier 1.
- * Endpoints not listed here are unrestricted.
  */
 const ENDPOINT_ENTITLEMENTS: Record<string, number> = {
   '/api/forecast/v1/trigger-simulation': 1,
   '/api/intelligence/v1/classify-event': 1,
-  '/api/intelligence/v1/get-country-intel-brief': 1,
-  '/api/sanctions/v1/list-sanctions-pressure': 1,
-  '/api/supply-chain/v1/get-country-cost-shock': 1,
 };
 
 const CONVEX_INTERNAL_ENTITLEMENTS_PATH = '/api/internal-entitlements';

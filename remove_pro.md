@@ -706,7 +706,7 @@ Intentional paid boundaries that are not part of this follow-up remain allowed: 
 - Acceptance:
   - Changing auth or billing state cannot make a now-public panel disappear, empty its cache, or wait for an entitlement transition before loading.
 
-### [ ] D8. Remove residual tier-1 gates from country intelligence and sanctions data
+### [x] D8. Remove residual tier-1 gates from country intelligence and sanctions data
 
 - Files:
   - `src/shared/premium-paths.ts`

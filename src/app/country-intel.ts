@@ -3,7 +3,6 @@ import { getSignalAggregator } from '@/app/lazy-services';
 import type { CountrySignalCluster } from '@/services/signal-aggregator';
 import { getRpcBaseUrl } from '@/services/rpc-client';
 import { premiumFetch } from '@/services/premium-fetch';
-import { IS_EMBEDDED_PREVIEW } from '@/utils/embedded-preview';
 import type { TimelineEvent } from '@/components/CountryTimeline';
 import { CountryTimeline } from '@/components/CountryTimeline';
 import type {
@@ -620,7 +619,7 @@ export class CountryIntelManager implements AppModule {
           this.ctx.countryBriefPage.updateMultiSectorCostShock?.(null);
         });
 
-      this.fetchProSections(code);
+      this.fetchSupplementalSections(code);
 
       this.mountCountryTimeline(code, country);
 
@@ -784,16 +783,12 @@ export class CountryIntelManager implements AppModule {
     return !!activeCode && activeCode !== '__loading__' && activeCode !== '__error__';
   }
 
-  private fetchProSections(code: string): void {
-    // /pro live-preview iframe can't carry a Clerk session, so every
-    // section call would 401. Skip the RPCs entirely so the embedded
-    // preview doesn't spam the parent /pro console with expected failures.
-    if (IS_EMBEDDED_PREVIEW) return;
-
+  private fetchSupplementalSections(code: string): void {
     const rpcBase = getRpcBaseUrl();
-    const economicClient = new EconomicServiceClient(rpcBase, { fetch: premiumFetch });
-    const intelClient = new IntelligenceServiceClient(rpcBase, { fetch: premiumFetch });
-    const tradeClient = new TradeServiceClient(rpcBase, { fetch: premiumFetch });
+    const rpcFetch = (...args: Parameters<typeof fetch>) => globalThis.fetch(...args);
+    const economicClient = new EconomicServiceClient(rpcBase, { fetch: rpcFetch });
+    const intelClient = new IntelligenceServiceClient(rpcBase, { fetch: rpcFetch });
+    const tradeClient = new TradeServiceClient(rpcBase, { fetch: rpcFetch });
     const iso3 = iso2ToIso3(code);
 
     economicClient.getNationalDebt({}).then(resp => {
@@ -930,7 +925,10 @@ export class CountryIntelManager implements AppModule {
       params.set('framework', framework.slice(0, 2000));
     }
 
+    // Country briefs are public to signed-in free users, but the gateway still
+    // needs a bearer identity here so direct-LLM spend is metered per account.
     const resp = await premiumFetch(toApiUrl(`/api/intelligence/v1/get-country-intel-brief?${params.toString()}`), {
+      forcePremium: true,
       method: 'GET',
       headers: { Accept: 'application/json' },
       signal: this.ctx.countryBriefPage?.signal,

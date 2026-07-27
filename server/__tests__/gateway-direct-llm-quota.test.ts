@@ -119,17 +119,13 @@ beforeEach(() => {
 });
 
 describe("gateway direct LLM quota", () => {
-  test("country brief is declared as a tier-1 Pro endpoint", () => {
-    expect(getRequiredTier(COUNTRY_BRIEF_PATH)).toBe(1);
+  test("country brief is no longer entitlement-gated", () => {
+    expect(getRequiredTier(COUNTRY_BRIEF_PATH)).toBeNull();
   });
 
-  test("free bearer country brief is rejected before quota or handler spend", async () => {
+  test("free bearer country brief reserves quota and reaches the handler", async () => {
     const calls = { classify: 0, deduct: 0, country: 0, cache: 0 };
     resolveClerkSession.mockResolvedValue({ userId: "user_free", orgId: null, role: "free" });
-    checkEntitlementDetailed.mockResolvedValue({
-      response: json({ error: "Upgrade required", requiredTier: 1, currentTier: 0 }, 403),
-      entitlements: null,
-    });
 
     const res = await makeGateway(calls)(
       req(`${COUNTRY_BRIEF_PATH}?country_code=US`, {
@@ -138,18 +134,14 @@ describe("gateway direct LLM quota", () => {
       { waitUntil: () => {} },
     );
 
-    expect(res.status).toBe(403);
-    expect(checkEntitlementDetailed).toHaveBeenCalledWith(
-      "user_free",
-      COUNTRY_BRIEF_PATH,
-      expect.any(Object),
-      { clerkRole: "free" },
+    expect(res.status).toBe(200);
+    expect(calls.country).toBe(1);
+    expect(reserveDirectLlmQuota).toHaveBeenCalledWith(
+      expect.objectContaining({ userId: "user_free" }),
     );
-    expect(calls.country).toBe(0);
-    expect(reserveDirectLlmQuota).not.toHaveBeenCalled();
   });
 
-  test("Pro bearer country brief reserves quota and reaches the handler", async () => {
+  test("Pro bearer country brief still reserves quota and reaches the handler", async () => {
     const calls = { classify: 0, deduct: 0, country: 0, cache: 0 };
     resolveClerkSession.mockResolvedValue({ userId: "user_pro", orgId: null, role: "pro" });
 

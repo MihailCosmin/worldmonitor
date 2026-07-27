@@ -9,11 +9,6 @@ export const PREMIUM_RPC_PATHS = new Set<string>([
   // premium path set so browser Pro callers attach the Clerk Bearer and
   // anonymous wms_ sessions cannot mint cache-miss LLM spend.
   '/api/intelligence/v1/classify-event',
-  // Browser calls must attach Clerk auth and bypass wm-session recovery:
-  // anonymous 401s here are expected Pro denials, not dead session cookies.
-  '/api/intelligence/v1/get-country-intel-brief',
-  '/api/supply-chain/v1/get-country-cost-shock',
-  '/api/sanctions/v1/list-sanctions-pressure',
   // #3734: PRO-gated mutation that enqueues a simulation task. Companion
   // /get-simulation-outcome remains public (existing convention).
   '/api/forecast/v1/trigger-simulation',

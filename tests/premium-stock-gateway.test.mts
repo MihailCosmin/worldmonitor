@@ -44,8 +44,6 @@ function installRateLimitRedisFake(): void {
 
 const ISSUE_4609_GATED_ROUTES = [
   { method: 'POST', path: '/api/forecast/v1/trigger-simulation' },
-  { method: 'GET', path: '/api/sanctions/v1/list-sanctions-pressure' },
-  { method: 'GET', path: '/api/supply-chain/v1/get-country-cost-shock' },
 ] as const;
 
 // Public routes now require a wms_ session token (issue #3541) — header-only
@@ -342,15 +340,17 @@ describe('premium gateway API key enforcement', () => {
     // contract: wms_ on a premium route must 401 (no Pro auth) — never 200.
     const handler = createDomainGateway([
       {
-        method: 'GET',
-        path: '/api/resilience/v1/get-resilience-score',
+        method: 'POST',
+        path: '/api/forecast/v1/trigger-simulation',
         handler: async () => new Response(JSON.stringify({ ok: true }), { status: 200 }),
       },
     ]);
 
-    for (const path of ['/api/resilience/v1/get-resilience-score?countryCode=US']) {
+    for (const path of ['/api/forecast/v1/trigger-simulation']) {
       const res = await handler(new Request(`https://worldmonitor.app${path}`, {
+        method: 'POST',
         headers: { Origin: 'https://worldmonitor.app', 'X-WorldMonitor-Key': SESSION_TOKEN },
+        body: JSON.stringify({ scenarioId: 'test' }),
       }));
       assert.notEqual(res.status, 200, `wms_ MUST NOT unlock ${path} (got ${res.status})`);
     }
@@ -609,6 +609,16 @@ describe('premium gateway bearer token auth', () => {
         path: '/api/market/v1/list-market-quotes',
         handler: async () => new Response(JSON.stringify({ ok: true }), { status: 200 }),
       },
+      {
+        method: 'POST',
+        path: '/api/forecast/v1/trigger-simulation',
+        handler: async () => new Response(JSON.stringify({ ok: true }), { status: 200 }),
+      },
+      {
+        method: 'GET',
+        path: '/api/intelligence/v1/get-country-intel-brief',
+        handler: async () => new Response(JSON.stringify({ ok: true }), { status: 200 }),
+      },
     ]);
   });
 
@@ -632,11 +642,14 @@ describe('premium gateway bearer token auth', () => {
     // Clerk role='pro' remains a supported Pro signal for complimentary,
     // tester, and legacy grants that do not have a Convex entitlement row.
     const token = await signToken({ sub: 'user_pro', plan: 'pro' });
-    const res = await handler(new Request('https://worldmonitor.app/api/sanctions/v1/list-sanctions-pressure?countryCode=US', {
+    const res = await handler(new Request('https://worldmonitor.app/api/forecast/v1/trigger-simulation', {
+      method: 'POST',
       headers: {
         Origin: 'https://worldmonitor.app',
         Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
       },
+      body: JSON.stringify({ scenarioId: 'test' }),
     }));
     assert.equal(res.status, 200);
     assert.deepEqual(await res.json(), { ok: true });
@@ -684,12 +697,15 @@ describe('premium gateway bearer token auth', () => {
     }) as typeof fetch;
 
     try {
-      const res = await handler(new Request('https://worldmonitor.app/api/sanctions/v1/list-sanctions-pressure?countryCode=US', {
+      const res = await handler(new Request('https://worldmonitor.app/api/forecast/v1/trigger-simulation', {
+        method: 'POST',
         headers: {
           Origin: 'https://worldmonitor.app',
           Authorization: `Bearer ${token}`,
           'X-Api-Key': FREE_USER_KEY,
+          'Content-Type': 'application/json',
         },
+        body: JSON.stringify({ scenarioId: 'test' }),
       }));
       assert.equal(res.status, 403);
       const body = await res.json() as { error?: string; currentTier?: number };
@@ -706,22 +722,28 @@ describe('premium gateway bearer token auth', () => {
 
   it('free bearer token on premium endpoint → 403', async () => {
     const token = await signToken({ sub: 'user_free', plan: 'free' });
-    const res = await handler(new Request('https://worldmonitor.app/api/sanctions/v1/list-sanctions-pressure?countryCode=US', {
+    const res = await handler(new Request('https://worldmonitor.app/api/forecast/v1/trigger-simulation', {
+      method: 'POST',
       headers: {
         Origin: 'https://worldmonitor.app',
         Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
       },
+      body: JSON.stringify({ scenarioId: 'test' }),
     }));
     assert.equal(res.status, 403);
   });
 
   it('rejects invalid/expired bearer token on premium endpoint → 401', async () => {
     const token = await signToken({ sub: 'user_bad', plan: 'pro' }, { key: wrongPrivateKey });
-    const res = await handler(new Request('https://worldmonitor.app/api/sanctions/v1/list-sanctions-pressure?countryCode=US', {
+    const res = await handler(new Request('https://worldmonitor.app/api/forecast/v1/trigger-simulation', {
+      method: 'POST',
       headers: {
         Origin: 'https://worldmonitor.app',
         Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
       },
+      body: JSON.stringify({ scenarioId: 'test' }),
     }));
     // Invalid bearer → no session → forceKey true → 401 (missing API key)
     assert.equal(res.status, 401);
@@ -806,14 +828,14 @@ describe('premium gateway bearer token auth', () => {
     const headerEchoHandler = createDomainGateway([
       {
         method: 'GET',
-        path: '/api/sanctions/v1/list-sanctions-pressure',
+        path: '/api/intelligence/v1/get-country-intel-brief',
         handler: async (request) => new Response(JSON.stringify({
           userId: request.headers.get('x-user-id'),
         }), { status: 200 }),
       },
     ]);
 
-    const res = await headerEchoHandler(new Request('https://worldmonitor.app/api/sanctions/v1/list-sanctions-pressure?countryCode=US', {
+    const res = await headerEchoHandler(new Request('https://worldmonitor.app/api/intelligence/v1/get-country-intel-brief?country_code=US', {
       headers: {
         Origin: 'https://worldmonitor.app',
         Authorization: `Bearer ${token}`,
