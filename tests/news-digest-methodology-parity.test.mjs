@@ -843,7 +843,7 @@ describe('news digest methodology parity', () => {
       assert.ok(text.includes('FOLLOWED_BIAS_MULTIPLIER'), 'brief docs must name followed bias env knob');
       assert.ok(text.includes('`1.25`'), 'brief docs must document followed bias default');
       assert.ok(text.includes('same severity lane'), 'brief docs must document within-lane behavior');
-      assert.ok(text.includes('`3`'), 'brief docs must document free-tier followed-country cap');
+      assert.doesNotMatch(text, /follow up to `3` countries|PRO readers can keep a larger followed set/);
     }
   });
 
@@ -855,8 +855,14 @@ describe('news digest methodology parity', () => {
       'digest cron must still write slot-keyed brief envelope and latest pointer',
     );
     assert.ok(
-      latestBriefApiSrc.includes('issueDate: preview.issueDate') &&
-        latestBriefApiSrc.includes('issueSlot,') &&
+      seedDigestSrc.includes('createLatestBriefSharedRule()') &&
+        latestBriefApiSrc.includes('LATEST_BRIEF_SHARED_USER_ID') &&
+        latestBriefPanelText.includes('shared dashboard edition'),
+      'latest brief stack must document and wire the shared dashboard fallback',
+    );
+    assert.ok(
+      latestBriefApiSrc.includes('issueDate: resolved.preview.issueDate') &&
+        latestBriefApiSrc.includes('issueSlot: resolved.issueSlot') &&
         latestBriefApiSrc.includes("issueDate: requestedSlot.slice(0, 10)"),
       'latest-brief API must still expose issueDate plus issueSlot where a slot is known',
     );

@@ -357,10 +357,7 @@ describe('isTransientDenial', () => {
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const readSource = (rel: string): string => readFileSync(resolve(root, rel), 'utf8');
 
-const WIRED_PANELS = [
-  'src/components/LatestBriefPanel.ts',
-  'src/components/ChatAnalystPanel.ts',
-];
+const WIRED_PANELS = ['src/components/ChatAnalystPanel.ts'];
 
 describe('premium panels route their denials through the classifier', () => {
   for (const rel of WIRED_PANELS) {
@@ -400,8 +397,11 @@ describe('premium panels route their denials through the classifier', () => {
    * rather than re-deriving the decision inline, and after the unlock it must
    * not retain any dedicated upsell renderer.
    */
-  it('LatestBriefPanel routes its denials through routeDenial', () => {
-    assert.match(readSource('src/components/LatestBriefPanel.ts'), /routeDenial\(/);
+  it('LatestBriefPanel no longer depends on the premium-denial classifier', () => {
+    const source = readSource('src/components/LatestBriefPanel.ts');
+    assert.doesNotMatch(source, /classifyDenialResponse|routeDenial|PremiumDenialVerdict|isTransientDenial/);
+    assert.match(source, /if \(res\.status === 401\) throw new BriefAccessError\('sign_in'\);/);
+    assert.match(source, /if \(res\.status === 403\) throw new BriefAccessError\('access_denied'\);/);
   });
 
   it('LatestBriefPanel no longer carries a dedicated upgrade renderer', () => {

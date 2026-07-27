@@ -5,13 +5,16 @@
  *
  *   - ready      → cover-card thumbnail + greeting + thread count +
  *                  "Read brief →" CTA that opens the signed magazine
- *                  URL in a new tab.
+ *                  URL in a new tab. The ready brief can be either
+ *                  the reader's personal edition or the shared
+ *                  dashboard fallback.
  *   - composing  → soft empty state. The composer hasn't produced
- *                  today's brief yet; the panel auto-refreshes on
- *                  the next user-visible interaction.
- *   - sign-in    → soft empty state. The brief remains tied to the
- *                  signed-in WorldMonitor account that owns it, so
- *                  logged-out viewers see a neutral sign-in prompt.
+ *                  a readable edition yet; the panel auto-refreshes
+ *                  on the next user-visible interaction.
+ *   - sign-in    → soft empty state. Signed-in state is still
+ *                  required even when the panel falls back to the
+ *                  shared dashboard edition, so logged-out viewers
+ *                  see a neutral sign-in prompt.
  *
  * The signed URL is generated server-side in `api/latest-brief.ts`
  * so the token never lives in the client bundle. The panel only
@@ -21,12 +24,6 @@
 import { Panel } from './Panel';
 import { getClerkToken, clearClerkTokenCache } from '@/services/clerk';
 import { getAuthState, subscribeAuthState } from '@/services/auth-state';
-import {
-  classifyDenialResponse,
-  isTransientDenial,
-  routeDenial,
-  type PremiumDenialVerdict,
-} from '@/services/premium-denial';
 import { trackBriefThreadOpen } from '@/services/analytics';
 import { h, rawHtml, replaceChildren, clearChildren, trustedHtml, type TrustedHtml } from '@/utils/dom-utils';
 
@@ -46,14 +43,16 @@ interface LatestBriefComposing {
 
 type LatestBriefResponse = LatestBriefReady | LatestBriefComposing;
 
+type BriefAccessCode = 'sign_in' | 'access_denied';
+
 /**
  * Typed access-failure surface. Lets the refresh loop branch on the
- * specific condition (sign-in / server-side desync) instead
+ * specific condition (sign-in / access denied) instead
  * of collapsing every denial into one render.
  */
 class BriefAccessError extends Error {
-  readonly code: PremiumDenialVerdict;
-  constructor(code: PremiumDenialVerdict) {
+  readonly code: BriefAccessCode;
+  constructor(code: BriefAccessCode) {
     super(code);
     this.code = code;
     this.name = 'BriefAccessError';
@@ -84,25 +83,12 @@ const WM_LOGO_SVG: TrustedHtml = trustedHtml(
 // Upstash with 401-path checks from backgrounded tabs".
 const COMPOSING_POLL_MS = 60_000;
 
-/**
- * Consecutive transient denials to auto-retry before giving up.
- *
- * Panel.showError backs off 15s, 30s, 60s, 120s, then 180s per attempt, so 8
- * attempts is roughly 16 minutes of grace — deliberately longer than the ~15
- * minute entitlement-cache poison window observed in #5600, so a real desync
- * resolves itself while a permanent one still terminates.
- */
-const MAX_TRANSIENT_DENIALS = 8;
-
 export class LatestBriefPanel extends Panel {
   private refreshing = false;
   private refreshQueued = false;
   /**
-   * Local mirror of Panel base `_locked`. The base doesn't expose a
-   * getter, so we track transitions by overriding showGatedCta() +
-   * unlockPanel() below. The flag lets renderReady/renderComposing
-   * detect a downgrade-while-fetching race and abort the render
-   * even if abort() on the fetch signal was too late.
+   * Abort controller for the in-flight `/api/latest-brief` request.
+   * Used to suppress stale renders across auth transitions.
    */
   private inflightAbort: AbortController | null = null;
   private composingPollId: ReturnType<typeof setTimeout> | null = null;
@@ -110,13 +96,6 @@ export class LatestBriefPanel extends Panel {
   private onVisibility: (() => void) | null = null;
   /** Last Clerk user-id seen. Used to detect sign-in / sign-out transitions. */
   private lastUserId: string | null = null;
-  /**
-   * Consecutive transient denials. Reset on any successful load and on every
-   * auth-id transition, so the budget is per-desync-episode rather than
-   * per-session.
-   */
-  private transientDenials = 0;
-
   constructor() {
     super({
       id: 'latest-brief',
@@ -142,9 +121,6 @@ export class LatestBriefPanel extends Panel {
       this.inflightAbort?.abort();
       this.inflightAbort = null;
       this.clearComposingPoll();
-      // New account, new retry budget — the previous user's desync says
-      // nothing about this one's access.
-      this.transientDenials = 0;
       // The Clerk token cache is keyed by time, not user. On every
       // id transition we MUST drop it so the next fetch reflects
       // the new session. Without this, /api/latest-brief derives
@@ -212,11 +188,7 @@ export class LatestBriefPanel extends Panel {
       // B's session because getClerkToken caches for up to 50s
       // across account changes.
       if ((getAuthState().user?.id ?? null) !== requestUserId) return;
-      // We have data — retire any auto-retry countdown a previous transient
-      // denial (entitlement_desync / access_denied) left armed, and refund the
-      // retry budget so a later, unrelated desync gets its own full grace.
       this.clearErrorState();
-      this.transientDenials = 0;
       if (data.status === 'ready') {
         this.renderReady(data);
       } else {
@@ -225,27 +197,16 @@ export class LatestBriefPanel extends Panel {
     } catch (err) {
       if ((err as { name?: string } | null)?.name === 'AbortError') return;
       if ((getAuthState().user?.id ?? null) !== requestUserId) return;
-      // Terminal access errors render a sign-in CTA or neutral
-      // recovery state. Transient ones fall through to showError(),
-      // which retries on the panel's backoff.
+      // Terminal access errors render neutral sign-in / access
+      // states. Everything else falls through to showError(), which
+      // retries on the panel's standard backoff.
       if (err instanceof BriefAccessError) {
-        if (isTransientDenial(err.code)) this.transientDenials += 1;
-        switch (routeDenial(err.code, this.transientDenials, MAX_TRANSIENT_DENIALS)) {
-          case 'sign_in':
-            this.renderSignInRequired();
-            return;
-          case 'give_up':
-            this.renderDesyncExhausted();
-            return;
-          default:
-            this.showError(
-              err.code === 'entitlement_desync'
-                ? 'Verifying your brief access — your brief will appear shortly.'
-                : 'Brief service unavailable — retrying shortly.',
-              () => { void this.refresh(); },
-            );
-            return;
+        if (err.code === 'sign_in') {
+          this.renderSignInRequired();
+          return;
         }
+        this.renderAccessDenied();
+        return;
       }
       const message = err instanceof Error ? err.message : 'Brief unavailable — try again shortly.';
       this.showError(message, () => { void this.refresh(); });
@@ -272,17 +233,8 @@ export class LatestBriefPanel extends Panel {
       signal,
       headers: { Authorization: `Bearer ${token}` },
     });
-    // 401/403 are classified rather than assumed so rejected origins
-    // and stale sessions do not collapse into a misleading upsell.
-    const verdict = await classifyDenialResponse(res, { entitlementTier: null, authRole: null });
-    if (verdict !== null) {
-      // Reading the body is awaited, so a gate-lock or account-switch abort
-      // can land mid-parse — where readDenialErrorCode swallows it. Without
-      // this, that abort would surface as a denial render instead of the
-      // no-op the abort was asking for.
-      if (signal.aborted) throw new DOMException('aborted while reading denial body', 'AbortError');
-      throw new BriefAccessError(verdict);
-    }
+    if (res.status === 401) throw new BriefAccessError('sign_in');
+    if (res.status === 403) throw new BriefAccessError('access_denied');
     if (!res.ok) {
       throw new Error(`Brief service unavailable (${res.status})`);
     }
@@ -309,7 +261,6 @@ export class LatestBriefPanel extends Panel {
    * this is an error state.
    */
   private renderSignInRequired(): void {
-    // Terminal state — retire any auto-retry a prior transient denial armed.
     this.clearErrorState();
     clearChildren(this.content);
     const logo = h('div', { className: 'latest-brief-logo' });
@@ -319,19 +270,13 @@ export class LatestBriefPanel extends Panel {
         logo,
         h('div', { className: 'latest-brief-empty-title' }, 'Sign in to view your brief.'),
         h('div', { className: 'latest-brief-empty-body' },
-          'Your personalised brief is tied to your WorldMonitor account. Sign in to see today\u2019s issue.',
+          'Sign in to see the latest dashboard edition and any account-specific brief issues.',
         ),
       ),
     );
   }
 
-  /**
-   * Auto-retry spent its budget and the server still denies us while the
-   * current session still looks valid. Deliberately no armed retry, so the
-   * panel stops polling. Returning to the tab re-runs refresh() via
-   * visibilitychange.
-   */
-  private renderDesyncExhausted(): void {
+  private renderAccessDenied(): void {
     this.clearErrorState();
     clearChildren(this.content);
     const logo = h('div', { className: 'latest-brief-logo' });
@@ -339,10 +284,9 @@ export class LatestBriefPanel extends Panel {
     this.content.appendChild(
       h('div', { className: 'latest-brief-card latest-brief-card--composing' },
         logo,
-        h('div', { className: 'latest-brief-empty-title' }, 'We couldn’t confirm your brief access.'),
+        h('div', { className: 'latest-brief-empty-title' }, 'We couldn’t load your brief.'),
         h('div', { className: 'latest-brief-empty-body' },
-          'Your account looks active here, but the brief service still can’t verify it. '
-          + 'Reload the page — if this keeps happening, contact support and we’ll sort it out.',
+          'Brief access is temporarily unavailable for this session. Reload the page and try again.',
         ),
       ),
     );

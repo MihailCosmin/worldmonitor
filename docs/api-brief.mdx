@@ -21,9 +21,10 @@ controls, see [News Digest and Briefing Methodology](/methodology/news-digest-an
 
 ### `GET /api/latest-brief`
 
-Returns a short summary of the caller's most recent composed brief, or
-`{ status: "composing" }` if the requested/current slot has not produced a
-brief yet.
+Returns a short summary of the caller's most recent composed brief, or falls
+back to the shared dashboard edition when the caller has no personal brief
+yet. If neither the requested slot nor the current readable slot has produced
+a brief, the route returns `{ status: "composing" }`.
 
 | Status | Response |
 |--------|----------|
@@ -36,8 +37,8 @@ brief yet.
 `issueDate` remains the display/date field (`YYYY-MM-DD`). `issueSlot` is the
 frozen edition key (`YYYY-MM-DD-HHMM`) used for Redis lookup and HMAC binding;
 it is present on ready responses and on misses for an explicitly requested
-slot. The `magazineUrl` is freshly signed against `{userId, issueSlot}` so it
-only works for the authenticated owner.
+slot. The `magazineUrl` is freshly signed against `{userId, issueSlot}` for
+whichever edition the route resolved, so it only works for that brief owner.
 
 ### `GET /api/brief/{userId}/{issueSlot}`
 

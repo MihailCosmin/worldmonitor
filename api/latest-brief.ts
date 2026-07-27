@@ -3,8 +3,8 @@
  *
  * GET /api/latest-brief (Clerk JWT required)
  *   -> 200 { status: 'ready', issueDate, issueSlot, dateLong, greeting,
- *      threadCount, magazineUrl } when a composed brief exists for this
- *      user's current/requested slot.
+ *      threadCount, magazineUrl } when a readable brief exists for the
+ *      caller's current/requested slot.
  *   -> 200 { status: 'composing', issueDate, issueSlot? } when the
  *      current/requested slot has not been composed yet. `issueSlot` is
  *      present when the caller requested a specific ?slot= value. The
@@ -16,11 +16,13 @@
  *
  * The returned magazineUrl is freshly signed per request. It is safe
  * to expose to the authenticated client — the HMAC binds {userId,
- * issueSlot} so it is only useful to the owner.
+ * issueSlot} so it is only useful to the resolved edition owner.
  *
- * The route does NOT drive composition. It reads the
- * brief:latest:{userId} pointer written by the digest cron to locate
- * the most recent slot, then returns that slot's envelope preview.
+ * The route does NOT drive composition. It first reads the caller's
+ * brief:latest:{userId} pointer written by the digest cron. If the
+ * caller has no personal brief yet, it falls back to the shared
+ * dashboard edition pointer and returns that slot's envelope preview
+ * instead.
  */
 
 export const config = { runtime: 'edge' };
@@ -36,6 +38,8 @@ import { captureSilentError } from './_sentry-edge.js';
 import { validateBearerToken } from '../server/auth-session';
 import { signBriefUrl, BriefUrlError } from '../server/_shared/brief-url';
 import { assertBriefEnvelope } from '../server/_shared/brief-render.js';
+// @ts-expect-error — JS module, no declaration file
+import { LATEST_BRIEF_SHARED_USER_ID } from '../shared/latest-brief.js';
 
 // Slot format written by the digest cron. Must match ISSUE_DATE_RE in
 // server/_shared/brief-url.ts — the signer rejects anything else.
@@ -104,6 +108,12 @@ type BriefPreview = {
   threadCount: number;
 };
 
+type LatestBriefResolvedPreview = {
+  ownerUserId: string;
+  issueSlot: string;
+  preview: BriefPreview;
+};
+
 async function readBriefPreview(
   userId: string,
   issueSlot: string,
@@ -165,6 +175,61 @@ function publicBaseUrl(req: Request): string {
   return new URL(req.url).origin;
 }
 
+export async function resolveLatestBriefPreviewWithFallback({
+  userId,
+  requestedSlot,
+  ctx,
+  readLatestPointerFn = readLatestPointer,
+  readBriefPreviewFn = readBriefPreview,
+}: {
+  userId: string;
+  requestedSlot: string | null;
+  ctx?: { waitUntil: (p: Promise<unknown>) => void };
+  readLatestPointerFn?: (userId: string, timeoutMs: number) => Promise<string | null>;
+  readBriefPreviewFn?: (
+    userId: string,
+    issueSlot: string,
+    timeoutMs: number,
+    ctx?: { waitUntil: (p: Promise<unknown>) => void },
+  ) => Promise<BriefPreview | null>;
+}): Promise<LatestBriefResolvedPreview | null> {
+  const ownersToTry = [userId];
+  if (userId !== LATEST_BRIEF_SHARED_USER_ID) ownersToTry.push(LATEST_BRIEF_SHARED_USER_ID);
+
+  if (requestedSlot) {
+    for (const ownerUserId of ownersToTry) {
+      const preview = await readWithOneRetry(
+        (timeoutMs) => readBriefPreviewFn(ownerUserId, requestedSlot, timeoutMs, ctx),
+        `readBriefPreview:${ownerUserId}`,
+        ctx,
+      );
+      if (preview) {
+        return { ownerUserId, issueSlot: requestedSlot, preview };
+      }
+    }
+    return null;
+  }
+
+  for (const ownerUserId of ownersToTry) {
+    const issueSlot = await readWithOneRetry(
+      (timeoutMs) => readLatestPointerFn(ownerUserId, timeoutMs),
+      `readLatestPointer:${ownerUserId}`,
+      ctx,
+    );
+    if (!issueSlot) continue;
+    const preview = await readWithOneRetry(
+      (timeoutMs) => readBriefPreviewFn(ownerUserId, issueSlot, timeoutMs, ctx),
+      `readBriefPreview:${ownerUserId}`,
+      ctx,
+    );
+    if (preview) {
+      return { ownerUserId, issueSlot, preview };
+    }
+  }
+
+  return null;
+}
+
 export default async function handler(
   req: Request,
   ctx?: { waitUntil: (p: Promise<unknown>) => void },
@@ -216,27 +281,9 @@ export default async function handler(
   // survive into closure capture sites.
   const userId: string = session.userId;
 
-  let issueSlot: string | null = null;
-  let preview: BriefPreview | null = null;
+  let resolved: LatestBriefResolvedPreview | null = null;
   try {
-    const targetSlot =
-      requestedSlot ??
-      (await readWithOneRetry(
-        (timeoutMs) => readLatestPointer(userId, timeoutMs),
-        'readLatestPointer',
-        ctx,
-      ));
-    if (targetSlot) {
-      const hit = await readWithOneRetry(
-        (timeoutMs) => readBriefPreview(userId, targetSlot, timeoutMs, ctx),
-        'readBriefPreview',
-        ctx,
-      );
-      if (hit) {
-        issueSlot = targetSlot;
-        preview = hit;
-      }
-    }
+    resolved = await resolveLatestBriefPreviewWithFallback({ userId, requestedSlot, ctx });
   } catch (err) {
     // Upstash outage / config break / corrupt value — do NOT collapse
     // this into "composing", which would falsely signal empty state
@@ -246,7 +293,7 @@ export default async function handler(
     return jsonResponse({ error: 'service_unavailable' }, 503, cors);
   }
 
-  if (!preview || !issueSlot) {
+  if (!resolved) {
     // Two miss cases with different semantics:
     //   (a) Caller asked for a specific ?slot= that doesn't exist →
     //       report that slot back as missing, NOT "today is composing".
@@ -273,17 +320,17 @@ export default async function handler(
   let magazineUrl: string;
   try {
     magazineUrl = await signBriefUrl({
-      userId: session.userId,
-      issueDate: issueSlot,
+      userId: resolved.ownerUserId,
+      issueDate: resolved.issueSlot,
       baseUrl: publicBaseUrl(req),
       secret,
     });
   } catch (err) {
     if (err instanceof BriefUrlError && err.code === 'invalid_user_id') {
-      // Clerk userId should always match our shape, but if it does
-      // not we want to log and fail clean rather than expose the raw
-      // id in a stack trace.
-      console.error('[api/latest-brief] Clerk userId failed shape check');
+      // Personal Clerk ids and the shared dashboard owner id should
+      // both satisfy the signer shape. If not, log and fail clean
+      // rather than exposing the raw id in a stack trace.
+      console.error('[api/latest-brief] resolved brief owner id failed shape check');
       return jsonResponse({ error: 'service_unavailable' }, 503, cors);
     }
     throw err;
@@ -292,11 +339,11 @@ export default async function handler(
   return jsonResponse(
     {
       status: 'ready',
-      issueDate: preview.issueDate,
-      issueSlot,
-      dateLong: preview.dateLong,
-      greeting: preview.greeting,
-      threadCount: preview.threadCount,
+      issueDate: resolved.preview.issueDate,
+      issueSlot: resolved.issueSlot,
+      dateLong: resolved.preview.dateLong,
+      greeting: resolved.preview.greeting,
+      threadCount: resolved.preview.threadCount,
       magazineUrl,
     },
     200,

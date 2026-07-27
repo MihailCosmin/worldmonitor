@@ -365,3 +365,90 @@ describe('api/latest-brief retry-on-Upstash-timeout', () => {
     assert.equal(mod.RETRY_ATTEMPT_MS, 3_000);
   });
 });
+
+describe('api/latest-brief shared fallback resolution', () => {
+  it('prefers the caller brief when a personal latest pointer resolves', async () => {
+    const { resolveLatestBriefPreviewWithFallback } = await import('../api/latest-brief.ts');
+    const pointerCalls = [];
+    const previewCalls = [];
+    const resolved = await resolveLatestBriefPreviewWithFallback({
+      userId: 'user_test',
+      requestedSlot: null,
+      readLatestPointerFn: async (userId) => {
+        pointerCalls.push(userId);
+        return userId === 'user_test' ? '2026-07-27-0800' : '2026-07-27-0900';
+      },
+      readBriefPreviewFn: async (userId, issueSlot) => {
+        previewCalls.push(`${userId}:${issueSlot}`);
+        return userId === 'user_test'
+          ? {
+              issueDate: '2026-07-27',
+              dateLong: '27 July 2026',
+              greeting: 'Good morning',
+              threadCount: 6,
+            }
+          : null;
+      },
+    });
+    assert.deepEqual(pointerCalls, ['user_test']);
+    assert.deepEqual(previewCalls, ['user_test:2026-07-27-0800']);
+    assert.equal(resolved?.ownerUserId, 'user_test');
+    assert.equal(resolved?.issueSlot, '2026-07-27-0800');
+  });
+
+  it('falls back to the shared dashboard edition when the caller has no personal latest pointer', async () => {
+    const { resolveLatestBriefPreviewWithFallback } = await import('../api/latest-brief.ts');
+    const pointerCalls = [];
+    const previewCalls = [];
+    const resolved = await resolveLatestBriefPreviewWithFallback({
+      userId: 'user_free',
+      requestedSlot: null,
+      readLatestPointerFn: async (userId) => {
+        pointerCalls.push(userId);
+        return userId === 'latest-brief-public' ? '2026-07-27-0800' : null;
+      },
+      readBriefPreviewFn: async (userId, issueSlot) => {
+        previewCalls.push(`${userId}:${issueSlot}`);
+        return userId === 'latest-brief-public'
+          ? {
+              issueDate: '2026-07-27',
+              dateLong: '27 July 2026',
+              greeting: 'Good morning',
+              threadCount: 8,
+            }
+          : null;
+      },
+    });
+    assert.deepEqual(pointerCalls, ['user_free', 'latest-brief-public']);
+    assert.deepEqual(previewCalls, ['latest-brief-public:2026-07-27-0800']);
+    assert.equal(resolved?.ownerUserId, 'latest-brief-public');
+    assert.equal(resolved?.issueSlot, '2026-07-27-0800');
+  });
+
+  it('tries the shared edition for an explicitly requested slot after a personal miss', async () => {
+    const { resolveLatestBriefPreviewWithFallback } = await import('../api/latest-brief.ts');
+    const previewCalls = [];
+    const resolved = await resolveLatestBriefPreviewWithFallback({
+      userId: 'user_free',
+      requestedSlot: '2026-07-27-0800',
+      readLatestPointerFn: async () => null,
+      readBriefPreviewFn: async (userId, issueSlot) => {
+        previewCalls.push(`${userId}:${issueSlot}`);
+        return userId === 'latest-brief-public'
+          ? {
+              issueDate: '2026-07-27',
+              dateLong: '27 July 2026',
+              greeting: 'Good morning',
+              threadCount: 5,
+            }
+          : null;
+      },
+    });
+    assert.deepEqual(
+      previewCalls,
+      ['user_free:2026-07-27-0800', 'latest-brief-public:2026-07-27-0800'],
+    );
+    assert.equal(resolved?.ownerUserId, 'latest-brief-public');
+    assert.equal(resolved?.issueSlot, '2026-07-27-0800');
+  });
+});

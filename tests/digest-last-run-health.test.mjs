@@ -53,12 +53,13 @@ describe('digest-notifications last-run health heartbeat', () => {
   it('stamps a healthy run even when there is nothing to send', () => {
     assert.match(
       src,
-      /No digest rules found[\s\S]*?await writeDigestLastRunMeta\(\{ startedAtMs: nowMs, sentCount: 0 \}\);[\s\S]*?return;/,
+      /No digest rules found — composing shared dashboard brief only/,
     );
     assert.match(
       src,
-      /No rules matched userId=\$\{onlyUserFilter\.userId\}[\s\S]*?await writeDigestLastRunMeta\(\{ startedAtMs: nowMs, sentCount: 0 \}\);[\s\S]*?return;/,
+      /No rules matched userId=\$\{onlyUserFilter\.userId\} — skipping digest delivery fan-out and composing shared dashboard brief only\./,
     );
+    assert.match(src, /const composeRules = \[\.\.\.rules, createLatestBriefSharedRule\(\)\];/);
   });
 
   it('stamps brief-compose failures before nonzero exit and healthy runs at the end', () => {

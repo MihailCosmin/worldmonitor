@@ -94,6 +94,7 @@ import { readCooldownConfig } from './lib/digest-cooldown-config.mjs';
 import { evaluateCooldown } from './lib/digest-cooldown-decision.mjs';
 import { emitCooldownShadowLog } from './lib/digest-cooldown-shadow-log.mjs';
 import { buildTickerDictionary } from '../shared/ticker-extract.js';
+import { createLatestBriefSharedRule, LATEST_BRIEF_SHARED_USER_ID } from '../shared/latest-brief.js';
 import { scanAndEnqueueWatchlistStoryEvents as scanWatchlistStoryEvents } from './lib/watchlist-story-scan.mjs';
 
 const EPHEMERAL_LIVE_LOG_TITLE_SAMPLE_LIMIT = 5;
@@ -2263,10 +2264,12 @@ async function main() {
     return;
   }
 
-  if (!Array.isArray(rules) || rules.length === 0) {
-    console.log('[digest] No digest rules found — nothing to do');
-    await writeDigestLastRunMeta({ startedAtMs: nowMs, sentCount: 0 });
-    return;
+  if (!Array.isArray(rules)) {
+    console.warn('[digest] Digest rules payload was not an array — treating as empty for delivery fan-out');
+    rules = [];
+  }
+  if (rules.length === 0) {
+    console.log('[digest] No digest rules found — composing shared dashboard brief only');
   }
 
   // Operator single-user test filter. Self-expiring by design: the env
@@ -2301,10 +2304,8 @@ async function main() {
     );
     if (rules.length === 0) {
       console.warn(
-        `[digest] No rules matched userId=${onlyUserFilter.userId} — nothing to do (exiting green).`,
+        `[digest] No rules matched userId=${onlyUserFilter.userId} — skipping digest delivery fan-out and composing shared dashboard brief only.`,
       );
-      await writeDigestLastRunMeta({ startedAtMs: nowMs, sentCount: 0 });
-      return;
     }
   } else if (onlyUserFilter.kind === 'reject') {
     // Malformed / expired / cap-exceeded — log LOUDLY and fan out normally
@@ -2323,7 +2324,11 @@ async function main() {
   // exit-non-zero gate AFTER the digest dispatch so Railway still
   // surfaces compose-layer breakage without skipping user-visible
   // digest delivery.
-  const { briefByUser, composeSuccess, composeFailed } = await composeBriefsForRun(rules, nowMs);
+  const composeRules = [...rules, createLatestBriefSharedRule()];
+  const { briefByUser, composeSuccess, composeFailed } = await composeBriefsForRun(composeRules, nowMs);
+  if (briefByUser.has(LATEST_BRIEF_SHARED_USER_ID)) {
+    console.log('[digest] Latest Brief shared dashboard edition refreshed');
+  }
 
   // Sprint 1 / U2 — option (a) canonical-send mapping. Build a per-user
   // rule index ONCE so each iteration of the send loop can resolve the

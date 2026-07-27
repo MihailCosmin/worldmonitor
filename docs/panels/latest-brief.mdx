@@ -3,7 +3,7 @@ title: "Latest Brief"
 description: "The WorldMonitor AI intelligence brief, surfaced in the dashboard as a single card that links to a signed magazine-style reader and shareable public URL."
 ---
 
-The **Latest Brief** panel is the dashboard surface for the WorldMonitor Brief — an AI-generated intelligence digest that synthesises the most significant events in the reader's configured digest window into a structured, source-attributed read. The default product cadence is daily, but digest rules can also produce twice-daily or weekly slots through `digestMode`. The panel simply mirrors the latest composed brief for the signed-in reader at the moment they open the dashboard.
+The **Latest Brief** panel is the dashboard surface for the WorldMonitor Brief — an AI-generated intelligence digest that synthesises the most significant events in the reader's configured digest window into a structured, source-attributed read. The default product cadence is daily, but digest rules can also produce twice-daily or weekly slots through `digestMode`. The panel first mirrors the latest composed brief for the signed-in reader and, when the reader has no personal digest rule, falls back to a shared dashboard edition so new free accounts still land on a real brief.
 
 For the canonical pipeline details, see [News Digest and Briefing Methodology](/methodology/news-digest-and-briefing).
 
@@ -13,7 +13,7 @@ Three states are rendered, depending on the reader and the composer's progress:
 
 - **Ready** — a cover-card thumbnail, the brief's greeting, the edition's thread count, and a **Read brief →** button that opens the signed magazine URL in a new tab.
 - **Composing** — a soft empty state when the composer has not yet produced the current slot. The panel auto-refreshes on the next user-visible interaction; no manual retry is needed.
-- **Sign-in required** — a neutral empty state when the reader is signed out. The brief is still tied to the signed-in WorldMonitor account that owns it.
+- **Sign-in required** — a neutral empty state when the reader is signed out. The dashboard reader still requires an authenticated WorldMonitor session, even when the panel falls back to the shared dashboard edition.
 
 Panel id is `latest-brief`; canonical component is `src/components/LatestBriefPanel.ts`.
 
@@ -26,7 +26,7 @@ Clicking **Read brief →** opens the full magazine-style reader in a new tab. S
 
 ## Data sources
 
-The panel calls `GET /api/latest-brief` (Clerk JWT required). The response is either the ready payload (`issueDate`, `dateLong`, `greeting`, `threadCount`, `magazineUrl`) or a `{ status: "composing", issueDate }` stub. The signed `magazineUrl` is generated server-side — the HMAC signing secret never lives in the client bundle.
+The panel calls `GET /api/latest-brief` (Clerk JWT required). The response is either the ready payload (`issueDate`, `dateLong`, `greeting`, `threadCount`, `magazineUrl`) or a `{ status: "composing", issueDate }` stub. The signed `magazineUrl` is generated server-side — the HMAC signing secret never lives in the client bundle. The route prefers the caller's personal latest pointer and falls back to the shared dashboard edition when the caller has no personal envelope yet.
 
 The brief itself is composed by a Railway job from:
 
@@ -38,13 +38,14 @@ The brief itself is composed by a Railway job from:
 
 - The composer writes the envelope to `brief:{userId}:{issueSlot}` — where `issueSlot` is computed by `issueSlotInTz(nowMs, userTz)`, so two same-day compose runs in different time-of-day slots produce distinct keys.
 - A **latest pointer** is written atomically alongside: `brief:latest:{userId}` → `{ "issueSlot": "<slot>" }`. Readers (the dashboard panel, the share-URL endpoint) resolve the current brief by reading the pointer first, then fetching the slot-keyed envelope.
+- The cron also keeps a shared dashboard edition under the same key shape using a synthetic user id. `GET /api/latest-brief` falls back to that shared pointer when a signed-in reader has no personal latest pointer yet.
 - TTL is 7 days on both keys; if the pointer is absent, the reader treats the user as having no recent brief.
 
 Reference: `scripts/seed-digest-notifications.mjs` (writer) and `api/latest-brief.ts` (reader).
 
 ## Refresh cadence
 
-- **Composer**: the Railway digest cron composes for eligible users when their `digestMode` is due. Default is daily; twice-daily and weekly modes are supported by the same writer.
+- **Composer**: the Railway digest cron composes for eligible users when their `digestMode` is due. Default is daily; twice-daily and weekly modes are supported by the same writer. The same job also refreshes the shared dashboard edition independently of paid delivery rules.
 - **Panel — ready state**: reads on panel load; subsequent reads happen only on user-visible refresh triggers. No polling timer while the brief is already displayed.
 - **Panel — composing state**: schedules a 60-second re-poll (`COMPOSING_POLL_MS = 60_000` in `src/components/LatestBriefPanel.ts`) so the panel transitions from `composing` to `ready` on the next composer tick without requiring a full page reload. The poll timer is cleared when the panel leaves the composing state.
 
@@ -60,7 +61,7 @@ cross-severity promotion. The nominal `FOLLOWED_BIAS_MULTIPLIER` is `1.25`
 and is env-tunable, but the live composer applies it as a stable severity-lane
 sort: a followed-country story can move ahead of non-followed stories in the
 same lane, while lower-severity stories never jump above higher-severity
-stories. Free-tier readers can follow up to `3` countries.
+stories.
 
 The brief excludes op-ed/opinion and analysis columns, feel-good/lifestyle
 items, and ephemeral live-coverage teasers such as "WATCH LIVE" pages. Those
@@ -69,7 +70,7 @@ summarise durable event-driven intelligence.
 
 ## Tier & gating
 
-Latest Brief is available to any signed-in WorldMonitor user. The panel is no longer registered with `premium: 'locked'`, and `api/latest-brief.ts` now checks only for a valid Clerk JWT before returning the caller's latest composed brief preview. Signed-out visitors still see the neutral sign-in state because the brief remains tied to the owning account.
+Latest Brief is available to any signed-in WorldMonitor user. The panel is no longer registered with `premium: 'locked'`, and `api/latest-brief.ts` now checks only for a valid Clerk JWT before returning either the caller's latest composed brief preview or the shared dashboard edition fallback. Signed-out visitors still see the neutral sign-in state because the dashboard reader remains an authenticated surface.
 
 ## API reference
 

@@ -671,7 +671,7 @@ Intentional paid boundaries that are not part of this follow-up remain allowed: 
 - Acceptance:
   - Free users can follow the same supported number of countries as paid users and never see an upgrade action from the follow control.
 
-### [ ] D6. Make Latest Brief composition actually available to free accounts
+### [x] D6. Make Latest Brief composition actually available to free accounts
 
 - Files:
   - `src/components/LatestBriefPanel.ts`
