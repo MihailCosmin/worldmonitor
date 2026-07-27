@@ -100,9 +100,8 @@ const EVENTS = {
   'sign-in': true,
   'sign-up': true,
   'sign-out': true,
-  'gate-hit': true,
-  // Conversion funnel (#4931) — pageview → gate-hit → checkout-start →
-  // checkout-success is the end-to-end funnel; the /pro page fires its own
+  // Conversion funnel (#4931) — pageview → checkout-start → checkout-success
+  // is the end-to-end funnel; the /pro page fires its own
   // checkout-start via the raw tracker (separate build, same event name).
   'checkout-start': true,
   'checkout-success': true,
@@ -450,10 +449,6 @@ export function resetAnalyticsForTesting(): void {
   umamiLoadScheduled = false;
   umamiLoadStarted = false;
   umamiLoadAttempts = 0;
-}
-
-export function trackGateHit(feature: string): void {
-  track('gate-hit', { feature });
 }
 
 // ---------------------------------------------------------------------------

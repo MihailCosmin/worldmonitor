@@ -70,7 +70,6 @@ import {
   trackMapLayerToggle,
   trackPanelToggled,
   trackDownloadClicked,
-  trackGateHit,
 } from '@/services/analytics';
 import { detectPlatform, allButtons, buttonsForPlatform } from '@/components/DownloadBanner';
 import type { Platform } from '@/components/DownloadBanner';
@@ -83,7 +82,6 @@ import { AuthLauncher } from '@/components/AuthLauncher';
 import { AuthHeaderWidget } from '@/components/AuthHeaderWidget';
 import { t } from '@/services/i18n';
 import { TvModeController } from '@/services/tv-mode';
-import { getAuthState, subscribeAuthState } from '@/services/auth-state';
 import { setTrustedHtml, trustedHtml } from '@/utils/dom-utils';
 import { scheduleAfterFirstPaint } from '@/utils/after-paint';
 import { escapeHtml } from '@/utils/sanitize';
@@ -228,7 +226,6 @@ export class EventHandlerManager implements AppModule {
   private boundEmbedModalKeydownHandler: ((e: KeyboardEvent) => void) | null = null;
   private missionPresetPopover: HTMLElement | null = null;
   private missionDataRefreshTimer: number | null = null;
-  private proGateUnsubscribers: Array<() => void> = [];
   private exportPanelLoad: Promise<NonNullable<AppContext['exportPanel']>> | null = null;
   private closedPanelStack: string[] = []; // max-items: 20
   private idleTimeoutId: ReturnType<typeof setTimeout> | null = null;
@@ -452,8 +449,6 @@ export class EventHandlerManager implements AppModule {
       window.clearTimeout(this.missionDataRefreshTimer);
       this.missionDataRefreshTimer = null;
     }
-    for (const unsub of this.proGateUnsubscribers) unsub();
-    this.proGateUnsubscribers = [];
     this.ctx.tvMode?.destroy();
     this.ctx.tvMode = null;
     this.ctx.unifiedSettings?.destroy();
@@ -1707,26 +1702,9 @@ export class EventHandlerManager implements AppModule {
       return this.exportPanelLoad;
     };
 
-    let currentIsPro = getAuthState().user?.role === 'pro';
-    const applyProGate = (isPro: boolean, initial = false) => {
-      currentIsPro = isPro;
-      if (!isPro) {
-        const el = this.ctx.exportPanel?.getElement();
-        if (el) el.style.display = 'none';
-        if (initial) trackGateHit('export');
-        return;
-      }
-
-      void ensureExportPanel()
-        .then((panel) => {
-          panel.getElement().style.display = currentIsPro ? '' : 'none';
-        })
-        .catch((err) => {
-          console.warn('[export-panel] Failed to lazy-load ExportPanel:', err);
-        });
-    };
-    applyProGate(currentIsPro, true);
-    this.proGateUnsubscribers.push(subscribeAuthState(state => applyProGate(state.user?.role === 'pro')));
+    void ensureExportPanel().catch((err) => {
+      console.warn('[export-panel] Failed to lazy-load ExportPanel:', err);
+    });
   }
 
   setupUnifiedSettings(): void {
@@ -1831,7 +1809,6 @@ export class EventHandlerManager implements AppModule {
   }
 
   setupPlaybackControl(): void {
-    // Always create — show/hide reactively via auth state subscription below.
     this.ctx.playbackControl = new PlaybackControl();
     this.ctx.playbackControl.onSnapshot((snapshot) => {
       if (snapshot) {
@@ -1848,13 +1825,6 @@ export class EventHandlerManager implements AppModule {
     if (headerRight) {
       headerRight.insertBefore(el, headerRight.firstChild);
     }
-
-    const applyProGate = (isPro: boolean, initial = false) => {
-      el.style.display = isPro ? '' : 'none';
-      if (initial && !isPro) trackGateHit('playback');
-    };
-    applyProGate(getAuthState().user?.role === 'pro', true);
-    this.proGateUnsubscribers.push(subscribeAuthState(state => applyProGate(state.user?.role === 'pro')));
   }
 
   setupSnapshotSaving(): void {

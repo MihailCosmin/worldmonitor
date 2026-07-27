@@ -748,7 +748,7 @@ Intentional paid boundaries that are not part of this follow-up remain allowed: 
 - Acceptance:
   - Free desktop and web users receive the same Forecast, OREF, Telegram, Resilience, and trade-route visualization behavior when their runtime supports it.
 
-### [ ] D10. Ungate global export and playback
+### [x] D10. Ungate global export and playback
 
 - Files:
   - `src/app/event-handlers.ts`
