@@ -4,7 +4,6 @@ import { escapeHtml, unsafeRawHtml } from '@/utils/sanitize';
 import { describeFreshness } from '@/services/persistent-cache';
 import type { MarketImplicationCard, MarketImplicationsData, TransmissionNode } from '@/services/market-implications';
 import { FrameworkSelector } from './FrameworkSelector';
-import { hasPremiumAccess } from '@/services/panel-gating';
 
 function directionClass(dir: string): string {
   const d = dir.toUpperCase();
@@ -72,9 +71,8 @@ export class MarketImplicationsPanel extends Panel {
       id: 'market-implications',
       title: t('components.marketImplications.title'),
       infoTooltip: t('components.marketImplications.infoTooltip'),
-      premium: 'locked',
     });
-    this.fwSelector = new FrameworkSelector({ panelId: 'market-implications', isPremium: hasPremiumAccess(), panel: this, note: t('components.marketImplications.appliesToNext') });
+    this.fwSelector = new FrameworkSelector({ panelId: 'market-implications', isPremium: true, panel: this, note: t('components.marketImplications.appliesToNext') });
     this.header.appendChild(this.fwSelector.el);
 
     this.content.addEventListener('click', (e) => {

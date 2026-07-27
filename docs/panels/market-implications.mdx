@@ -19,14 +19,14 @@ A list of market-implication cards. Each card shows:
 - **Rationale** — short narrative paragraph.
 - **Transmission path** — the chain that gets from the triggering event to the named asset (`TransmissionNode[]`).
 
-Above the cards sits a **Framework selector** — the same `FrameworkSelector` used by other LLM panels — which lets PRO users re-run the analysis against an alternative analytical framework.
+Above the cards sits a **Framework selector** — the same `FrameworkSelector` used by other LLM panels — which lets users re-run the analysis against an alternative analytical framework.
 
 Panel id is `market-implications`; canonical component is `src/components/MarketImplicationsPanel.ts`. Title per `src/config/panels.ts:109`.
 
 ## How you reach it
 
 - **Cmd+K**: type *market implications* or *trade signals*.
-- **Availability by variant**: registered and enabled by default in the **full/geopolitical** variant only (`premium: 'locked'` at `src/config/panels.ts:109`). Not present in the tech, finance, commodity, or happy variants.
+- **Availability by variant**: registered and enabled by default in the **full/geopolitical** variant only. Not present in the tech, finance, commodity, or happy variants.
 
 ## Data sources
 
@@ -38,7 +38,7 @@ Bundled into the forecast cron, which runs approximately hourly. `api/health.js`
 
 ## Tier & gating
 
-**PRO (hard-locked).** `premium: 'locked'` in `src/config/panels.ts:109`. `isPanelEntitled` unlocks it when **either** a valid `WORLDMONITOR_API_KEY` is present **or** `isPro` is true (`market-implications` is in the `apiKeyPanels` allowlist at `src/config/panels.ts:973`).
+Public panel on the web app. The panel is enabled in the full variant without a Pro/API-key gate, and the framework selector remains available to free users.
 
 ## API reference
 

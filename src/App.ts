@@ -576,6 +576,9 @@ export class App {
     if (shouldPrime('trade-policy')) {
       primeTask('tradePolicy', () => this.dataLoader.loadTradePolicy());
     }
+    if (shouldPrime('market-implications')) {
+      primeTask('marketImplications', () => this.dataLoader.loadMarketImplications());
+    }
     if (shouldPrime('energy-complex')) {
       primeTask('oil', () => this.dataLoader.loadOilAnalytics());
     }
@@ -602,9 +605,6 @@ export class App {
       }
       if (shouldPrime('daily-market-brief')) {
         primeTask('dailyMarketBrief', () => this.dataLoader.loadDailyMarketBrief());
-      }
-      if (shouldPrime('market-implications')) {
-        primeTask('marketImplications', () => this.dataLoader.loadMarketImplications());
       }
     }
 
@@ -1411,8 +1411,7 @@ export class App {
         // mounted and re-checks hasPremiumAccess() internally, so these
         // calls are safe and idempotent. Without this, panels would sit empty
         // until the next scheduled refresh (FOREVER on the full variant for
-        // stock-analysis / stock-backtest / daily-
-        // market-brief / market-implications because their schedulers are
+        // stock-analysis / stock-backtest / daily-market-brief because their schedulers are
         // gated to SITE_VARIANT === 'finance'). The audit-locking regression
         // test in tests/premium-loaders-fan-out-coverage.test.mts asserts
         // every `hasPremiumAccess() && shouldLoad('X')` gate in data-loader.ts
@@ -1421,7 +1420,6 @@ export class App {
         void this.dataLoader.loadStockAnalysis();
         void this.dataLoader.loadStockBacktest();
         void this.dataLoader.loadDailyMarketBrief();
-        void this.dataLoader.loadMarketImplications();
         void this.dataLoader.loadResilienceRanking();
         void this.dataLoader.loadGlobalTenders();
       } else if (!nowPremium && hadPremium) {
@@ -2162,7 +2160,7 @@ export class App {
         'market-implications',
         () => this.dataLoader.loadMarketImplications(),
         REFRESH_INTERVALS.marketImplications,
-        () => hasPremiumAccess() && this.isPanelNearViewport('market-implications'),
+        () => this.isPanelNearViewport('market-implications'),
       );
     }
 

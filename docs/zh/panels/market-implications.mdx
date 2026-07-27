@@ -19,14 +19,14 @@ description: "AI 市场影响面板从当日全球新闻流与实时市场信号
 - **理由** — 简短叙述段落。
 - **传导路径** — 从触发事件到指定资产的链路（`TransmissionNode[]`）。
 
-卡片上方有一个 **框架选择器** — 与其他 LLM 面板使用的 `FrameworkSelector` 相同 — 允许 PRO 用户在替代分析框架下重新运行分析。
+卡片上方有一个 **框架选择器** — 与其他 LLM 面板使用的 `FrameworkSelector` 相同 — 允许用户在替代分析框架下重新运行分析。
 
 面板 id 为 `market-implications`；规范组件为 `src/components/MarketImplicationsPanel.ts`。标题见 `src/config/panels.ts:109`。
 
 ## 如何访问
 
 - **Cmd+K**：输入 *market implications* 或 *trade signals*。
-- **按变体的可用性**：仅在 **full/geopolitical** 变体中注册并默认启用（`src/config/panels.ts:109` 处的 `premium: 'locked'`）。在 tech、finance、commodity 或 happy 变体中不存在。
+- **按变体的可用性**：仅在 **full/geopolitical** 变体中注册并默认启用。在 tech、finance、commodity 或 happy 变体中不存在。
 
 ## 数据来源
 
@@ -38,7 +38,7 @@ Market Implications 卡片由 Railway `seed-forecasts` cron 中的预测模拟�
 
 ## 层级与门控
 
-**PRO（硬锁定）。** `src/config/panels.ts:109` 中的 `premium: 'locked'`。当存在有效的 `WORLDMONITOR_API_KEY` **或** `isPro` 为 true 时，`isPanelEntitled` 解锁该面板（`market-implications` 在 `src/config/panels.ts:973` 的 `apiKeyPanels` 允许列表中）。
+Web 应用中的公开面板。该面板在 full 变体中默认启用，不再需要 Pro 或 API key；框架选择器也对免费用户开放。
 
 ## API 参考
 

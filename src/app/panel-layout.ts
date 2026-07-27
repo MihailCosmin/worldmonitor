@@ -112,7 +112,6 @@ const WEB_PREMIUM_PANELS = new Set([
   'stock-analysis',
   'stock-backtest',
   'daily-market-brief',
-  'market-implications',
   'deduction',
   'regional-intelligence',
 ]);
@@ -2018,8 +2017,6 @@ export class PanelLayoutManager implements AppModule {
     this.lazyDefaultPanel('daily-market-brief', () => import('@/components/DailyMarketBriefPanel'), 'DailyMarketBriefPanel');
 
     this.lazyDefaultPanel('market-implications', () => import('@/components/MarketImplicationsPanel'), 'MarketImplicationsPanel');
-    // Gating for market-implications is handled reactively by
-    // updatePanelGating() via auth state subscription.
 
     this.lazyImportedPanel('chat-analyst', () => import('@/components/ChatAnalystPanel'), 'ChatAnalystPanel', (ChatAnalystPanel) => {
       // agent-bus-applier (and its zod-backed shared/agent-bus-actions schemas, ~69KB)

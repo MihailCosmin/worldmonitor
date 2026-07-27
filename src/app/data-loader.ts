@@ -931,12 +931,11 @@ export class DataLoaderManager implements AppModule {
 
     this.updateSearchIndex();
 
+    const postHydrationLoads = [this.loadMarketImplications()];
     if (hasPremiumAccess()) {
-      await Promise.allSettled([
-        this.loadDailyMarketBrief(),
-        this.loadMarketImplications(),
-      ]);
+      postHydrationLoads.unshift(this.loadDailyMarketBrief());
     }
+    await Promise.allSettled(postHydrationLoads);
 
     const bootstrapTemporal = consumeServerAnomalies();
     if (bootstrapTemporal.anomalies.length > 0 || bootstrapTemporal.trackedTypes.length > 0) {
@@ -2288,7 +2287,6 @@ export class DataLoaderManager implements AppModule {
   }
 
   async loadMarketImplications(): Promise<void> {
-    if (!hasPremiumAccess()) return;
     if (this.ctx.isDestroyed || this.ctx.inFlight.has('marketImplications')) return;
     this.ctx.inFlight.add('marketImplications');
     try {

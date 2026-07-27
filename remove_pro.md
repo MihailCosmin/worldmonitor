@@ -286,7 +286,7 @@ These surfaces already have real feature logic, data structures, or fetch/render
 - Acceptance:
   - The scanner renders and sorts for free users.
 
-### [ ] F9. Ungate AI Market Implications
+### [x] F9. Ungate AI Market Implications
 
 - Files:
   - `src/components/MarketImplicationsPanel.ts`
