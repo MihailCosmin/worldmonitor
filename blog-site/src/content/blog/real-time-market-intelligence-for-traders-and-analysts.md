@@ -132,16 +132,16 @@ World Monitor maps the world's **19 major financial centers** ranked by the Glob
 - Check AI-generated World Brief for overnight synthesis
 - Share notable findings via built-in story sharing
 
-## Free Core Dashboard, Optional Pro Workflows
+## Free Core Dashboard, Optional Paid Workflows
 
-World Monitor Finance's core dashboard is free with no account required. Optional Pro workflows add analyst chat, scenario analysis, route exploration, AI digests, and MCP access; the public map and core market context remain available without a subscription.
+World Monitor Finance's core dashboard is free with no account required. The dashboard includes analyst chat, scenario analysis, and route exploration, while optional paid workflows add AI digests and MCP access; the public map and core market context remain available without a subscription.
 
 The entire platform is open source under AGPL-3.0, meaning the algorithms behind every score and signal are auditable.
 
 ## Frequently Asked Questions
 
 **Is World Monitor Finance free to use?**
-The core Finance dashboard is free and requires no account. Optional Pro workflows are available for advanced AI analysis, scenarios, route exploration, digests, and MCP access. The platform is open source under AGPL-3.0.
+The core Finance dashboard is free and requires no account. Analyst chat, scenarios, and route exploration are available in the dashboard; paid workflows cover digests and MCP access. The platform is open source under AGPL-3.0.
 
 **How does World Monitor differ from Bloomberg or Reuters terminals?**
 World Monitor uniquely overlays geopolitical intelligence (conflict data, military tracking, instability scores) on top of financial data. Traditional terminals focus on price and fundamentals; World Monitor adds the geopolitical context that drives price action.

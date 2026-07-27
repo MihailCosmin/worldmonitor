@@ -525,7 +525,7 @@ These should be addressed after the real feature ungating work above.
 
 After the tasks above are done, run a final repo-wide cleanup.
 
-### [ ] C1. Remove stale `Pro` / `Premium` names from panels and copy
+### [x] C1. Remove stale `Pro` / `Premium` names from panels and copy
 
 - Examples to rename:
   - `Premium Stock Analysis`
@@ -535,14 +535,14 @@ After the tasks above are done, run a final repo-wide cleanup.
   - `src/components/StockBacktestPanel.ts`
   - any matching locale/config entries
 
-### [ ] C2. Remove stale premium analytics telemetry and gate tracking where no longer useful
+### [x] C2. Remove stale premium analytics telemetry and gate tracking where no longer useful
 
 - Files:
   - any remaining `trackGateHit(...)` callers on now-public features
 - Task:
   - remove gate-hit instrumentation that no longer represents a real gate
 
-### [ ] C3. Sweep remaining strings
+### [x] C3. Sweep remaining strings
 
 - Command to rerun after implementation:
 

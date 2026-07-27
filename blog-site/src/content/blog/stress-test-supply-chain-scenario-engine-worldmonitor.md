@@ -21,7 +21,7 @@ This is not a free-form simulator with arbitrary sliders. Version 1 is deliberat
 
 ## What Scenario Engine does
 
-Scenario Engine lives in the Supply Chain panel. A PRO user selects a pre-built scenario, starts a run, and the system computes impact through the current chokepoint and trade-exposure data.
+Scenario Engine lives in the Supply Chain panel. A user selects a pre-built scenario, starts a run, and the system computes impact through the current chokepoint and trade-exposure data.
 
 The result can paint affected chokepoints on the map, highlight impacted countries, and inject a scenario summary into the Supply Chain panel. Programmatic users can do the same through the scenarios API: list templates, run a scenario, then poll job status until the worker returns a terminal state.
 
@@ -64,7 +64,7 @@ The lifecycle is straightforward:
 
 If no country is supplied, v1 computes across the seeded reporter set: US, CN, RU, IR, IN, and TW. That scope is a current implementation detail, not a claim that only those countries matter. It keeps the first version bounded while the underlying exposure graph expands.
 
-The run endpoint is PRO-gated. It also has gateway rate limits and queue backpressure, because scenario runs consume worker capacity and Redis queue space.
+The run endpoint follows gateway rate limits and queue backpressure, because scenario runs consume worker capacity and Redis queue space.
 
 ## What the impact score means
 
@@ -111,7 +111,7 @@ The template assumptions and execution path are inspectable in the public [scena
 
 **Is Scenario Engine free?**
 
-The Supply Chain panel is available on public variants, but Scenario Engine activation is PRO. The API also enforces PRO entitlement for scenario runs.
+Yes in the dashboard. Programmatic usage still follows the published API auth model and the same queue and rate-limit protections.
 
 **Can I create arbitrary custom scenarios?**
 

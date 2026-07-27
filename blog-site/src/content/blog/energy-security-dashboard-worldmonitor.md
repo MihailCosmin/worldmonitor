@@ -58,7 +58,7 @@ Interpret live indicators against authoritative references such as the EIA's [Wo
 
 **Is the energy dashboard free?**
 
-Yes — like every WorldMonitor variant, energy.worldmonitor.app is free with no login. The Latest Brief panel is the one Pro-locked element at launch.
+Yes — like every WorldMonitor variant, energy.worldmonitor.app is free with no login, including the Latest Brief panel.
 
 **How is this different from the main WorldMonitor dashboard?**
 

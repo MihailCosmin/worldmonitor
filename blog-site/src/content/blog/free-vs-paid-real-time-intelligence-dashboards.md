@@ -24,7 +24,7 @@ More than most buyers expect. Using [World Monitor's free tier](https://www.worl
 - **Cascade analysis, hotspots, breaking-alert pipeline, and watchlists**
 - Coverage in [25 languages](https://www.worldmonitor.app/blog/posts/worldmonitor-in-21-languages-global-intelligence-for-everyone/)
 
-The catch, and it is a fair one: free-tier refresh cadence is typically **5–15 minutes** rather than seconds, and the workflow layer — analyst chat, scheduled digests, API access, team features — sits behind paid plans.
+The catch, and it is a fair one: free-tier refresh cadence is typically **5–15 minutes** rather than seconds, and the workflow layer — scheduled digests, API access, and team features — sits behind paid plans.
 
 Free tiers built on open data are not a marketing trick. Much of the underlying signal (ACLED, UCDP, USGS, NASA FIRMS, GDELT) is [free at the source](https://www.worldmonitor.app/blog/posts/free-geopolitical-data-apis-2026/); what a free dashboard adds is aggregation, normalization, and a single view.
 
@@ -81,7 +81,7 @@ Free is the correct choice — not a compromise — when:
 Upgrade when one of these is concretely true:
 
 - **Missed events cost you money or safety.** Scheduled digests and alert routing to Slack/Teams/Telegram exist so the dashboard reaches you.
-- **You ask analytical questions daily.** An AI analyst grounded in 30+ live data services with citations replaces the hour of tab-hopping, not the dashboard.
+- **You need the dashboard to brief you first.** Scheduled digests and routed alerts replace the hour of tab-hopping when you do not have time to pull the dashboard yourself.
 - **You're integrating, not reading.** API quotas (e.g. 1,000 requests/day starter, 10,000/day business tier) and webhook rules are the product; the UI is incidental.
 - **Your agents need the data.** MCP access with a documented tool surface (42 tools in World Monitor's case) lets Claude or GPT query live intelligence under one key.
 - **Compliance is in the room.** SSO, RBAC, audit trails, and air-gapped deployment are enterprise-tier features everywhere; nobody ships them free.
@@ -93,7 +93,7 @@ For a concrete, current example (full details on the [pricing page](https://www.
 | Plan | Price | Built for |
 |---|---|---|
 | Free | $0, no signup | Public situational awareness: 56 map layers, 500+ feeds, country briefs, chokepoints, watchlists |
-| Pro | $39.99/month or $399.99/year | Analysts: WM Analyst chat with citations, Scenario Engine, Route Explorer, AI digest, MCP access with 42 tools |
+| Pro | $39.99/month or $399.99/year | Analysts: scheduled AI digests, notification routing, and MCP access with 42 tools |
 | API | $99.99/month or $999/year | Developers: REST access, 1,000 requests/day, 5 webhook rules, OpenAPI docs |
 | API Business | $299.99/month | Teams: 300 requests/minute, 10,000 requests/day, priority support |
 | Enterprise | Custom | Organizations: SSO/MFA/RBAC, team workspaces, white-label, on-prem or air-gapped deployment |
@@ -124,4 +124,4 @@ Policies vary by vendor and this belongs on your comparison checklist. Look for 
 
 **When does the API tier make more sense than the Pro tier?**
 
-When the consumer is software, not a person. If you are wiring intelligence into your own risk models, ops tooling, or agents, the API tier's quotas (1,000 requests/day starter, 10,000/day business) and webhook rules are what you are actually buying. If a human reads the output, Pro's analyst chat and digests are the better $40.
+When the consumer is software, not a person. If you are wiring intelligence into your own risk models, ops tooling, or agents, the API tier's quotas (1,000 requests/day starter, 10,000/day business) and webhook rules are what you are actually buying. If a human reads the output, Pro's digests and delivery workflows are the better $40.

@@ -33,11 +33,11 @@ The first version is intentionally focused on public map layers:
 - Protests
 - Weather
 
-The embed accepts `layers`, `center`, `zoom`, `theme`, and `variant` query parameters. Unknown layers are ignored, and premium or authenticated surfaces are not exposed through the iframe.
+The embed accepts `layers`, `center`, `zoom`, `theme`, and `variant` query parameters. Unknown layers are ignored, and account-scoped surfaces are not exposed through the iframe.
 
 ## What It Does Not Include
 
-This is a map embed, not a full dashboard embed. It does not load panels, account state, saved preferences, premium layers, or notification state. That keeps it lightweight enough for article pages and safe enough for anonymous cross-origin distribution.
+This is a map embed, not a full dashboard embed. It does not load panels, account state, saved preferences, authenticated layers, or notification state. That keeps it lightweight enough for article pages and safe enough for anonymous cross-origin distribution.
 
 ## Publisher Examples
 
@@ -89,7 +89,7 @@ Before publishing:
 - Set a fixed height to avoid layout shift.
 - Link to the related World Monitor layer or source article for readers who want the full dashboard.
 
-The embed is intentionally lightweight: no panels, no saved account state, no premium layers, and no notification preferences. That keeps article pages faster and avoids exposing authenticated surfaces.
+The embed is intentionally lightweight: no panels, no saved account state, no authenticated layers, and no notification preferences. That keeps article pages faster and avoids exposing authenticated surfaces.
 
 ## Layer Recipes
 
@@ -114,10 +114,10 @@ The embed follows the HTML standard's [`iframe` element](https://html.spec.whatw
 Yes. The public iframe is designed for articles, briefing pages, research notes, and internal dashboards that need a lightweight live map.
 
 **Which layers can I use in the embed?**
-The current public embed supports conflicts, earthquakes, protests, and weather. Premium and authenticated layers are ignored by the iframe.
+The current public embed supports conflicts, earthquakes, protests, and weather. Authenticated layers are ignored by the iframe.
 
 **Does the iframe expose user or account data?**
-No. The embed does not load account state, saved preferences, notification settings, or premium surfaces.
+No. The embed does not load account state, saved preferences, notification settings, or authenticated surfaces.
 
 **How should I optimize an embedded map for SEO?**
 Use the map alongside explanatory text, descriptive headings, a useful iframe title, and internal links to related coverage. Search engines need the surrounding article to understand the topic.

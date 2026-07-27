@@ -123,7 +123,6 @@ import {
 import { renderLayerExplanationCard } from '@/utils/layer-explanation-card';
 import { getAuthState } from '@/services/auth-state';
 import { hasPremiumAccess } from '@/services/panel-gating';
-import { trackGateHit } from '@/services/analytics';
 import { MapPopup, type PopupType } from './MapPopup';
 import { renderMilitaryVesselTooltipHtml } from './deckgl-tooltip-renderers';
 import type { GetChokepointStatusResponse } from '@/services/supply-chain';
@@ -5152,10 +5151,6 @@ export class DeckGLMap {
 
     if (layerId === 'trade-routes-layer') {
       const segment = info.object as TradeRouteSegment;
-      if (!hasPremiumAccess(getAuthState())) {
-        trackGateHit('trade-arc-intel');
-        return;
-      }
       const waypoints = ROUTE_WAYPOINTS_MAP.get(segment.routeId) ?? [];
       this.popup.showRouteBreakdown(segment, waypoints, info.x, info.y);
       this.onTradeArcClick?.(segment, waypoints, info.x, info.y);

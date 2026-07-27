@@ -69,7 +69,7 @@ The same feed is available programmatically:
 - **REST:** `GET /api/economic/v1/list-global-tenders` — paginated up to 100 records per page, with filters for country, region, source, status, buyer, publish and deadline dates, value range, currency, category, and free-text query. See the [API reference](https://www.worldmonitor.app/docs/api-reference).
 - **MCP:** the `get_procurement_opportunities` tool gives AI agents a compact projection (10 records by default, 25 max) so an agent can ask "open cybersecurity tenders in the EU closing in the next 30 days" without flooding its context window.
 
-Both paths are part of WorldMonitor Pro and enforce the subscription server-side. Pair the feed with [country risk screening](/blog/posts/country-risk-monitoring-due-diligence-worldmonitor/) before chasing an opportunity in an unfamiliar market, and with the [tariff and trade-policy trackers](/blog/posts/tariff-tracker-trade-policy-monitoring-worldmonitor/) when the contract involves cross-border delivery.
+The dashboard feed is open to all users. Programmatic workflows follow the published API and MCP auth model. Pair the feed with [country risk screening](/blog/posts/country-risk-monitoring-due-diligence-worldmonitor/) before chasing an opportunity in an unfamiliar market, and with the [tariff and trade-policy trackers](/blog/posts/tariff-tracker-trade-policy-monitoring-worldmonitor/) when the contract involves cross-border delivery.
 
 ## Procurement as an intelligence signal
 
@@ -83,7 +83,7 @@ Coverage is currently six sources — strong for the US, EU, UK, Canada, New Zea
 
 **Is the tender feed free?**
 
-No. Global Procurement is a Pro feature, enforced server-side on both the panel and the API. Historical US award data in the Economic panel remains free.
+Yes. Global Procurement is available in the dashboard, while historical US award data in the Economic panel remains a separate historical view.
 
 **How fresh is the data?**
 

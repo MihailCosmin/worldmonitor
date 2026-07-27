@@ -12,15 +12,15 @@ Live tier/price/product-ID data (JSON): `GET https://www.worldmonitor.app/api/pr
 - Signup required: No
 - Best for: Public situational awareness, OSINT research, market/geopolitical context, news monitoring
 - Includes: 56 map layers, 500+ curated feeds, country briefs, hotspots, instability scores, chokepoints, cables, cascade analysis, breaking alert pipeline and watchlists
-- Limits: Free dashboard refresh cadence is typically 5-15 minutes; advanced analyst, digest, API and team workflows require paid plans
+- Limits: Free dashboard refresh cadence is typically 5-15 minutes; digest, API and team workflows require paid plans
 
 ## Pro
 
 - Price: $39.99/month
 - Annual price: $399.99/year
 - Annual savings: 2 months free versus monthly billing
-- Best for: Investors, analysts, researchers, traders and operators who need the decision layer on top of the free dashboard
-- Includes: WM Analyst chat across 30+ live services with citations, Scenario Engine, Route Explorer, personal AI digest, custom widget builder, MCP access and 40 tools under one key
+- Best for: Investors, analysts, researchers, traders and operators who need scheduled delivery and build workflows on top of the free dashboard
+- Includes: Personal AI digest, notification routing, custom widget builder, MCP access and 40 tools under one key
 - Digest cadence: Daily, twice-daily or weekly
 - Delivery channels: Slack, Discord, Telegram, email and webhook
 
@@ -77,7 +77,7 @@ Live tier/price/product-ID data (JSON): `GET https://www.worldmonitor.app/api/pr
       "name": "Pro",
       "price_usd_monthly": 39.99,
       "price_usd_yearly": 399.99,
-      "features": ["WM Analyst", "Scenario Engine", "Route Explorer", "AI digest", "custom widget builder", "MCP"]
+      "features": ["AI digest", "notification routing", "custom widget builder", "MCP"]
     },
     {
       "name": "API",

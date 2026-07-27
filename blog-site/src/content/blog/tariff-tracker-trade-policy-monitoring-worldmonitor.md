@@ -15,7 +15,7 @@ WorldMonitor's trade-policy surface is built for seeing it coming.
 
 ## What the Trade Policy tracker shows
 
-The **Trade Policy panel** (a Pro panel in the geopolitical, finance, and commodity dashboards) brings together the layers a trade decision actually touches:
+The **Trade Policy panel** in the geopolitical, finance, and commodity dashboards brings together the layers a trade decision actually touches:
 
 - **WTO MFN tariff baselines** — the structural starting point: what tariffs look like before anyone starts a trade dispute.
 - **US tariff trends and customs revenue** — effective tariff context and what the US actually collects at the border, which is the cleanest scoreboard for whether announced tariffs are biting.
@@ -58,7 +58,7 @@ News tells you what was announced. The tracker pairs announcements with what's m
 
 **Is the Trade Policy panel free?**
 
-The dedicated panel is Pro. Context instruments — Big Mac Index, FAO Food Price Index, fuel prices, and trade news feeds — are part of the free dashboards.
+Yes. The dedicated panel is available in the public dashboards alongside the context instruments — Big Mac Index, FAO Food Price Index, fuel prices, and trade news feeds.
 
 ---
 
