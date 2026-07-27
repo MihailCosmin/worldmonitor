@@ -467,7 +467,7 @@
       "layers": "Írj be a \"military\" vagy \"finance\" szót a réteg-előbeállításokhoz",
       "time": "Írj be az \"1h\", \"24h\" vagy \"7d\" szót az időszűréshez",
       "settings": "Írj be a \"dark mode\", \"settings\" vagy \"fullscreen\" szót",
-      "flight": "Keress élő járatokat hívójel alapján (PRO)",
+      "flight": "Keress élő járatokat hívójel alapján",
       "mapExample": "iran",
       "panelExample": "news",
       "briefExample": "brief china",

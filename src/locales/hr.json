@@ -479,7 +479,7 @@
       "layers": "Upišite \"military\" ili \"finance\" za unaprijed postavljene slojeve",
       "time": "Upišite \"1h\", \"24h\" ili \"7d\" za filtriranje po vremenu",
       "settings": "Upišite \"dark mode\", \"settings\" ili \"fullscreen\"",
-      "flight": "Pretražite direktne letove prema pozivu (PRO)",
+      "flight": "Pretražite direktne letove prema pozivu",
       "mapExample": "iran",
       "panelExample": "news",
       "briefExample": "brief china",

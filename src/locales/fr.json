@@ -406,7 +406,7 @@
       "layersExample": "military layers",
       "timeExample": "24h",
       "settingsExample": "dark mode",
-      "flight": "Recherchez des vols en direct par indicatif d'appel (PRO)",
+      "flight": "Recherchez des vols en direct par indicatif d'appel",
       "flightExample": "UAE528"
     },
     "keywords": {

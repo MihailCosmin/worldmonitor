@@ -764,7 +764,7 @@ Intentional paid boundaries that are not part of this follow-up remain allowed: 
 - Acceptance:
   - Anonymous and signed-in free users can export current dashboard data and use playback without changing plans.
 
-### [ ] D11. Ungate live flight search
+### [x] D11. Ungate live flight search
 
 - Files:
   - `src/app/search-manager.ts`

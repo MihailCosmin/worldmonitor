@@ -32,7 +32,6 @@ import { CountryIntelManager } from '@/app/country-intel';
 import type { PositionSample } from '@/services/aviation';
 import { fetchAircraftPositions } from '@/services/aviation';
 import { isProUser } from '@/services/widget-store';
-import { getAuthState } from '@/services/auth-state';
 
 export interface SearchManagerCallbacks {
   openCountryBriefByCode: (code: string, country: string) => void;
@@ -201,6 +200,9 @@ export class SearchManager implements AppModule {
     }
 
     this.ctx.searchModal.registerSource('country', this.buildCountrySearchItems());
+    // Seed the source immediately so CMD+K advertises callsign lookup
+    // even before the first live flight batch is indexed.
+    this.ctx.searchModal.registerSource('flight', []);
 
     this.syncPanelSearchIndex();
     // Filter CMD+K layer commands by (a) variant-allowed, (b) renderer
@@ -221,10 +223,7 @@ export class SearchManager implements AppModule {
     });
     this.ctx.searchModal.setOnSelect((result) => this.handleSearchResult(result));
     this.ctx.searchModal.setOnCommand((cmd) => this.handleCommand(cmd));
-    // Always wire flight search; check pro status reactively inside the callback
-    // so mid-session sign-ins get the feature without a page reload.
     this.ctx.searchModal.setOnFlightSearch((callsign) => {
-      if (!isProUser() && getAuthState().user?.role !== 'pro') return;
       fetchAircraftPositions({ callsign }).then((positions) => {
         if (!this.ctx.searchModal) return;
         // Deduplicate by callsign: keep the most recently observed entry per callsign.
@@ -677,7 +676,7 @@ export class SearchManager implements AppModule {
   }
 
   updateFlightSource(adsb: PositionSample[], military: MilitaryFlight[]): void {
-    if (!this.ctx.searchModal || !isProUser()) return;
+    if (!this.ctx.searchModal) return;
     const items = [
       ...adsb.map(p => {
         const fl = Number.isFinite(p.altitudeFt) ? Math.round(p.altitudeFt / 100) : null;

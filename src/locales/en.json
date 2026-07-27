@@ -467,7 +467,7 @@
       "layers": "Type \"military\" or \"finance\" for layer presets",
       "time": "Type \"1h\", \"24h\", or \"7d\" to filter by time",
       "settings": "Type \"dark mode\", \"settings\", or \"fullscreen\"",
-      "flight": "Search live flights by callsign (PRO)",
+      "flight": "Search live flights by callsign",
       "mapExample": "iran",
       "panelExample": "news",
       "briefExample": "brief china",
