@@ -54,7 +54,7 @@ const TIER_CONFIG = {
     name: 'Free',
     localeKey: 'free',
     description: 'Get started with the essentials',
-    features: ['Core dashboard panels', 'Global news feed', 'Earthquake & weather alerts', 'Basic map view'],
+    features: ['Full live map — all 56 layers, 500+ feeds', 'Stock analysis, backtesting & daily AI market briefs', 'WM Analyst chat across 30+ live services', 'Country briefs, instability index & resilience scores'],
     cta: 'Get Started',
     href: 'https://worldmonitor.app/dashboard',
     highlighted: false,
@@ -63,7 +63,7 @@ const TIER_CONFIG = {
     name: 'Pro',
     localeKey: 'pro',
     description: 'Full intelligence dashboard',
-    features: ['Everything in Free', 'AI stock analysis & backtesting', 'Daily market briefs', 'Military & geopolitical tracking', 'Custom widget builder', 'MCP + SDK access for Claude Desktop & other AI clients (50 calls/day)', 'Priority data refresh'],
+    features: ['Everything in Free', 'Personal AI digest & real-time alerts — Slack, Discord, Telegram, Email, webhook', 'Custom alert rules — quiet hours, AES-256 encrypted channels', 'MCP + SDK access for Claude Desktop & other AI clients (50 calls/day)', 'Priority data refresh — near real-time', 'Pro Widget Builder — smarter model, more turns, interactive JS'],
     highlighted: true,
   },
   api_starter: {

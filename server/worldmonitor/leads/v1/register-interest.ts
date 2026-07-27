@@ -181,9 +181,9 @@ async function sendConfirmationEmail(email: string, referralCode: string): Promi
                   </td>
                   <td style="width: 50%; padding: 12px; vertical-align: top;">
                     <div style="background: #111; border: 1px solid #1a1a1a; padding: 16px; height: 100%;">
-                      <div style="font-size: 20px; margin-bottom: 8px;">&#129504;</div>
-                      <div style="font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 4px;">AI Analyst</div>
-                      <div style="font-size: 12px; color: #888; line-height: 1.4;">Morning briefs, flash alerts, pattern detection</div>
+                      <div style="font-size: 20px; margin-bottom: 8px;">&#128276;</div>
+                      <div style="font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 4px;">Custom Alert Rules</div>
+                      <div style="font-size: 12px; color: #888; line-height: 1.4;">Quiet hours, AES-256 encrypted channels</div>
                     </div>
                   </td>
                 </tr>
@@ -198,8 +198,8 @@ async function sendConfirmationEmail(email: string, referralCode: string): Promi
                   <td style="width: 50%; padding: 12px; vertical-align: top;">
                     <div style="background: #111; border: 1px solid #1a1a1a; padding: 16px; height: 100%;">
                       <div style="font-size: 20px; margin-bottom: 8px;">&#128273;</div>
-                      <div style="font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 4px;">30+ Services, 1 Key</div>
-                      <div style="font-size: 12px; color: #888; line-height: 1.4;">ACLED, NASA FIRMS, OpenSky, Finnhub, and more</div>
+                      <div style="font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 4px;">MCP for Your Agents</div>
+                      <div style="font-size: 12px; color: #888; line-height: 1.4;">Connect Claude, GPT & custom LLMs (50 calls/day)</div>
                     </div>
                   </td>
                 </tr>

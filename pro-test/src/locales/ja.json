@@ -12,7 +12,7 @@
   "hero": {
     "noiseWord": "ノイズ",
     "signalWord": "シグナル",
-    "valueProps": "地政学 AI レイヤー — 尋ね、購読し、その上に構築する。",
+    "valueProps": "インテリジェンス配信レイヤー——購読し、それを基に構築し、誰よりも早く知る。",
     "reserveEarlyAccess": "早期アクセスを予約",
     "launchingDate": "現在ご利用可能",
     "tryFreeDashboard": "無料ダッシュボードを試す",
@@ -27,16 +27,13 @@
   },
   "twoPath": {
     "proTitle": "World Monitor Pro",
-    "proDesc": "あなたの AI アナリスト。パーソナル・インテリジェンス・デスク。その上に構築できるプラットフォーム。30+ のライブサービスに 1 本の鍵。",
-    "proF1": "WM Analyst チャット — 30+ のサービスを会話形式で照会",
-    "proF2": "AI ダイジェスト — 日次、1日2回、または週次 — Slack、Discord、Telegram、メール、Webhook へ",
-    "proF3": "カスタムウィジェットビルダー — HTML/CSS/JS を AI 支援で編集",
-    "proF4": "MCP コネクタ — WorldMonitor を Claude、GPT、独自 LLM に接続",
-    "proF5": "エクイティリサーチ、株式分析、バックテスト",
-    "proF6": "フライト検索と価格比較",
-    "proF7": "アラートルールエンジン — カスタムトリガー、サイレント時間、AES-256 暗号化チャネル",
-    "proF8": "マーケットウォッチリスト、マクロ・中央銀行追跡",
-    "proF9": "AI Market Implications と Regional Intelligence(近日公開:軌道監視、プレミアム地図レイヤー、拡張履歴)",
+    "proDesc": "購読するパーソナルインテリジェンスデスク。その上に構築できるプラットフォーム。30以上のライブサービスに対応する1つのキー。",
+    "proF1": "パーソナルAIダイジェスト——毎日、1日2回、または毎週——Slack、Discord、Telegram、メール、webhookへ",
+    "proF2": "予定されたダイジェストだけでなく、重大イベントに対するリアルタイムアラート",
+    "proF3": "カスタムアラートルール——静粛時間帯、AES-256暗号化チャネル",
+    "proF4": "MCPコネクタ——WorldMonitorをClaude、GPT、独自のLLMに接続(1日50コール)",
+    "proF5": "優先データ更新——30以上の全サービスでほぼリアルタイム",
+    "proF6": "Pro Widget Builder——より強力なモデル、より多くのターン、インタラクティブJS",
     "proCta": "早期アクセスを予約",
     "choosePlan": "プランを選ぶ",
     "entTitle": "World Monitor Enterprise",
@@ -59,20 +56,20 @@
     "title": "アップグレードする理由",
     "noiseTitle": "一番に知る",
     "noiseDesc": "AIS 異常 → Brent の急騰 → あなたの Slack へ 1 分以内。見出しではなく、シグナル。",
-    "fasterTitle": "何でも尋ねる",
-    "fasterDesc": "ダッシュボードと同じ 30+ のサービスとチャット。WM Analyst、常時稼働。",
+    "fasterTitle": "より早く知る",
+    "fasterDesc": "Proでは30以上のサービスそれぞれがほぼリアルタイムで更新されます——5〜15分ごとではなく。",
     "controlTitle": "何でも構築",
-    "controlDesc": "カスタムウィジェットビルダー(HTML/CSS/JS + AI)と MCP で、独自の AI ワークフローを。",
+    "controlDesc": "独自のAIワークフロー向けMCPコネクタに加え、より強力なPro Widget Builder——より多くのターン、より大きなビルド、インタラクティブJS。",
     "deeperTitle": "目覚めれば事情通",
     "deeperDesc": "あなたのアラートルールで並べ替えた 30 件の AI ダイジェスト。Critical、High、Medium — Assessment と Signals to watch 付き。"
   },
   "pillars": {
-    "askIt": "尋ねる",
-    "askItDesc": "WM Analyst チャット。30+ のサービスすべてを自然言語で照会。",
+    "askIt": "より早く知る",
+    "askItDesc": "Proでは各サービスがほぼリアルタイムで更新されます——Freeのように5〜15分ごとではありません。",
     "subscribeIt": "購読する",
     "subscribeItDesc": "AI ダイジェストをご希望のリズムで: 日次、1日2回、または週次。Slack、Discord、Telegram、メール、Webhook。",
     "buildOnIt": "その上に構築",
-    "buildOnItDesc": "カスタムウィジェットビルダー(HTML/CSS/JS + AI)と、Claude・GPT・独自 LLM 向け MCP。"
+    "buildOnItDesc": "Claude、GPT、独自LLM向けMCPに加え、より強力なPro Widget Builder——より多くのターン、より大きなビルド、インタラクティブJS。"
   },
   "deliveryDesk": {
     "eyebrow": "デリバリーデスク",
@@ -104,7 +101,7 @@
     "tradersTitle": "エネルギー・商品トレーダー",
     "tradersDesc": "船舶の動き、貨物推定、サプライチェーンの混乱、マーケットを動かす地政学シグナルを追跡。",
     "researchersTitle": "研究者とアナリスト",
-    "researchersDesc": "より深い分析とレポーティングのためのエクイティリサーチ、経済アナリティクス、地政学フレームワーク。",
+    "researchersDesc": "より深い分析とレポーティングのための、30以上のサービスにまたがるMCP接続の1つのキーによるクロスソース相関と経済分析。",
     "journalistsTitle": "ジャーナリストとメディア",
     "journalistsDesc": "市場と地域を横断する急展開の動きを、ソースを手作業でつなぎ合わせずに追跡。",
     "govTitle": "政府・機関",
@@ -147,22 +144,22 @@
   },
   "proShowcase": {
     "proTier": "PRO ティア",
-    "title": "決して眠らない、あなたの AI アナリスト",
-    "subtitle": "無料のダッシュボードは世界を見せる。Pro は、尋ねるためのアナリスト、購読するダイジェスト、そして構築のためのプリミティブを提供する。株式、マクロ、地政学リスク — そしてそれらの関係。",
-    "equityResearch": "エクイティリサーチ",
-    "equityResearchDesc": "財務可視化、アナリスト目標株価、評価指標を備えたグローバル株式分析。市場を動かすものを追跡。",
-    "geopoliticalAnalysis": "地政学分析",
-    "geopoliticalAnalysisDesc": "Grand Chessboard の戦略フレームワーク、Prisoners of Geography モデル、中央銀行と金融政策の追跡。",
-    "economyAnalytics": "経済アナリティクス",
-    "economyAnalyticsDesc": "GDP、インフレ、金利、成長サイクル。市場シグナルと地政学イベントに相関するマクロデータ。",
-    "riskMonitoring": "リスク監視とシナリオ",
-    "riskMonitoringDesc": "グローバルリスクスコア、シナリオ分析、地政学リスク評価。市場と政治のシグナル間の収束検出。",
+    "title": "自動化されたあなたのパーソナルインテリジェンスデスク",
+    "subtitle": "無料ダッシュボードには、すでに株式分析、レジリエンススコア、Scenario Engineが含まれています。Proは配信レイヤーを追加します:購読できるダイジェスト、リアルタイムアラート、独自エージェント向けMCP、そしてより強力なウィジェットビルダーです。",
+    "equityResearch": "優先データ更新",
+    "equityResearchDesc": "Proでは30以上の全サービスがほぼリアルタイムで更新されます——Freeでの5〜15分ごとの更新に対して。",
+    "geopoliticalAnalysis": "MCP・エージェントアクセス",
+    "geopoliticalAnalysisDesc": "Claude、GPT、または独自LLMをMCP経由でWorldMonitorに直接接続——1日50コール込み。",
+    "economyAnalytics": "Pro Widget Builder",
+    "economyAnalyticsDesc": "より強力なモデル、より多くのターン、より大きなビルド、インタラクティブJavaScript——無料レベルよりも豊かなカスタムパネルを構築できます。",
+    "riskMonitoring": "カスタムアラートルール",
+    "riskMonitoringDesc": "価格・イベントトリガー、静粛時間帯、AES-256暗号化配信チャネル——あなたが監視している対象に合わせて調整。",
     "orbitalSurveillance": "軌道監視",
-    "orbitalSurveillanceDesc": "(近日公開)衛星通過予測、再訪頻度分析、撮影ウィンドウアラート。情報衛星があなたの関心領域を見ているタイミングを把握。",
+    "orbitalSurveillanceDesc": "(近日公開)指定した衛星の通過予測と撮像ウィンドウアラート——無料レベルにすでに含まれるライブ軌道位置情報を超えて。",
     "morningBriefs": "パーソナル・インテリジェンス・デスク",
     "morningBriefsDesc": "ダイジェストごとに最大 30 件のランク付きストーリー、400 以上のソースで重複排除。日次、1日2回、または週次のリズム — または重要イベントのリアルタイム通知を選択。AI Assessment と Signals to watch を Slack、Discord、Telegram、メール、Webhook に配信。ニュースレターではなく、アナリスト。",
-    "oneKey": "30+ のサービス、1 本の鍵",
-    "oneKeyDesc": "Finnhub、FRED、ACLED、UCDP、NASA FIRMS、AISStream、OpenSky など — すべて有効、個別登録不要。",
+    "oneKey": "リアルタイムエスカレーション",
+    "oneKeyDesc": "重大イベントは発生した瞬間に同じ暗号化チャネルでプッシュされます——次の予定されたダイジェストを待つ必要はありません。",
     "deliveryLabel": "インテリジェンスがあなたを見つける方法を選ぶ"
   },
   "slackMock": {
@@ -271,15 +268,15 @@
     "fStandard": "標準",
     "fKeyAuth": "キー認証",
     "fSsoMfa": "SSO/MFA/RBAC/監査",
-    "noteBelow": "コアプラットフォームは無料のまま。有料プランはエクイティリサーチ、マクロアナリティクス、AI ブリーフ、組織利用をアンロック。",
+    "noteBelow": "コアプラットフォームは引き続き無料です。有料プランでは、予定されたAI配信、MCPアクセス、優先更新、組織利用がアンロックされます。",
     "f50plus": "50+"
   },
   "faq": {
     "title": "よくある質問",
     "q1": "World Monitor はまだ無料ですか?",
-    "a1": "はい。コアプラットフォームは無料のままです。Pro はエクイティリサーチ、マクロアナリティクス、AI ブリーフを追加します。Enterprise はチームデプロイと TV アプリを追加します。",
+    "a1": "はい。コアプラットフォームは引き続き無料です——株式分析、レジリエンススコア、Scenario Engineを含みます。Proは予定されたAI配信、カスタムアラートルール、MCPアクセス、優先更新を追加します。Enterpriseはチーム展開とTVアプリを追加します。",
     "q2": "なぜ Pro を支払うのですか?",
-    "a2": "Pro は、株式モニタリング、地政学分析、経済アナリティクス、AI デイリーブリーフを望む投資家、アナリスト、プロ向け — すべて 1 本の鍵の下に。",
+    "a2": "Proは、スケジュールに沿って配信される独自のAIダイジェスト、カスタムアラートルール、独自エージェント向けのMCPアクセス、優先データ更新を求める投資家、アナリスト、専門家向けです——すべて1つのキーで利用できます。",
     "q3": "Enterprise は誰向けですか?",
     "a3": "Enterprise は、共有利用、API、統合、デプロイオプション、直接サポートを必要とするチーム向けです。",
     "q4": "Pro で始めて後からアップグレードできますか?",
@@ -293,7 +290,7 @@
     "q8": "MCP とは?",
     "a8": "MCP は、AI エージェント — Claude、GPT、独自 LLM — が WorldMonitor をツールとして使い、30+ のサービスすべてを照会できるようにします。Pro に含まれます。Enterprise はプライベート MCP サーバーとカスタムデプロイを追加します。",
     "q9": "独自のパネルを作れますか?",
-    "a9": "はい。Pro はカスタムウィジェットビルダーを含みます — HTML、CSS、JavaScript からパネルを構築し、AI 支援で変更できます。",
+    "a9": "はい——すべての人に。無料レベルにはCustom Widget Builderが含まれます。Proはより強力なモデル、より多くのターン、より大きなビルド、インタラクティブJavaScriptでこれをアップグレードします。",
     "q10": "Claude または GPT を WorldMonitor に接続できますか?",
     "a10": "はい。MCP は Pro に含まれます — WorldMonitor をライブツールとして Claude、GPT、または MCP 互換の任意の LLM に接続します。",
     "q11": "ダイジェストはどれほどパーソナライズされていますか?",
@@ -305,7 +302,7 @@
   },
   "finalCta": {
     "title": "Pro で始める。Enterprise までスケールする。",
-    "subtitle": "World Monitor を無料で使い続けるか、エクイティリサーチ、マクロアナリティクス、AI ブリーフのためにアップグレードしてください。組織がチームアクセス、TV アプリ、API サポートを必要とする場合はご相談ください。",
+    "subtitle": "引き続きWorld Monitorを無料で利用するか、予定されたAI配信、MCPアクセス、優先更新のためにProにアップグレードしてください。組織にチームアクセス、TVアプリ、APIサポートが必要な場合はお問い合わせください。",
     "getPro": "早期アクセスを予約",
     "talkToSales": "営業に相談する"
   },
@@ -329,17 +326,17 @@
     "linkedin": "LinkedIn",
     "whatsapp": "WhatsApp",
     "telegram": "Telegram",
-    "shareText": "World Monitor Pro のウェイトリストに参加しました — 株式モニタリング、地政学分析、毎日の AI ブリーフを 1 つのプラットフォームに。一緒に:",
+    "shareText": "たった今World Monitor Proのウェイティングリストに参加しました——パーソナルAIダイジェスト、MCPアクセス、優先更新を1つのプラットフォームで。ぜひ一緒に参加してください:",
     "joinWaitlistShare": "World Monitor Pro のウェイトリストに参加:",
     "youreIn": "参加完了!",
     "invitedBanner": "招待されました — ウェイトリストに参加"
   },
   "soonBadge": "近日公開",
   "meta": {
-    "title": "World Monitor Pro — AI Analyst、パーソナルインテリジェンスデスク、Claude & GPT用MCP",
-    "description": "地政学的AIレイヤー。質問して、購読して、構築して。WM Analyst チャット（30以上のライブサービス対応）、AI ダイジェスト（毎日、1日2回、または週1回の配信）を Slack、Discord、Telegram、Email、またはウェブフックで受信、カスタムウィジェットビルダー（HTML/CSS/JS + AI）、および Claude、GPT、カスタム LLM 用の MCP コネクタ。",
-    "ogTitle": "World Monitor Pro — 地政学的AIレイヤー",
-    "ogDescription": "質問して、購読して、構築して。WM Analyst チャット、AI ダイジェスト（毎日、1日2回、または週1回のスケジュール配信）、カスタムウィジェットビルダー、および Claude/GPT 用 MCP — 1つのキーで30以上のライブサービスに対応。"
+    "title": "World Monitor Pro — パーソナルインテリジェンスデスク、Claude & GPT 向け MCP",
+    "description": "インテリジェンス配信レイヤー。30以上のライブサービスにまたがるパーソナルAIダイジェスト——毎日、1日2回、または毎週、Slack、Discord、Telegram、メール、webhookへ——カスタムアラートルール、Claude・GPT・独自LLM向けMCPコネクタ、より強力なPro Widget Builder、そして優先的なほぼリアルタイムのデータ更新付き。",
+    "ogTitle": "World Monitor Pro — インテリジェンス配信レイヤー",
+    "ogDescription": "購読し、それを基に構築し、誰よりも早く知る。あなたのスケジュールに合わせたパーソナルAIダイジェスト、Claude/GPT向けMCP、より強力なPro Widget Builder、優先データ更新——30以上のサービスを1つのキーで。"
   },
   "pricing": {
     "suffixForever": "永続",
@@ -359,23 +356,22 @@
       "free": {
         "description": "基本機能で始めましょう",
         "features": [
-          "コアダッシュボードパネル",
-          "グローバルニュースフィード",
-          "地震・天気アラート",
-          "基本マップビュー"
+          "完全なライブマップ——全56レイヤー、500以上のフィード",
+          "株式分析、バックテスト、毎日のAI市場ブリーフィング",
+          "30以上のライブサービスにまたがるWM Analystチャット",
+          "国別ブリーフィング、不安定性指数、レジリエンススコア"
         ],
         "cta": "始める"
       },
       "pro": {
         "description": "フルインテリジェンスダッシュボード",
         "features": [
-          "Free内のすべて",
-          "AI株式分析&バックテスト",
-          "日次マーケットブリーフ",
-          "軍事・地政学追跡",
-          "カスタムウィジェットビルダー",
-          "Claude Desktop などの AI クライアント向け MCP + SDK アクセス (50コール/日)",
-          "優先データ更新"
+          "Freeのすべて",
+          "パーソナルAIダイジェストとリアルタイムアラート——Slack、Discord、Telegram、メール、webhook",
+          "カスタムアラートルール——静粛時間帯、AES-256暗号化チャネル",
+          "Claude Desktopおよびその他のAIクライアント向けMCP + SDKアクセス(1日50コール)",
+          "優先データ更新——ほぼリアルタイム",
+          "Pro Widget Builder——より強力なモデル、より多くのターン、インタラクティブJS"
         ]
       },
       "api": {

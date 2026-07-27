@@ -12,7 +12,7 @@
   "hero": {
     "noiseWord": "Zaj",
     "signalWord": "Jel",
-    "valueProps": "A geopolitikai hírszerzési AI-réteg — kérdezze, iratkozzon fel rá, építsen rá.",
+    "valueProps": "A hírszerzési kézbesítési réteg — iratkozz fel rá, építs rá, tudd meg elsőként.",
     "reserveEarlyAccess": "Korai hozzáférés lefoglalása",
     "launchingDate": "Már elérhető",
     "tryFreeDashboard": "Próbálja ki az ingyenes irányítópultot",
@@ -27,16 +27,13 @@
   },
   "twoPath": {
     "proTitle": "World Monitor Pro",
-    "proDesc": "Az Ön AI-elemzője. Személyes hírszerzési desk. Platform, amelyre építhet. Egy kulcs több mint 30 élő szolgáltatáshoz.",
-    "proF1": "WM Analyst chat — kérdezzen társalgási formában mind a 30+ szolgáltatástól",
-    "proF2": "AI digest — naponta, naponta kétszer vagy hetente — Slackre, Discordra, Telegramra, e-mailre vagy webhookra",
-    "proF3": "Custom Widget Builder — HTML/CSS/JS AI-asszisztált módosítással",
-    "proF4": "MCP-csatlakozók — kösse a WorldMonitort Claude-hoz, GPT-hez vagy saját LLM-ekhez",
-    "proF5": "Részvénykutatás, részvényelemzés és backtesting",
-    "proF6": "Repülőjárat-keresés és ár-összehasonlítás",
-    "proF7": "Riasztási szabálymotor — egyéni triggerek, csendes órák, AES-256-tal titkosított csatornák",
-    "proF8": "Piaci watchlist, makró és jegybanki követés",
-    "proF9": "AI Market Implications és Regional Intelligence (hamarosan: orbitális megfigyelés, prémium térképrétegek, hosszabb előzmények)",
+    "proDesc": "Személyes hírszerzési központ előfizetéssel. Platform, amire építhetsz. Egyetlen kulcs 30+ élő szolgáltatáshoz.",
+    "proF1": "Személyes AI-összefoglaló — naponta, naponta kétszer vagy hetente — Slackre, Discordra, Telegramra, e-mailre vagy webhookra",
+    "proF2": "Valós idejű riasztások kritikus eseményekhez, nemcsak ütemezett összefoglalók",
+    "proF3": "Egyedi riasztási szabályok — csendes órák, AES-256 titkosítású csatornák",
+    "proF4": "MCP-konnektorok — kösd össze a WorldMonitort a Claude-dal, GPT-vel, saját LLM-ekkel (50 hívás/nap)",
+    "proF5": "Elsőbbségi adatfrissítés — szinte valós időben mind a 30+ szolgáltatásban",
+    "proF6": "Pro Widget Builder — erősebb modell, több kör, interaktív JS",
     "proCta": "Korai hozzáférés lefoglalása",
     "choosePlan": "Válasszon csomagot",
     "entTitle": "World Monitor Enterprise",
@@ -59,20 +56,20 @@
     "title": "Miért érdemes frissíteni",
     "noiseTitle": "Tudja meg elsőként",
     "noiseDesc": "AIS-anomália → Brent-ugrás → Slack-értesítés egy percen belül. Jel, nem címlapzaj.",
-    "fasterTitle": "Kérdezzen bármit",
-    "fasterDesc": "Csevegjen ugyanazzal a 30+ szolgáltatással, amelyet az irányítópultja lát. WM Analyst, mindig bekapcsolva.",
+    "fasterTitle": "Tudd meg gyorsabban",
+    "fasterDesc": "A 30+ szolgáltatás mindegyike szinte valós időben frissül Pro-val — nem csak 5-15 percenként.",
     "controlTitle": "Építsen bármit",
-    "controlDesc": "Custom widget builder (HTML/CSS/JS + AI) és MCP a saját AI-munkafolyamataihoz.",
+    "controlDesc": "MCP-konnektorok saját AI-munkafolyamataidhoz, plusz egy erősebb Pro Widget Builder — több kör, nagyobb buildek, interaktív JS.",
     "deeperTitle": "Ébredjen tájékozottan",
     "deeperDesc": "30 elemes AI digest az Ön riasztási szabályai szerint rangsorolva. Critical, High, Medium — Assessment és Signals to watch mezőkkel."
   },
   "pillars": {
-    "askIt": "Kérdezze",
-    "askItDesc": "WM Analyst chat. Mind a 30+ szolgáltatás természetes nyelven lekérdezhető.",
+    "askIt": "Tudd meg gyorsabban",
+    "askItDesc": "Minden szolgáltatás szinte valós időben frissül Pro-val — nem csak 5-15 percenként, mint a Free esetén.",
     "subscribeIt": "Iratkozzon fel rá",
     "subscribeItDesc": "AI digest az Ön ütemezése szerint — naponta, naponta kétszer vagy hetente. Slack, Discord, Telegram, e-mail, webhook.",
     "buildOnIt": "Építsen rá",
-    "buildOnItDesc": "Custom Widget Builder (HTML/CSS/JS + AI) és MCP Claude-hoz, GPT-hez, saját LLM-ekhez."
+    "buildOnItDesc": "MCP a Claude-hoz, GPT-hez, saját LLM-ekhez, plusz egy erősebb Pro Widget Builder — több kör, nagyobb buildek, interaktív JS."
   },
   "deliveryDesk": {
     "eyebrow": "DELIVERY DESK",
@@ -104,7 +101,7 @@
     "tradersTitle": "Energia- és árupiaci kereskedők",
     "tradersDesc": "Kövesse a hajómozgásokat, rakománykövetkeztetést, ellátásilánc-zavarokat és piacmozgató geopolitikai jeleket.",
     "researchersTitle": "Kutatók és elemzők",
-    "researchersDesc": "Részvénykutatás, gazdasági analitika és geopolitikai keretrendszerek mélyebb elemzéshez és jelentéskészítéshez.",
+    "researchersDesc": "Forrásokon átívelő korreláció és gazdasági elemzés, egyetlen MCP-hez kapcsolt kulccsal 30+ szolgáltatáson át a mélyebb elemzésért és jelentésekért.",
     "journalistsTitle": "Újságírók és média",
     "journalistsDesc": "Kövesse a gyorsan változó eseményeket piacokon és régiókon át anélkül, hogy kézzel kellene összefűznie a forrásokat.",
     "govTitle": "Kormányzat és intézmények",
@@ -147,22 +144,22 @@
   },
   "proShowcase": {
     "proTier": "PRO SZINT",
-    "title": "Az AI-elemzője, aki sosem alszik",
-    "subtitle": "Az ingyenes irányítópult megmutatja a világot. A Pro elemzőt ad, akit kérdezhet, digestet, amelyre feliratkozhat, és építőkockákat, amelyekre építhet. Részvények, makró, geopolitikai kockázat — és a köztük lévő kapcsolatok.",
-    "equityResearch": "Részvénykutatás",
-    "equityResearchDesc": "Globális részvényelemzés pénzügyi vizualizációval, elemzői célárakkal és értékelési mutatókkal. Kövesse, mi mozgatja a piacokat.",
-    "geopoliticalAnalysis": "Geopolitikai elemzés",
-    "geopoliticalAnalysisDesc": "Grand Chessboard stratégiai keret, Prisoners of Geography modellek, valamint jegybanki és monetáris politikai követés.",
-    "economyAnalytics": "Gazdasági analitika",
-    "economyAnalyticsDesc": "GDP, infláció, kamatlábak és növekedési ciklusok. Makróadatok piaci jelekkel és geopolitikai eseményekkel korrelálva.",
-    "riskMonitoring": "Kockázatmonitoring és forgatókönyvek",
-    "riskMonitoringDesc": "Globális kockázati pontozás, forgatókönyv-elemzés és geopolitikai kockázatértékelés. Konvergenciadetektálás piaci és politikai jelek között.",
+    "title": "Személyes hírszerzési központod, automatizálva",
+    "subtitle": "Az ingyenes irányítópult már tartalmazza a részvényelemzést, az ellenálló-képességi pontszámokat és a Scenario Engine-t. A Pro hozzáadja a kézbesítési réteget: előfizethető összefoglalót, valós idejű riasztásokat, MCP-t a saját ügynökeidhez és erősebb widget buildert.",
+    "equityResearch": "Elsőbbségi adatfrissítés",
+    "equityResearchDesc": "A 30+ szolgáltatás mindegyike szinte valós időben frissül Pro-val — a Free-nél megszokott 5-15 percenkénti frissítéssel szemben.",
+    "geopoliticalAnalysis": "MCP- és ügynökhozzáférés",
+    "geopoliticalAnalysisDesc": "Kösd össze közvetlenül a Claude-ot, GPT-t vagy saját LLM-jeidet a WorldMonitorral MCP-n keresztül — napi 50 hívással.",
+    "economyAnalytics": "Pro Widget Builder",
+    "economyAnalyticsDesc": "Erősebb modell, több kör, nagyobb buildek és interaktív JavaScript — gazdagabb egyedi paneleket építhetsz, mint az ingyenes szinten.",
+    "riskMonitoring": "Egyedi riasztási szabályok",
+    "riskMonitoringDesc": "Ár- és eseményalapú kiváltók, csendes órák és AES-256 titkosítású kézbesítési csatornák — pontosan arra hangolva, amit figyelsz.",
     "orbitalSurveillance": "Orbitális megfigyelés",
-    "orbitalSurveillanceDesc": "Áthaladási előrejelzések, visszatérési gyakoriság elemzése és képalkotási ablakokra vonatkozó riasztások. Tudja meg, mikor figyelik hírszerző műholdak az érdeklődési területeit.",
+    "orbitalSurveillanceDesc": "(Hamarosan) Átvonulási előrejelzések és felvételi ablak riasztások megnevezett műholdakhoz — a Free szinten már elérhető élő pályapozíciókon túl.",
     "morningBriefs": "Személyes hírszerzési desk",
     "morningBriefsDesc": "Digestenként legfeljebb 30 rangsorolt történet, 500+ forrásból deduplikálva. Válasszon napi, napi kétszeri vagy heti ütemezést — vagy valós idejű riasztásokat kritikus eseményekhez. AI Assessment és Signals to watch Slackre, Discordra, Telegramra, e-mailre vagy webhookra. Nem hírlevél — elemző.",
-    "oneKey": "30+ szolgáltatás, 1 kulcs",
-    "oneKeyDesc": "Finnhub, FRED, ACLED, UCDP, NASA FIRMS, AISStream, OpenSky és még sok más — mind aktív, külön regisztrációk nélkül.",
+    "oneKey": "Valós idejű eszkaláció",
+    "oneKeyDesc": "A kritikus események abban a pillanatban kerülnek kiküldésre, amikor megtörténnek, ugyanazokon a titkosított csatornákon — nem kell megvárni a következő ütemezett összefoglalót.",
     "deliveryLabel": "Válassza ki, hogyan találjon Önre az intelligencia"
   },
   "slackMock": {
@@ -271,15 +268,15 @@
     "fStandard": "Standard",
     "fKeyAuth": "Kulcsalapú auth",
     "fSsoMfa": "SSO/MFA/RBAC/audit",
-    "noteBelow": "Az alapplatform ingyenes marad. A fizetős csomagok részvénykutatást, makróanalitikát, AI-briefeket és szervezeti használatot nyitnak meg.",
+    "noteBelow": "Az alapplatform ingyenes marad. A fizetős csomagok feloldják az ütemezett AI-kézbesítést, az MCP-hozzáférést, az elsőbbségi frissítést és a szervezeti használatot.",
     "f50plus": "50+"
   },
   "faq": {
     "title": "Gyakori kérdések",
     "q1": "A World Monitor továbbra is ingyenes?",
-    "a1": "Igen. Az alapplatform ingyenes marad. A Pro részvénykutatást, makróanalitikát és AI-briefeket ad hozzá. Az Enterprise csapatszintű telepítéseket és TV-appokat ad.",
+    "a1": "Igen. Az alapplatform ingyenes marad — beleértve a részvényelemzést, az ellenálló-képességi pontszámokat és a Scenario Engine-t. A Pro hozzáadja az ütemezett AI-kézbesítést, az egyedi riasztási szabályokat, az MCP-hozzáférést és az elsőbbségi frissítést. Az Enterprise csapatos telepítéseket és TV-alkalmazásokat ad hozzá.",
     "q2": "Miért érdemes a Pro csomagért fizetni?",
-    "a2": "A Pro befektetőknek, elemzőknek és szakembereknek készült, akik részvényfigyelést, geopolitikai elemzést, gazdasági analitikát és AI-alapú napi briefeket szeretnének — mindezt egy kulcs alatt.",
+    "a2": "A Pro azoknak a befektetőknek, elemzőknek és szakembereknek szól, akik saját, ütemezett AI-összefoglalót, egyedi riasztási szabályokat, MCP-hozzáférést saját ügynökeikhez és elsőbbségi adatfrissítést szeretnének — mindezt egyetlen kulcs alatt.",
     "q3": "Kinek szól az Enterprise?",
     "a3": "Az Enterprise olyan csapatoknak szól, amelyeknek közös használat, API-k, integrációk, telepítési opciók és közvetlen támogatás kell.",
     "q4": "Kezdhetek Pro csomaggal, és később frissíthetek?",
@@ -293,7 +290,7 @@
     "q8": "Mi az MCP?",
     "a8": "Az MCP lehetővé teszi, hogy AI-ügynökök — Claude, GPT, saját LLM-ek — eszközként használják a WorldMonitort, és lekérdezzék mind a 30+ szolgáltatást. A Pro része. Az Enterprise privát MCP-szervereket és egyedi telepítéseket ad.",
     "q9": "Építhetek saját paneleket?",
-    "a9": "Igen. A Pro tartalmazza a Custom Widget Buildert — építsen paneleket HTML-ből, CSS-ből és JavaScriptből, AI-asszisztált módosítással.",
+    "a9": "Igen — mindenki számára. Az ingyenes szint tartalmazza a Custom Widget Buildert. A Pro erősebb modellel, több körrel, nagyobb buildekkel és interaktív JavaScripttel fejleszti tovább.",
     "q10": "Csatlakoztathatom Claude-ot vagy GPT-t a WorldMonitorhoz?",
     "a10": "Igen. Az MCP benne van a Pro csomagban — kösse a WorldMonitort Claude-hoz, GPT-hez vagy bármely MCP-kompatibilis LLM-hez élő eszközként.",
     "q11": "Mennyire személyre szabott a digest?",
@@ -305,7 +302,7 @@
   },
   "finalCta": {
     "title": "Kezdje a Pro csomaggal. Skálázzon Enterprise-ra.",
-    "subtitle": "Használja tovább ingyen a World Monitort, vagy frissítsen részvénykutatásért, makróanalitikáért és AI-briefekért. Ha szervezetének csapathozzáférésre, TV-appokra vagy API-támogatásra van szüksége, beszéljen velünk.",
+    "subtitle": "Használd tovább ingyen a World Monitort, vagy válts Pro-ra az ütemezett AI-kézbesítésért, az MCP-hozzáférésért és az elsőbbségi frissítésért. Ha szervezetednek csapatos hozzáférésre, TV-alkalmazásokra vagy API-támogatásra van szüksége, keress minket.",
     "getPro": "Korai hozzáférés lefoglalása",
     "talkToSales": "Beszéljen az értékesítéssel"
   },
@@ -329,17 +326,17 @@
     "linkedin": "LinkedIn",
     "whatsapp": "WhatsApp",
     "telegram": "Telegram",
-    "shareText": "Most csatlakoztam a World Monitor Pro várólistához — részvényfigyelés, geopolitikai elemzés és AI napi briefek egy platformon. Csatlakozz hozzám:",
+    "shareText": "Most csatlakoztam a World Monitor Pro várólistájához — személyes AI-összefoglaló, MCP-hozzáférés és elsőbbségi frissítés egyetlen platformon. Csatlakozz te is:",
     "joinWaitlistShare": "Csatlakozzon a World Monitor Pro várólistához:",
     "youreIn": "Bent van!",
     "invitedBanner": "Meghívást kapott — csatlakozzon a várólistához"
   },
   "soonBadge": "Hamarosan",
   "meta": {
-    "title": "World Monitor Pro — AI-elemző, személyes hírszerzési desk, MCP Claude-hoz és GPT-hez",
-    "description": "A geopolitikai AI-réteg. Kérdezze, iratkozzon fel rá, építsen rá. WM Analyst chat 30+ élő szolgáltatáson át, AI digest napi, napi kétszeri vagy heti kézbesítéssel Slackre, Discordra, Telegramra, e-mailre vagy webhookra, custom widget builder (HTML/CSS/JS + AI) és MCP-csatlakozók Claude-hoz, GPT-hez és saját LLM-ekhez.",
-    "ogTitle": "World Monitor Pro — A geopolitikai AI-réteg",
-    "ogDescription": "Kérdezze, iratkozzon fel rá, építsen rá. WM Analyst chat, AI digest az Ön ütemezése szerint (napi, napi kétszeri vagy heti), custom widget builder és MCP Claude/GPT-hez — 30+ élő szolgáltatáson át, egy kulcs alatt."
+    "title": "World Monitor Pro — Személyes hírszerzési központ, MCP a Claude-hoz és GPT-hez",
+    "description": "A hírszerzési kézbesítési réteg. Személyre szabott AI-összefoglaló 30+ élő szolgáltatáson keresztül — naponta, naponta kétszer vagy hetente Slackre, Discordra, Telegramra, e-mailre vagy webhookra — egyedi riasztási szabályokkal, MCP-konnektorokkal a Claude-hoz, GPT-hez és saját LLM-ekhez, erősebb Pro Widget Builderrel és elsőbbségi, szinte valós idejű adatfrissítéssel.",
+    "ogTitle": "World Monitor Pro — A hírszerzési kézbesítési réteg",
+    "ogDescription": "Iratkozz fel rá, építs rá, tudd meg elsőként. Személyes AI-összefoglaló a saját ütemezésed szerint, MCP a Claude-hoz/GPT-hez, erősebb Pro Widget Builder és elsőbbségi adatfrissítés — 30+ szolgáltatáson át egyetlen kulccsal."
   },
   "pricing": {
     "suffixForever": "örökre",
@@ -359,23 +356,22 @@
       "free": {
         "description": "Kezdje az alapokkal",
         "features": [
-          "Alap irányítópult-panelek",
-          "Globális hírfolyam",
-          "Földrengés- és időjárási riasztások",
-          "Alap térképnézet"
+          "Teljes élő térkép — mind az 56 réteg, 500+ hírforrás",
+          "Részvényelemzés, backtesting és napi AI piaci összefoglalók",
+          "WM Analyst chat 30+ élő szolgáltatáson át",
+          "Országjelentések, instabilitási index és ellenálló-képességi pontszámok"
         ],
         "cta": "Kezdés"
       },
       "pro": {
         "description": "Teljes hírszerzési irányítópult",
         "features": [
-          "Minden az ingyenes csomagban",
-          "AI részvényelemzés és backtesting",
-          "Napi piaci briefek",
-          "Katonai és geopolitikai követés",
-          "Custom widget builder",
-          "MCP + SDK-hozzáférés Claude Desktophoz és más AI-kliensekhez (50 hívás/nap)",
-          "Prioritásos adatfrissítés"
+          "Minden a Free-ből",
+          "Személyes AI-összefoglaló és valós idejű riasztások — Slack, Discord, Telegram, e-mail, webhook",
+          "Egyedi riasztási szabályok — csendes órák, AES-256 titkosítású csatornák",
+          "MCP + SDK hozzáférés Claude Desktophoz és más AI-kliensekhez (50 hívás/nap)",
+          "Elsőbbségi adatfrissítés — szinte valós időben",
+          "Pro Widget Builder — erősebb modell, több kör, interaktív JS"
         ]
       },
       "api": {

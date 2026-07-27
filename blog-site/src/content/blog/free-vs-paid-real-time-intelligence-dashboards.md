@@ -6,7 +6,7 @@ keywords: "free vs paid intelligence dashboard, real-time intelligence dashboard
 audience: "Buyers evaluating intelligence tooling, analysts justifying budget, procurement teams, researchers deciding whether to upgrade"
 heroImage: "/blog/images/blog/free-vs-paid-real-time-intelligence-dashboards.jpg"
 pubDate: "2026-07-07"
-modifiedDate: "2026-07-22"
+modifiedDate: "2026-07-27"
 ---
 
 Most buyers evaluating real-time intelligence dashboards compare the wrong things. The honest answer to "free versus paid" is that free tiers now cover **awareness** — seeing what is happening in the world right now — remarkably well, while paid tiers sell the **decision layer**: analysis, alert routing, programmatic access, and deployment control. If your job ends at "know what's happening," a good free dashboard is enough. If your job is "decide, notify, and integrate," you are buying one of those three things, and you should price them separately.
@@ -32,7 +32,7 @@ Free tiers built on open data are not a marketing trick. Much of the underlying 
 
 Across the category, paid features cluster into three groups. Price each one separately, because vendors bundle them differently:
 
-**1. The decision layer.** AI analysis grounded in the live data (not a generic chatbot), scenario simulation, route risk, and personal digests delivered on a schedule. This is the layer that turns "something happened" into "here is what it means for your exposure."
+**1. The decision layer.** AI-assessed digests grounded in the live data (not a generic chatbot), custom alert rules with quiet hours, and priority near-real-time refresh — delivered on your schedule. This is the layer that turns "something happened" into "here is what it means for your exposure."
 
 **2. Programmatic access.** REST APIs, webhooks, structured JSON, and — increasingly important in 2026 — [MCP servers](https://www.worldmonitor.app/blog/posts/worldmonitor-mcp-server-ai-agents-real-time-intelligence/) so AI agents (Claude, GPT, custom stacks) can query the same intelligence your analysts see. If your evaluation checklist doesn't include agent access yet, it will next cycle.
 

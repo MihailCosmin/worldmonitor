@@ -12,7 +12,7 @@
   "hero": {
     "noiseWord": "噪音",
     "signalWord": "信号",
-    "valueProps": "地缘政治 AI 层 — 向它提问、订阅它、在其之上构建。",
+    "valueProps": "情报投递层——订阅它、在它之上构建、率先知晓。",
     "reserveEarlyAccess": "预订早鸟访问",
     "launchingDate": "现已上线",
     "tryFreeDashboard": "试用免费仪表板",
@@ -27,16 +27,13 @@
   },
   "twoPath": {
     "proTitle": "World Monitor Pro",
-    "proDesc": "您的 AI 分析师。个人情报工作台。一个可以在其之上构建的平台。一把密钥通向 30+ 个实时服务。",
-    "proF1": "WM Analyst 对话 — 以对话方式查询 30+ 个服务",
-    "proF2": "AI 摘要 — 每日、每日两次或每周 — 至 Slack、Discord、Telegram、邮件或 webhook",
-    "proF3": "自定义小组件构建器 — HTML/CSS/JS,AI 辅助修改",
-    "proF4": "MCP 连接器 — 将 WorldMonitor 接入 Claude、GPT 或自定义 LLM",
-    "proF5": "股票研究、股票分析与回测",
-    "proF6": "航班搜索与价格比较",
-    "proF7": "告警规则引擎 — 自定义触发器、静音时段、AES-256 加密通道",
-    "proF8": "市场观察列表、宏观与央行追踪",
-    "proF9": "AI Market Implications 与 Regional Intelligence(即将推出:轨道监视、高级地图图层、更长历史)",
+    "proDesc": "一个你可以订阅的个人情报台。一个可以在其上构建的平台。一把密钥覆盖 30+ 个实时服务。",
+    "proF1": "个人 AI 摘要——每日、每日两次或每周——发送至 Slack、Discord、Telegram、电子邮件或 webhook",
+    "proF2": "针对关键事件的实时告警，而不仅仅是定期摘要",
+    "proF3": "自定义告警规则——静默时段、AES-256 加密通道",
+    "proF4": "MCP 连接器——将 WorldMonitor 接入 Claude、GPT、你自己的 LLM(每日 50 次调用)",
+    "proF5": "优先数据刷新——所有 30+ 服务近乎实时",
+    "proF6": "Pro Widget Builder——更强模型、更多轮次、可交互 JS",
     "proCta": "预订早鸟访问",
     "choosePlan": "选择方案",
     "entTitle": "World Monitor Enterprise",
@@ -59,20 +56,20 @@
     "title": "为什么升级",
     "noiseTitle": "抢先知晓",
     "noiseDesc": "AIS 异常 → Brent 跳升 → 不到一分钟就到您的 Slack。信号,而非标题。",
-    "fasterTitle": "问什么都行",
-    "fasterDesc": "与您仪表板看到的同样 30+ 个服务对话。WM Analyst,始终在线。",
+    "fasterTitle": "更快知晓",
+    "fasterDesc": "Pro 版下，30+ 服务中的每一项都近乎实时刷新——而不是每 5-15 分钟一次。",
     "controlTitle": "想造什么造什么",
-    "controlDesc": "自定义小组件构建器(HTML/CSS/JS + AI)外加 MCP,用于您自己的 AI 工作流。",
+    "controlDesc": "面向你自己 AI 工作流的 MCP 连接器，加上更强大的 Pro Widget Builder——更多轮次、更大构建、可交互 JS。",
     "deeperTitle": "醒来时已通晓",
     "deeperDesc": "按您的告警规则排序的 30 条 AI 摘要。Critical、High、Medium — 附带 Assessment 与 Signals to watch。"
   },
   "pillars": {
-    "askIt": "问它",
-    "askItDesc": "WM Analyst 对话。30+ 个服务皆可用自然语言查询。",
+    "askIt": "更快知晓",
+    "askItDesc": "Pro 版下每项服务都近乎实时刷新——不像 Free 版每 5-15 分钟一次。",
     "subscribeIt": "订阅它",
     "subscribeItDesc": "AI 摘要按您的频率: 每日、每日两次或每周。Slack、Discord、Telegram、邮件、webhook。",
     "buildOnIt": "在其上构建",
-    "buildOnItDesc": "自定义小组件构建器(HTML/CSS/JS + AI)与 MCP,适用于 Claude、GPT 与自定义 LLM。"
+    "buildOnItDesc": "面向 Claude、GPT、你自己 LLM 的 MCP，加上更强大的 Pro Widget Builder——更多轮次、更大构建、可交互 JS。"
   },
   "deliveryDesk": {
     "eyebrow": "交付工作台",
@@ -104,7 +101,7 @@
     "tradersTitle": "能源与大宗商品交易员",
     "tradersDesc": "追踪船舶动向、货物推断、供应链扰动,以及驱动市场的地缘政治信号。",
     "researchersTitle": "研究人员与分析师",
-    "researchersDesc": "面向更深入的分析与报告的股票研究、经济分析与地缘政治框架。",
+    "researchersDesc": "跨源关联与经济分析，配合一把连接 MCP、覆盖 30+ 服务的密钥，实现更深入的分析与报告。",
     "journalistsTitle": "记者与媒体",
     "journalistsDesc": "跨市场与区域追踪快速演进的事件,无需手动拼接来源。",
     "govTitle": "政府与机构",
@@ -147,22 +144,22 @@
   },
   "proShowcase": {
     "proTier": "PRO 等级",
-    "title": "永不停歇的 AI 分析师",
-    "subtitle": "免费仪表板向您展示世界。Pro 则给您一位可问询的分析师、可订阅的摘要和可构建其上的原语。股票、宏观、地缘政治风险 — 以及它们之间的关联。",
-    "equityResearch": "股票研究",
-    "equityResearchDesc": "具财务可视化、分析师目标价与估值指标的全球股票分析。追踪市场动力所在。",
-    "geopoliticalAnalysis": "地缘政治分析",
-    "geopoliticalAnalysisDesc": "Grand Chessboard 战略框架、Prisoners of Geography 模型,以及央行与货币政策追踪。",
-    "economyAnalytics": "经济分析",
-    "economyAnalyticsDesc": "GDP、通胀、利率与增长周期。将宏观数据与市场信号和地缘政治事件相关联。",
-    "riskMonitoring": "风险监测与情景分析",
-    "riskMonitoringDesc": "全球风险评分、情景分析与地缘政治风险评估。跨市场与政治信号的收敛检测。",
+    "title": "你的个人情报台，实现自动化",
+    "subtitle": "免费仪表盘已包含股票分析、韧性评分和情景引擎（Scenario Engine）。Pro 版增加了投递层：可订阅的摘要、实时告警、面向你自有代理的 MCP，以及更强大的小组件构建器。",
+    "equityResearch": "优先数据刷新",
+    "equityResearchDesc": "Pro 版下所有 30+ 服务近乎实时更新——而 Free 版每 5-15 分钟才更新一次。",
+    "geopoliticalAnalysis": "MCP 与代理访问",
+    "geopoliticalAnalysisDesc": "通过 MCP 将 Claude、GPT 或你自己的 LLM 直接连接到 WorldMonitor——含每日 50 次调用。",
+    "economyAnalytics": "Pro Widget Builder",
+    "economyAnalyticsDesc": "更强的模型、更多轮次、更大的构建以及可交互 JavaScript——构建比免费版更丰富的自定义面板。",
+    "riskMonitoring": "自定义告警规则",
+    "riskMonitoringDesc": "价格与事件触发器、静默时段，以及 AES-256 加密投递通道——针对你所关注的内容量身定制。",
     "orbitalSurveillance": "轨道监视",
-    "orbitalSurveillanceDesc": "(即将推出)过顶预测、重访频率分析与成像窗口告警。得知情报卫星何时正在观察您关注的区域。",
+    "orbitalSurveillanceDesc": "（即将推出）针对指定卫星的过境预测与成像窗口告警——超越免费版已包含的实时轨道位置。",
     "morningBriefs": "个人情报工作台",
     "morningBriefsDesc": "每个摘要最多 30 条按级别排序的事件,在 400+ 来源间去重。选择每日、每日两次或每周频率 — 或对关键事件启用实时告警。AI Assessment 与 Signals to watch 推送至 Slack、Discord、Telegram、邮件或 webhook。不是邮件通讯 — 是分析师。",
-    "oneKey": "30+ 个服务,一把密钥",
-    "oneKeyDesc": "Finnhub、FRED、ACLED、UCDP、NASA FIRMS、AISStream、OpenSky 等 — 全部开启,无需单独注册。",
+    "oneKey": "实时升级",
+    "oneKeyDesc": "关键事件一发生即通过相同的加密通道推送——无需等待下一次定期摘要。",
     "deliveryLabel": "选择情报如何找到您"
   },
   "slackMock": {
@@ -271,15 +268,15 @@
     "fStandard": "标准",
     "fKeyAuth": "密钥鉴权",
     "fSsoMfa": "SSO/MFA/RBAC/审计",
-    "noteBelow": "核心平台保持免费。付费方案解锁股票研究、宏观分析、AI 简报与组织级使用。",
+    "noteBelow": "核心平台始终免费。付费方案解锁定期 AI 投递、MCP 访问、优先刷新和组织级使用。",
     "f50plus": "50+"
   },
   "faq": {
     "title": "常见问题",
     "q1": "World Monitor 仍然免费吗?",
-    "a1": "是。核心平台保持免费。Pro 增加股票研究、宏观分析和 AI 简报。Enterprise 增加团队部署与 TV 应用。",
+    "a1": "是的。核心平台始终免费——包括股票分析、韧性评分和情景引擎。Pro 版增加了定期 AI 投递、自定义告警规则、MCP 访问和优先刷新。Enterprise 版增加了团队部署和电视应用。",
     "q2": "为什么要付费使用 Pro?",
-    "a2": "Pro 面向希望获得股票监测、地缘政治分析、经济分析与 AI 每日简报的投资者、分析师与专业人士 — 全部在一把密钥下。",
+    "a2": "Pro 版面向希望按日程接收自己的 AI 摘要、自定义告警规则、为自有代理提供 MCP 访问，以及优先数据刷新的投资者、分析师和专业人士——所有这些都在同一把密钥之下。",
     "q3": "Enterprise 面向谁?",
     "a3": "Enterprise 面向需要共享使用、API、集成、部署选项与直接支持的团队。",
     "q4": "我可以先用 Pro 之后再升级吗?",
@@ -293,7 +290,7 @@
     "q8": "什么是 MCP?",
     "a8": "MCP 允许 AI 代理 — Claude、GPT、自定义 LLM — 把 WorldMonitor 作为工具来调用,查询全部 30+ 个服务。Pro 已包含。Enterprise 额外提供私有 MCP 服务器与定制部署。",
     "q9": "我可以自建面板吗?",
-    "a9": "可以。Pro 包含自定义小组件构建器 — 从 HTML、CSS 与 JavaScript 构建面板,并支持 AI 辅助修改。",
+    "a9": "是的——面向所有人。免费版包含 Custom Widget Builder。Pro 版通过更强的模型、更多轮次、更大的构建和可交互 JavaScript 对其进行升级。",
     "q10": "我可以把 Claude 或 GPT 接入 WorldMonitor 吗?",
     "a10": "可以。MCP 已包含在 Pro 中 — 将 WorldMonitor 作为实时工具接入 Claude、GPT 或任何兼容 MCP 的 LLM。",
     "q11": "摘要的个性化程度如何?",
@@ -305,7 +302,7 @@
   },
   "finalCta": {
     "title": "从 Pro 开始。扩展到 Enterprise。",
-    "subtitle": "继续免费使用 World Monitor,或升级以获取股票研究、宏观分析和 AI 简报。若您的组织需要团队访问、TV 应用或 API 支持,请与我们联系。",
+    "subtitle": "继续免费使用 World Monitor，或升级到 Pro 以获得定期 AI 投递、MCP 访问和优先刷新。如果你的组织需要团队访问、电视应用或 API 支持，请联系我们。",
     "getPro": "预订早鸟访问",
     "talkToSales": "联系销售"
   },
@@ -329,17 +326,17 @@
     "linkedin": "LinkedIn",
     "whatsapp": "WhatsApp",
     "telegram": "Telegram",
-    "shareText": "我刚加入了 World Monitor Pro 等候名单 — 一个平台囊括股票监测、地缘政治分析与每日 AI 简报。一起来:",
+    "shareText": "我刚刚加入了 World Monitor Pro 的等候名单——一个平台集成个人 AI 摘要、MCP 访问和优先刷新。加入我吧：",
     "joinWaitlistShare": "加入 World Monitor Pro 等候名单:",
     "youreIn": "您已入列!",
     "invitedBanner": "您已被邀请 — 加入等候名单"
   },
   "soonBadge": "即将推出",
   "meta": {
-    "title": "World Monitor Pro — AI 分析师、个人智能助手、Claude & GPT 的 MCP",
-    "description": "地缘政治 AI 层。提问、订阅、构建。WM Analyst 聊天支持 30+ 个实时服务，AI 摘要按日、两次日或周频率投送至 Slack、Discord、Telegram、Email 或 webhook，自定义小部件构建器（HTML/CSS/JS + AI），以及 Claude、GPT 和自定义 LLM 的 MCP 连接器。",
-    "ogTitle": "World Monitor Pro — 地缘政治 AI 层",
-    "ogDescription": "提问、订阅、构建。WM Analyst 聊天、按您的时间表（日、两次日或周）投送的 AI 摘要、自定义小部件构建器，以及 Claude/GPT 的 MCP — 跨 30+ 个实时服务，一个密钥管理。"
+    "title": "World Monitor Pro — 个人情报台，面向 Claude 与 GPT 的 MCP",
+    "description": "情报投递层。跨 30+ 个实时服务的个人 AI 摘要——每日、每日两次或每周发送至 Slack、Discord、Telegram、电子邮件或 webhook——配备自定义告警规则、面向 Claude、GPT 及自有 LLM 的 MCP 连接器、更强大的 Pro Widget Builder，以及优先的近实时数据刷新。",
+    "ogTitle": "World Monitor Pro — 情报投递层",
+    "ogDescription": "订阅它、在它之上构建、率先知晓。按你的日程发送的个人 AI 摘要、面向 Claude/GPT 的 MCP、更强大的 Pro Widget Builder，以及优先数据刷新——一把密钥覆盖 30+ 服务。"
   },
   "pricing": {
     "suffixForever": "永久",
@@ -359,23 +356,22 @@
       "free": {
         "description": "从基础功能开始",
         "features": [
-          "核心仪表板面板",
-          "全球新闻源",
-          "地震和天气警报",
-          "基础地图视图"
+          "完整实时地图——全部 56 个图层，500+ 信息源",
+          "股票分析、回测和每日 AI 市场简报",
+          "覆盖 30+ 实时服务的 WM Analyst 聊天",
+          "国家简报、不稳定性指数和韧性评分"
         ],
         "cta": "开始使用"
       },
       "pro": {
         "description": "完整的情报仪表板",
         "features": [
-          "免费版的所有功能",
-          "AI 股票分析和回测",
-          "每日市场简报",
-          "军事和地缘政治追踪",
-          "自定义小部件构建器",
-          "面向 Claude Desktop 和其他 AI 客户端的 MCP + SDK 访问权限（50 次调用/天）",
-          "优先级数据刷新"
+          "Free 版的全部内容",
+          "个人 AI 摘要与实时告警——Slack、Discord、Telegram、电子邮件、webhook",
+          "自定义告警规则——静默时段、AES-256 加密通道",
+          "面向 Claude Desktop 及其他 AI 客户端的 MCP + SDK 访问（每日 50 次调用）",
+          "优先数据刷新——近乎实时",
+          "Pro Widget Builder——更强模型、更多轮次、可交互 JS"
         ]
       },
       "api": {

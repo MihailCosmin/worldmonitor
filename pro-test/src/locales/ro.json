@@ -12,7 +12,7 @@
   "hero": {
     "noiseWord": "Zgomot",
     "signalWord": "Semnal",
-    "valueProps": "Stratul de IA geopolitică — întreabă-l, abonează-te, construiește deasupra.",
+    "valueProps": "Stratul de livrare a informațiilor — abonează-te, construiește pe el, află primul.",
     "reserveEarlyAccess": "Rezervă-ți accesul anticipat",
     "launchingDate": "Disponibil acum",
     "tryFreeDashboard": "Încearcă panoul gratuit",
@@ -27,16 +27,13 @@
   },
   "twoPath": {
     "proTitle": "World Monitor Pro",
-    "proDesc": "Analistul tău IA. Un birou personal de intelligence. O platformă pe care să construiești. O cheie pentru 30+ de servicii live.",
-    "proF1": "Chat WM Analyst — interoghează cele 30+ de servicii conversațional",
-    "proF2": "Digest IA — zilnic, de două ori pe zi sau săptămânal — pe Slack, Discord, Telegram, Email sau webhook",
-    "proF3": "Custom Widget Builder — HTML/CSS/JS cu modificare asistată de IA",
-    "proF4": "Conectori MCP — conectează WorldMonitor la Claude, GPT sau LLM-uri proprii",
-    "proF5": "Equity research, analiză de acțiuni și backtesting",
-    "proF6": "Căutare zboruri și comparație de prețuri",
-    "proF7": "Motor de reguli de alertă — trigeri proprii, ore silențioase, canale criptate AES-256",
-    "proF8": "Watchlist de piață, urmărire macro și bănci centrale",
-    "proF9": "AI Market Implications și Regional Intelligence (În curând: supraveghere orbitală, straturi premium de hartă, istoric extins)",
+    "proDesc": "Un centru personal de informații la care te abonezi. O platformă pe care poți construi. O singură cheie pentru peste 30 de servicii live.",
+    "proF1": "Rezumat AI personal — zilnic, de două ori pe zi sau săptămânal — către Slack, Discord, Telegram, email sau webhook",
+    "proF2": "Alerte în timp real pentru evenimente critice, nu doar rezumate programate",
+    "proF3": "Reguli de alertă personalizate — ore de liniște, canale criptate AES-256",
+    "proF4": "Conectori MCP — conectează WorldMonitor la Claude, GPT, LLM-uri proprii (50 apeluri/zi)",
+    "proF5": "Actualizare prioritară a datelor — aproape în timp real pe toate cele peste 30 de servicii",
+    "proF6": "Pro Widget Builder — model mai puternic, mai multe ture, JS interactiv",
     "proCta": "Rezervă-ți accesul anticipat",
     "choosePlan": "Alege planul",
     "entTitle": "World Monitor Enterprise",
@@ -59,20 +56,20 @@
     "title": "De ce să faci upgrade",
     "noiseTitle": "Află primul",
     "noiseDesc": "Anomalie AIS → salt Brent → Slack-ul tău în mai puțin de un minut. Semnal, nu titluri.",
-    "fasterTitle": "Întreabă orice",
-    "fasterDesc": "Discută cu aceleași 30+ de servicii pe care le vede panoul tău. WM Analyst, mereu activ.",
+    "fasterTitle": "Află mai repede",
+    "fasterDesc": "Fiecare dintre cele peste 30 de servicii se actualizează aproape în timp real cu Pro — nu doar la fiecare 5-15 minute.",
     "controlTitle": "Construiește orice",
-    "controlDesc": "Custom widget builder (HTML/CSS/JS + IA) plus MCP pentru fluxurile tale IA.",
+    "controlDesc": "Conectori MCP pentru propriile fluxuri AI, plus un Pro Widget Builder mai puternic — mai multe ture, build-uri mai mari, JS interactiv.",
     "deeperTitle": "Trezește-te informat",
     "deeperDesc": "Digest IA cu 30 de elemente sortate după regulile tale de alertă. Critical, High, Medium — cu Assessment și Signals to watch."
   },
   "pillars": {
-    "askIt": "Întreabă-l",
-    "askItDesc": "Chat WM Analyst. Toate cele 30+ de servicii interogabile în limbaj natural.",
+    "askIt": "Află mai repede",
+    "askItDesc": "Fiecare serviciu se actualizează aproape în timp real cu Pro — nu doar la fiecare 5-15 minute ca la Free.",
     "subscribeIt": "Abonează-te",
     "subscribeItDesc": "Digest IA în ritmul tău: zilnic, de două ori pe zi sau săptămânal. Slack, Discord, Telegram, Email, webhook.",
     "buildOnIt": "Construiește deasupra",
-    "buildOnItDesc": "Custom Widget Builder (HTML/CSS/JS + IA) și MCP pentru Claude, GPT, LLM-uri proprii."
+    "buildOnItDesc": "MCP pentru Claude, GPT, LLM-uri proprii, plus un Pro Widget Builder mai puternic — mai multe ture, build-uri mai mari, JS interactiv."
   },
   "deliveryDesk": {
     "eyebrow": "BIROU DE LIVRARE",
@@ -104,7 +101,7 @@
     "tradersTitle": "Traderi energie și mărfuri",
     "tradersDesc": "Urmărește mișcări de nave, inferență de încărcătură, perturbări de lanț de aprovizionare și semnale geopolitice care mișcă piețele.",
     "researchersTitle": "Cercetători și analiști",
-    "researchersDesc": "Equity research, analitică economică și cadre geopolitice pentru analiză și raportare mai profundă.",
+    "researchersDesc": "Corelare între surse și analiză economică, cu o singură cheie conectată la MCP pe peste 30 de servicii pentru analiză și raportare mai aprofundate.",
     "journalistsTitle": "Jurnaliști și media",
     "journalistsDesc": "Urmărește evoluții rapide pe piețe și regiuni fără să cusuți surse manual.",
     "govTitle": "Guvern și instituții",
@@ -147,22 +144,22 @@
   },
   "proShowcase": {
     "proTier": "NIVEL PRO",
-    "title": "Analistul tău IA care nu doarme niciodată",
-    "subtitle": "Panoul gratuit îți arată lumea. Pro îți dă un analist de întrebat, un digest la care te abonezi și primitive pe care să construiești. Acțiuni, macro, risc geopolitic — și conexiunile dintre ele.",
-    "equityResearch": "Equity research",
-    "equityResearchDesc": "Analiză globală de acțiuni cu vizualizare a datelor financiare, ținte de preț ale analiștilor și metrici de evaluare. Urmărește ce mișcă piețele.",
-    "geopoliticalAnalysis": "Analiză geopolitică",
-    "geopoliticalAnalysisDesc": "Cadru strategic Grand Chessboard, modele Prisoners of Geography și urmărire bănci centrale și politică monetară.",
-    "economyAnalytics": "Analitică economică",
-    "economyAnalyticsDesc": "PIB, inflație, rate de dobândă și cicluri de creștere. Date macro corelate cu semnale de piață și evenimente geopolitice.",
-    "riskMonitoring": "Monitoring de risc și scenarii",
-    "riskMonitoringDesc": "Scoring global de risc, analiză de scenarii și evaluare a riscului geopolitic. Detecție de convergențe între semnale de piață și politice.",
+    "title": "Centrul tău personal de informații, automatizat",
+    "subtitle": "Dashboard-ul gratuit include deja analiză bursieră, scoruri de reziliență și Scenario Engine. Pro adaugă stratul de livrare: un rezumat la care te abonezi, alerte în timp real, MCP pentru propriii agenți și un widget builder mai puternic.",
+    "equityResearch": "Actualizare prioritară a datelor",
+    "equityResearchDesc": "Toate cele peste 30 de servicii se actualizează aproape în timp real cu Pro — față de fiecare 5-15 minute la Free.",
+    "geopoliticalAnalysis": "Acces MCP și agenți",
+    "geopoliticalAnalysisDesc": "Conectează Claude, GPT sau LLM-uri proprii direct la WorldMonitor prin MCP — 50 apeluri/zi incluse.",
+    "economyAnalytics": "Pro Widget Builder",
+    "economyAnalyticsDesc": "Un model mai puternic, mai multe ture, build-uri mai mari și JavaScript interactiv — construiește panouri personalizate mai bogate decât la nivelul gratuit.",
+    "riskMonitoring": "Reguli de alertă personalizate",
+    "riskMonitoringDesc": "Declanșatoare de preț și evenimente, ore de liniște și canale de livrare criptate AES-256 — adaptate la ceea ce urmărești.",
     "orbitalSurveillance": "Supraveghere orbitală",
-    "orbitalSurveillanceDesc": "(În curând) Predicții de treceri orbitale, analiză a frecvenței de revizitare și alerte de fereastră de captare. Află când sateliții de intelligence observă zonele tale de interes.",
+    "orbitalSurveillanceDesc": "(În curând) Predicții de survolare și alerte pentru ferestre de imagistică pentru sateliți numiți — dincolo de pozițiile orbitale live deja incluse la nivelul gratuit.",
     "morningBriefs": "Birou personal de intelligence",
     "morningBriefsDesc": "Până la 30 de povești clasificate pe digest, deduplicate peste 400+ surse. Alege zilnic, de două ori pe zi sau săptămânal — sau alerte în timp real pentru evenimente critice. Assessment IA și Signals to watch livrate pe Slack, Discord, Telegram, Email sau webhook. Nu un newsletter — un analist.",
-    "oneKey": "30+ servicii, 1 cheie",
-    "oneKeyDesc": "Finnhub, FRED, ACLED, UCDP, NASA FIRMS, AISStream, OpenSky și mai mult — toate active, fără înregistrări separate.",
+    "oneKey": "Escaladare în timp real",
+    "oneKeyDesc": "Evenimentele critice sunt trimise în momentul în care au loc prin aceleași canale criptate — fără a aștepta următorul rezumat programat.",
     "deliveryLabel": "Alege cum te găsește intelligence-ul"
   },
   "slackMock": {
@@ -271,15 +268,15 @@
     "fStandard": "Standard",
     "fKeyAuth": "Auth cu cheie",
     "fSsoMfa": "SSO/MFA/RBAC/audit",
-    "noteBelow": "Platforma de bază rămâne gratuită. Planurile plătite deblochează equity research, analitică macro, briefinguri IA și utilizare organizațională.",
+    "noteBelow": "Platforma de bază rămâne gratuită. Planurile plătite deblochează livrarea AI programată, accesul MCP, actualizarea prioritară și utilizarea organizațională.",
     "f50plus": "50+"
   },
   "faq": {
     "title": "Întrebări frecvente",
     "q1": "World Monitor este în continuare gratuit?",
-    "a1": "Da. Platforma de bază rămâne gratuită. Pro adaugă equity research, analitică macro și briefinguri IA. Enterprise adaugă deployment-uri de echipă și aplicații TV.",
+    "a1": "Da. Platforma de bază rămâne gratuită — inclusiv analiza bursieră, scorurile de reziliență și Scenario Engine. Pro adaugă livrarea AI programată, regulile de alertă personalizate, accesul MCP și actualizarea prioritară. Enterprise adaugă implementări de echipă și aplicații TV.",
     "q2": "De ce să plătești pentru Pro?",
-    "a2": "Pro este pentru investitori, analiști și profesioniști care vor monitorizare acțiuni, analiză geopolitică, analitică economică și briefinguri zilnice IA — totul sub o cheie.",
+    "a2": "Pro este pentru investitori, analiști și profesioniști care doresc propriul rezumat AI livrat după un program, reguli de alertă personalizate, acces MCP pentru propriii agenți și actualizare prioritară a datelor — totul sub o singură cheie.",
     "q3": "Pentru cine este Enterprise?",
     "a3": "Enterprise este pentru echipe care au nevoie de uz partajat, API-uri, integrări, opțiuni de deployment și suport direct.",
     "q4": "Pot începe cu Pro și face upgrade mai târziu?",
@@ -293,7 +290,7 @@
     "q8": "Ce este MCP?",
     "a8": "MCP permite agenților IA — Claude, GPT, LLM-uri proprii — să folosească WorldMonitor ca instrument, interogând toate cele 30+ de servicii. Inclus în Pro. Enterprise adaugă servere MCP private și deployment-uri proprii.",
     "q9": "Pot construi propriile panouri?",
-    "a9": "Da. Pro include Custom Widget Builder — construiește panouri din HTML, CSS și JavaScript, cu modificare asistată de IA.",
+    "a9": "Da — pentru toată lumea. Nivelul gratuit include Custom Widget Builder. Pro îl îmbunătățește cu un model mai puternic, mai multe ture, build-uri mai mari și JavaScript interactiv.",
     "q10": "Pot conecta Claude sau GPT la WorldMonitor?",
     "a10": "Da. MCP este inclus în Pro — conectează WorldMonitor la Claude, GPT sau orice LLM compatibil MCP ca instrument live.",
     "q11": "Cât de personalizat este digest-ul?",
@@ -305,7 +302,7 @@
   },
   "finalCta": {
     "title": "Începe cu Pro. Scalează la Enterprise.",
-    "subtitle": "Continuă să folosești World Monitor gratuit, sau fă upgrade pentru equity research, analitică macro și briefinguri IA. Dacă organizația ta are nevoie de acces de echipă, aplicații TV sau suport API, vorbește cu noi.",
+    "subtitle": "Continuă să folosești World Monitor gratuit sau treci la Pro pentru livrare AI programată, acces MCP și actualizare prioritară. Dacă organizația ta are nevoie de acces în echipă, aplicații TV sau suport API, contactează-ne.",
     "getPro": "Rezervă-ți accesul anticipat",
     "talkToSales": "Vorbește cu vânzările"
   },
@@ -329,17 +326,17 @@
     "linkedin": "LinkedIn",
     "whatsapp": "WhatsApp",
     "telegram": "Telegram",
-    "shareText": "Tocmai m-am alăturat listei de așteptare World Monitor Pro — monitorizare acțiuni, analiză geopolitică și briefinguri zilnice IA într-o singură platformă. Alătură-te:",
+    "shareText": "Tocmai m-am înscris pe lista de așteptare World Monitor Pro — un rezumat AI personal, acces MCP și actualizare prioritară într-o singură platformă. Alătură-te:",
     "joinWaitlistShare": "Alătură-te listei de așteptare World Monitor Pro:",
     "youreIn": "Ești înăuntru!",
     "invitedBanner": "Ai fost invitat — alătură-te listei de așteptare"
   },
   "soonBadge": "În curând",
   "meta": {
-    "title": "World Monitor Pro — AI Analyst, Personal Intelligence Desk, MCP pentru Claude & GPT",
-    "description": "Stratul geopolitic AI. Întrebați-l, abonați-vă la el, construiți pe el. WM Analyst chat în 30+ servicii live, un rezumat AI livrat zilnic, de două ori pe zi sau săptămânal către Slack, Discord, Telegram, Email sau webhook, un constructor de widget-uri personalizat (HTML/CSS/JS + AI) și conectori MCP pentru Claude, GPT și LLM-uri personalizate.",
-    "ogTitle": "World Monitor Pro — Stratul Geopolitic AI",
-    "ogDescription": "Întrebați-l, abonați-vă la el, construiți pe el. WM Analyst chat, un rezumat AI după programul dvs. (zilnic, de două ori pe zi sau săptămânal), constructor de widget-uri personalizat și MCP pentru Claude/GPT — în 30+ servicii live sub o singură cheie."
+    "title": "World Monitor Pro — Centru personal de informații, MCP pentru Claude și GPT",
+    "description": "Stratul de livrare a informațiilor. Un rezumat AI personal pe peste 30 de servicii live — zilnic, de două ori pe zi sau săptămânal către Slack, Discord, Telegram, email sau webhook — cu reguli de alertă personalizate, conectori MCP pentru Claude, GPT și LLM-uri proprii, un Pro Widget Builder mai puternic și actualizare prioritară a datelor aproape în timp real.",
+    "ogTitle": "World Monitor Pro — Stratul de livrare a informațiilor",
+    "ogDescription": "Abonează-te, construiește pe el, află primul. Un rezumat AI personal după programul tău, MCP pentru Claude/GPT, un Pro Widget Builder mai puternic și actualizare prioritară a datelor — pe peste 30 de servicii sub o singură cheie."
   },
   "pricing": {
     "suffixForever": "pentru totdeauna",
@@ -359,23 +356,22 @@
       "free": {
         "description": "Începeți cu elementele esențiale",
         "features": [
-          "Panouri de bază ale tabloului de bord",
-          "Flux de știri global",
-          "Alerte pentru cutremure și vreme",
-          "Vizualizare hartă de bază"
+          "Hartă live completă — toate cele 56 de straturi, peste 500 de fluxuri",
+          "Analiză bursieră, backtesting și rezumate AI zilnice ale pieței",
+          "Chat WM Analyst pe peste 30 de servicii live",
+          "Rezumate de țară, indice de instabilitate și scoruri de reziliență"
         ],
         "cta": "Începeți"
       },
       "pro": {
         "description": "Tablou de bord complet de intelligence",
         "features": [
-          "Totul din Gratuit",
-          "Analiza și backtesting pentru acțiuni cu AI",
-          "Rezumate zilnice de piață",
-          "Urmărirea militară și geopolitică",
-          "Constructor de widget-uri personalizate",
+          "Tot ce e în Free",
+          "Rezumat AI personal și alerte în timp real — Slack, Discord, Telegram, email, webhook",
+          "Reguli de alertă personalizate — ore de liniște, canale criptate AES-256",
           "Acces MCP + SDK pentru Claude Desktop și alți clienți AI (50 apeluri/zi)",
-          "Reîmprospătare prioritară a datelor"
+          "Actualizare prioritară a datelor — aproape în timp real",
+          "Pro Widget Builder — model mai puternic, mai multe ture, JS interactiv"
         ]
       },
       "api": {

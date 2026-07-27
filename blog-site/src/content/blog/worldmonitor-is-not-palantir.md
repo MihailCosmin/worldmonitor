@@ -6,7 +6,7 @@ keywords: "WorldMonitor vs Palantir, Palantir alternative open source, open inte
 audience: "Press, analysts, developers, investors, anyone who has seen the Palantir comparison"
 heroImage: "/blog/images/blog/worldmonitor-is-not-palantir.jpg"
 pubDate: "2026-07-21"
-modifiedDate: "2026-07-22"
+modifiedDate: "2026-07-27"
 pinned: true
 ---
 
@@ -61,7 +61,7 @@ UCDP conflict events, IMF PortWatch ship transits, EIA petroleum stocks, OFAC de
 - **Explore possible consequences.** Route Explorer and the Scenario Engine model how conflict, weather, sanctions, and tariff shocks could move through chokepoints, sectors, and countries; WM Analyst lets you question the live intelligence stack with citations.
 - **Build on the intelligence layer.** Public REST routes expose health, discovery, and dashboard-support data without a key; authenticated API and MCP access can feed the broader structured intelligence layer into software and agents. The CLI and official SDKs shorten the integration path; the embeddable map and AGPL source let you publish, fork, or self-host a version of your own.
 
-The core dashboards, map layers, feeds, briefs, and watchlists remain free and require no account. Scheduled delivery, custom widgets, and programmatic data access support the paid tiers. The source remains inspectable, adaptable, and self-hostable under AGPL-3.0.
+The core dashboards, map layers, feeds, briefs, and watchlists remain free and require no account. Scheduled delivery and programmatic data access support the paid tiers. The source remains inspectable, adaptable, and self-hostable under AGPL-3.0.
 
 Despite the war-room aesthetic that invites the Palantir shorthand, economic and operational consequence is one of WorldMonitor's strongest organizing ideas. Count the surface: [markets and central-bank trackers](/blog/posts/real-time-market-intelligence-for-traders-and-analysts/), [chokepoints and freight](/blog/posts/tracking-global-trade-routes-chokepoints-freight-costs/), [tariffs and customs revenue](/blog/posts/tariff-tracker-trade-policy-monitoring-worldmonitor/), [government tenders from six official portals](/blog/posts/government-tenders-procurement-intelligence-worldmonitor/), [shelf-price inflation](/blog/posts/ground-truth-inflation-shelf-price-tracking-worldmonitor/), energy intelligence, prediction markets.
 
@@ -76,7 +76,7 @@ Here's the sanctions layer, queried live while writing this (July 22, 2026): **2
 - **The interfaces are open**: a versioned REST API built on 35 typed proto services, an [MCP server with 40+ tools](/blog/posts/worldmonitor-mcp-server-ai-agents-real-time-intelligence/) whose catalog is publicly discoverable while data calls authenticate through OAuth or an API key, an [embeddable live map](/blog/posts/embed-live-global-map-worldmonitor/), 25 UI languages.
 - **The pricing is open**: [published on the site](/blog/posts/free-vs-paid-real-time-intelligence-dashboards/), $0 to flat monthly tiers, no "contact sales."
 
-And, in fairness, what WorldMonitor is **not**: it is not fully free at every layer — scheduled AI digests, custom widgets, authenticated MCP data calls, and full REST API access are paid, and they fund the free rest. Public REST routes still expose health, discovery, and the data needed by the free dashboards without an API key. WorldMonitor has no classified feeds and no private ontology for your internal data — if you need *your* data integrated, that's genuinely Palantir's job, not ours. And public data has gaps; where sensors don't exist, WorldMonitor shows the gap rather than interpolating confidence.
+And, in fairness, what WorldMonitor is **not**: it is not fully free at every layer — scheduled AI digests, authenticated MCP data calls, and full REST API access are paid, and they fund the free rest. Public REST routes still expose health, discovery, and the data needed by the free dashboards without an API key. WorldMonitor has no classified feeds and no private ontology for your internal data — if you need *your* data integrated, that's genuinely Palantir's job, not ours. And public data has gaps; where sensors don't exist, WorldMonitor shows the gap rather than interpolating confidence.
 
 That last habit may be the deepest difference. In a private deployment, source health is visible inside the customer's environment. WorldMonitor exposes its own publicly, on the health endpoint you curled above.
 
@@ -105,7 +105,7 @@ No. Conflict monitoring is one layer among dozens spanning markets, trade, energ
 
 **Is everything really free?**
 
-The core dashboards, map layers, feeds, briefs, breaking alerts, WM Analyst, Scenario Engine, Route Explorer, and watchlists are free with no login. Public REST routes cover health, discovery, and dashboard support. Scheduled digests, custom widgets, authenticated MCP data calls, and full REST API access are paid. Anyone can inspect the MCP catalog and public health metadata anonymously, but data-bearing MCP tool calls require Pro or API authentication. The source is AGPL-3.0 — self-hosters get everything their own keys can feed.
+The core dashboards, map layers, feeds, briefs, breaking alerts, WM Analyst, Scenario Engine, Route Explorer, watchlists, and the Custom Widget Builder are free with no login. Public REST routes cover health, discovery, and dashboard support. Scheduled digests, authenticated MCP data calls, and full REST API access are paid. Anyone can inspect the MCP catalog and public health metadata anonymously, but data-bearing MCP tool calls require Pro or API authentication. The source is AGPL-3.0 — self-hosters get everything their own keys can feed.
 
 ---
 

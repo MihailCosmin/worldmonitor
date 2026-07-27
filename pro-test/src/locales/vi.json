@@ -12,7 +12,7 @@
   "hero": {
     "noiseWord": "Nhiễu",
     "signalWord": "Tín hiệu",
-    "valueProps": "Lớp AI địa chính trị — hãy hỏi nó, đăng ký, xây dựng trên đó.",
+    "valueProps": "Lớp phân phối thông tin tình báo — đăng ký, xây dựng trên đó, biết trước tiên.",
     "reserveEarlyAccess": "Đặt trước quyền truy cập sớm",
     "launchingDate": "Hiện có sẵn",
     "tryFreeDashboard": "Dùng thử bảng điều khiển miễn phí",
@@ -27,16 +27,13 @@
   },
   "twoPath": {
     "proTitle": "World Monitor Pro",
-    "proDesc": "Nhà phân tích AI của bạn. Bàn tình báo cá nhân. Một nền tảng để xây dựng trên đó. Một khóa cho 30+ dịch vụ trực tiếp.",
-    "proF1": "Chat WM Analyst — truy vấn 30+ dịch vụ theo hội thoại",
-    "proF2": "AI digest — hàng ngày, hai lần mỗi ngày hoặc hàng tuần — đến Slack, Discord, Telegram, Email hoặc webhook",
-    "proF3": "Custom Widget Builder — HTML/CSS/JS với chỉnh sửa hỗ trợ AI",
-    "proF4": "Bộ kết nối MCP — cắm WorldMonitor vào Claude, GPT hoặc LLM tùy chỉnh",
-    "proF5": "Equity research, phân tích cổ phiếu và backtesting",
-    "proF6": "Tìm chuyến bay và so sánh giá",
-    "proF7": "Động cơ quy tắc cảnh báo — trình kích hoạt tùy chỉnh, giờ yên lặng, kênh mã hóa AES-256",
-    "proF8": "Watchlist thị trường, theo dõi vĩ mô và ngân hàng trung ương",
-    "proF9": "AI Market Implications và Regional Intelligence (Sắp ra mắt: giám sát quỹ đạo, lớp bản đồ cao cấp, lịch sử mở rộng)",
+    "proDesc": "Một trung tâm tình báo cá nhân mà bạn đăng ký. Một nền tảng để xây dựng. Một khóa duy nhất cho hơn 30 dịch vụ trực tiếp.",
+    "proF1": "Bản tóm tắt AI cá nhân — hằng ngày, hai lần mỗi ngày hoặc hằng tuần — tới Slack, Discord, Telegram, Email hoặc webhook",
+    "proF2": "Cảnh báo theo thời gian thực cho các sự kiện quan trọng, không chỉ là bản tóm tắt theo lịch",
+    "proF3": "Quy tắc cảnh báo tùy chỉnh — giờ im lặng, kênh mã hóa AES-256",
+    "proF4": "Trình kết nối MCP — kết nối WorldMonitor với Claude, GPT, các LLM riêng của bạn (50 lượt gọi/ngày)",
+    "proF5": "Làm mới dữ liệu ưu tiên — gần như thời gian thực trên tất cả hơn 30 dịch vụ",
+    "proF6": "Pro Widget Builder — mô hình mạnh mẽ hơn, nhiều lượt hơn, JS tương tác",
     "proCta": "Đặt trước quyền truy cập sớm",
     "choosePlan": "Chọn gói",
     "entTitle": "World Monitor Enterprise",
@@ -59,20 +56,20 @@
     "title": "Tại sao nâng cấp",
     "noiseTitle": "Biết đầu tiên",
     "noiseDesc": "Bất thường AIS → Brent tăng đột biến → Slack của bạn dưới một phút. Tín hiệu, không phải tiêu đề.",
-    "fasterTitle": "Hỏi bất cứ điều gì",
-    "fasterDesc": "Trò chuyện với cùng 30+ dịch vụ mà bảng điều khiển của bạn thấy. WM Analyst, luôn hoạt động.",
+    "fasterTitle": "Biết nhanh hơn",
+    "fasterDesc": "Mỗi dịch vụ trong hơn 30 dịch vụ được làm mới gần như thời gian thực với Pro — không phải chỉ mỗi 5-15 phút.",
     "controlTitle": "Xây dựng bất cứ điều gì",
-    "controlDesc": "Custom widget builder (HTML/CSS/JS + AI) cộng với MCP cho quy trình AI của riêng bạn.",
+    "controlDesc": "Trình kết nối MCP cho quy trình AI riêng của bạn, cộng với Pro Widget Builder mạnh mẽ hơn — nhiều lượt hơn, bản dựng lớn hơn, JS tương tác.",
     "deeperTitle": "Thức dậy được thông tin đầy đủ",
     "deeperDesc": "AI digest 30 mục được sắp xếp theo quy tắc cảnh báo của bạn. Critical, High, Medium — với Assessment và Signals to watch."
   },
   "pillars": {
-    "askIt": "Hỏi nó",
-    "askItDesc": "Chat WM Analyst. Cả 30+ dịch vụ có thể truy vấn bằng ngôn ngữ tự nhiên.",
+    "askIt": "Biết nhanh hơn",
+    "askItDesc": "Mỗi dịch vụ được làm mới gần như thời gian thực với Pro — không phải chỉ mỗi 5-15 phút như ở gói Free.",
     "subscribeIt": "Đăng ký",
     "subscribeItDesc": "AI digest theo nhịp của bạn: hàng ngày, hai lần mỗi ngày hoặc hàng tuần. Slack, Discord, Telegram, Email, webhook.",
     "buildOnIt": "Xây dựng trên đó",
-    "buildOnItDesc": "Custom Widget Builder (HTML/CSS/JS + AI) và MCP cho Claude, GPT, LLM tùy chỉnh."
+    "buildOnItDesc": "MCP cho Claude, GPT, các LLM riêng của bạn, cộng với Pro Widget Builder mạnh mẽ hơn — nhiều lượt hơn, bản dựng lớn hơn, JS tương tác."
   },
   "deliveryDesk": {
     "eyebrow": "BÀN GIAO HÀNG",
@@ -104,7 +101,7 @@
     "tradersTitle": "Thương nhân năng lượng và hàng hóa",
     "tradersDesc": "Theo dõi chuyển động tàu, suy luận hàng hóa, gián đoạn chuỗi cung ứng và tín hiệu địa chính trị di chuyển thị trường.",
     "researchersTitle": "Nhà nghiên cứu và nhà phân tích",
-    "researchersDesc": "Equity research, phân tích kinh tế và các khung địa chính trị để phân tích và báo cáo sâu hơn.",
+    "researchersDesc": "Tương quan đa nguồn và phân tích kinh tế, với một khóa kết nối MCP trên hơn 30 dịch vụ để phân tích và báo cáo sâu hơn.",
     "journalistsTitle": "Nhà báo và truyền thông",
     "journalistsDesc": "Theo dõi các diễn biến nhanh trên các thị trường và khu vực mà không cần khâu các nguồn thủ công.",
     "govTitle": "Chính phủ và các tổ chức",
@@ -147,22 +144,22 @@
   },
   "proShowcase": {
     "proTier": "CẤP ĐỘ PRO",
-    "title": "Nhà phân tích AI không bao giờ ngủ của bạn",
-    "subtitle": "Bảng điều khiển miễn phí cho bạn thấy thế giới. Pro cho bạn một nhà phân tích để hỏi, một digest để đăng ký và các nguyên thủy để xây dựng. Cổ phiếu, vĩ mô, rủi ro địa chính trị — và các kết nối giữa chúng.",
-    "equityResearch": "Equity research",
-    "equityResearchDesc": "Phân tích cổ phiếu toàn cầu với trực quan hóa tài chính, mục tiêu giá của nhà phân tích và chỉ số định giá. Theo dõi những gì di chuyển thị trường.",
-    "geopoliticalAnalysis": "Phân tích địa chính trị",
-    "geopoliticalAnalysisDesc": "Khung chiến lược Grand Chessboard, mô hình Prisoners of Geography và theo dõi ngân hàng trung ương và chính sách tiền tệ.",
-    "economyAnalytics": "Phân tích kinh tế",
-    "economyAnalyticsDesc": "GDP, lạm phát, lãi suất và chu kỳ tăng trưởng. Dữ liệu vĩ mô tương quan với tín hiệu thị trường và sự kiện địa chính trị.",
-    "riskMonitoring": "Giám sát rủi ro và kịch bản",
-    "riskMonitoringDesc": "Ghi điểm rủi ro toàn cầu, phân tích kịch bản và đánh giá rủi ro địa chính trị. Phát hiện hội tụ giữa tín hiệu thị trường và chính trị.",
+    "title": "Trung tâm tình báo cá nhân của bạn, được tự động hóa",
+    "subtitle": "Bảng điều khiển miễn phí đã bao gồm phân tích cổ phiếu, điểm khả năng phục hồi và Scenario Engine. Pro bổ sung lớp phân phối: một bản tóm tắt để đăng ký, cảnh báo theo thời gian thực, MCP cho các tác nhân riêng của bạn, và một trình tạo widget mạnh mẽ hơn.",
+    "equityResearch": "Làm mới dữ liệu ưu tiên",
+    "equityResearchDesc": "Tất cả hơn 30 dịch vụ được cập nhật gần như thời gian thực với Pro — so với mỗi 5-15 phút ở gói Free.",
+    "geopoliticalAnalysis": "Truy cập MCP & tác nhân",
+    "geopoliticalAnalysisDesc": "Kết nối Claude, GPT hoặc các LLM riêng trực tiếp với WorldMonitor qua MCP — bao gồm 50 lượt gọi/ngày.",
+    "economyAnalytics": "Pro Widget Builder",
+    "economyAnalyticsDesc": "Một mô hình mạnh mẽ hơn, nhiều lượt hơn, bản dựng lớn hơn và JavaScript tương tác — xây dựng các bảng tùy chỉnh phong phú hơn so với gói miễn phí.",
+    "riskMonitoring": "Quy tắc cảnh báo tùy chỉnh",
+    "riskMonitoringDesc": "Kích hoạt theo giá và sự kiện, giờ im lặng, và kênh phân phối mã hóa AES-256 — được điều chỉnh theo những gì bạn đang theo dõi.",
     "orbitalSurveillance": "Giám sát quỹ đạo",
-    "orbitalSurveillanceDesc": "(Sắp ra mắt) Dự báo đi qua quỹ đạo, phân tích tần suất ghé thăm lại và cảnh báo cửa sổ chụp ảnh. Biết khi nào các vệ tinh tình báo quan sát các khu vực quan tâm của bạn.",
+    "orbitalSurveillanceDesc": "(Sắp ra mắt) Dự đoán đường bay ngang qua và cảnh báo khung giờ chụp ảnh cho các vệ tinh được đặt tên — bên cạnh các vị trí quỹ đạo trực tiếp đã có sẵn ở gói miễn phí.",
     "morningBriefs": "Bàn tình báo cá nhân",
     "morningBriefsDesc": "Tối đa 30 câu chuyện được xếp hạng mỗi digest, loại bỏ trùng lặp trên 400+ nguồn. Chọn nhịp hàng ngày, hai lần mỗi ngày hoặc hàng tuần — hoặc cảnh báo theo thời gian thực cho các sự kiện quan trọng. AI Assessment và Signals to watch được giao đến Slack, Discord, Telegram, Email hoặc webhook. Không phải bản tin — là nhà phân tích.",
-    "oneKey": "30+ dịch vụ, 1 khóa",
-    "oneKeyDesc": "Finnhub, FRED, ACLED, UCDP, NASA FIRMS, AISStream, OpenSky và nhiều hơn nữa — tất cả đang hoạt động, không cần đăng ký riêng.",
+    "oneKey": "Leo thang theo thời gian thực",
+    "oneKeyDesc": "Các sự kiện quan trọng được gửi ngay khi chúng xảy ra qua cùng các kênh mã hóa — không cần chờ bản tóm tắt theo lịch tiếp theo.",
     "deliveryLabel": "Chọn cách tình báo tìm đến bạn"
   },
   "slackMock": {
@@ -271,15 +268,15 @@
     "fStandard": "Tiêu chuẩn",
     "fKeyAuth": "Xác thực khóa",
     "fSsoMfa": "SSO/MFA/RBAC/kiểm toán",
-    "noteBelow": "Nền tảng cốt lõi vẫn miễn phí. Các gói trả phí mở khóa Equity research, phân tích vĩ mô, bản tóm tắt AI và sử dụng tổ chức.",
+    "noteBelow": "Nền tảng cốt lõi vẫn miễn phí. Các gói trả phí mở khóa phân phối AI theo lịch, quyền truy cập MCP, làm mới ưu tiên và sử dụng cho tổ chức.",
     "f50plus": "50+"
   },
   "faq": {
     "title": "Câu hỏi thường gặp",
     "q1": "World Monitor vẫn miễn phí phải không?",
-    "a1": "Đúng. Nền tảng cốt lõi vẫn miễn phí. Pro thêm Equity research, phân tích vĩ mô và bản tóm tắt AI. Enterprise thêm triển khai nhóm và ứng dụng TV.",
+    "a1": "Có. Nền tảng cốt lõi vẫn miễn phí — bao gồm phân tích cổ phiếu, điểm khả năng phục hồi và Scenario Engine. Pro bổ sung phân phối AI theo lịch, quy tắc cảnh báo tùy chỉnh, quyền truy cập MCP và làm mới ưu tiên. Enterprise bổ sung triển khai theo nhóm và ứng dụng TV.",
     "q2": "Tại sao trả tiền cho Pro?",
-    "a2": "Pro dành cho nhà đầu tư, nhà phân tích và chuyên gia muốn giám sát cổ phiếu, phân tích địa chính trị, phân tích kinh tế và bản tóm tắt hàng ngày bằng AI — tất cả dưới một khóa.",
+    "a2": "Pro dành cho các nhà đầu tư, nhà phân tích và chuyên gia muốn có bản tóm tắt AI riêng được gửi theo lịch, quy tắc cảnh báo tùy chỉnh, quyền truy cập MCP cho các tác nhân riêng của họ, và làm mới dữ liệu ưu tiên — tất cả chỉ dưới một khóa.",
     "q3": "Enterprise dành cho ai?",
     "a3": "Enterprise dành cho các nhóm cần sử dụng chung, API, tích hợp, tùy chọn triển khai và hỗ trợ trực tiếp.",
     "q4": "Tôi có thể bắt đầu với Pro và nâng cấp sau không?",
@@ -293,7 +290,7 @@
     "q8": "MCP là gì?",
     "a8": "MCP cho phép các AI agents — Claude, GPT, LLM tùy chỉnh — sử dụng WorldMonitor như một công cụ, truy vấn tất cả 30+ dịch vụ. Bao gồm trong Pro. Enterprise thêm máy chủ MCP riêng và triển khai tùy chỉnh.",
     "q9": "Tôi có thể xây dựng các bảng của riêng mình không?",
-    "a9": "Có. Pro bao gồm Custom Widget Builder — xây dựng bảng từ HTML, CSS và JavaScript, với chỉnh sửa hỗ trợ AI.",
+    "a9": "Có — cho tất cả mọi người. Gói miễn phí bao gồm Custom Widget Builder. Pro nâng cấp nó với mô hình mạnh mẽ hơn, nhiều lượt hơn, bản dựng lớn hơn và JavaScript tương tác.",
     "q10": "Tôi có thể kết nối Claude hoặc GPT với WorldMonitor không?",
     "a10": "Có. MCP được bao gồm trong Pro — kết nối WorldMonitor với Claude, GPT hoặc bất kỳ LLM nào tương thích MCP như một công cụ trực tiếp.",
     "q11": "Digest được cá nhân hóa như thế nào?",
@@ -305,7 +302,7 @@
   },
   "finalCta": {
     "title": "Bắt đầu với Pro. Mở rộng đến Enterprise.",
-    "subtitle": "Tiếp tục sử dụng World Monitor miễn phí, hoặc nâng cấp để có Equity research, phân tích vĩ mô và bản tóm tắt AI. Nếu tổ chức của bạn cần truy cập nhóm, ứng dụng TV hoặc hỗ trợ API — hãy trao đổi với chúng tôi.",
+    "subtitle": "Tiếp tục sử dụng World Monitor miễn phí, hoặc nâng cấp lên Pro để có phân phối AI theo lịch, quyền truy cập MCP và làm mới ưu tiên. Nếu tổ chức của bạn cần quyền truy cập nhóm, ứng dụng TV hoặc hỗ trợ API, hãy liên hệ với chúng tôi.",
     "getPro": "Đặt trước quyền truy cập sớm",
     "talkToSales": "Liên hệ kinh doanh"
   },
@@ -329,17 +326,17 @@
     "linkedin": "LinkedIn",
     "whatsapp": "WhatsApp",
     "telegram": "Telegram",
-    "shareText": "Tôi vừa tham gia danh sách chờ World Monitor Pro — giám sát cổ phiếu, phân tích địa chính trị và bản tóm tắt hàng ngày bằng AI trong một nền tảng. Hãy tham gia cùng tôi:",
+    "shareText": "Tôi vừa tham gia danh sách chờ World Monitor Pro — bản tóm tắt AI cá nhân, quyền truy cập MCP và làm mới ưu tiên trong một nền tảng. Hãy tham gia cùng tôi:",
     "joinWaitlistShare": "Tham gia danh sách chờ World Monitor Pro:",
     "youreIn": "Bạn đã tham gia!",
     "invitedBanner": "Bạn đã được mời — hãy tham gia danh sách chờ"
   },
   "soonBadge": "Sắp ra mắt",
   "meta": {
-    "title": "World Monitor Pro — Nhà phân tích AI, Bàn làm việc Trí tuệ Cá nhân, MCP cho Claude & GPT",
-    "description": "Lớp AI địa chính trị. Hỏi nó, đăng ký nó, xây dựng trên nó. Chat WM Analyst trên 30+ dịch vụ trực tiếp, bản tóm tắt AI gửi hàng ngày, hai lần mỗi ngày hoặc hàng tuần đến Slack, Discord, Telegram, Email hoặc webhook, trình xây dựng widget tùy chỉnh (HTML/CSS/JS + AI), và trình kết nối MCP cho Claude, GPT và LLM tùy chỉnh.",
-    "ogTitle": "World Monitor Pro — Lớp AI Địa chính trị",
-    "ogDescription": "Hỏi nó, đăng ký nó, xây dựng trên nó. Chat WM Analyst, bản tóm tắt AI theo lịch của bạn (hàng ngày, hai lần mỗi ngày hoặc hàng tuần), trình xây dựng widget tùy chỉnh, và MCP cho Claude/GPT — trên 30+ dịch vụ trực tiếp dưới một khóa."
+    "title": "World Monitor Pro — Trung tâm tình báo cá nhân, MCP cho Claude & GPT",
+    "description": "Lớp phân phối thông tin tình báo. Bản tóm tắt AI cá nhân trên hơn 30 dịch vụ trực tiếp — hằng ngày, hai lần mỗi ngày hoặc hằng tuần tới Slack, Discord, Telegram, Email hoặc webhook — cùng các quy tắc cảnh báo tùy chỉnh, trình kết nối MCP cho Claude, GPT và các LLM riêng, Pro Widget Builder mạnh mẽ hơn, và làm mới dữ liệu ưu tiên gần như thời gian thực.",
+    "ogTitle": "World Monitor Pro — Lớp phân phối thông tin tình báo",
+    "ogDescription": "Đăng ký, xây dựng trên đó, biết trước tiên. Bản tóm tắt AI cá nhân theo lịch của bạn, MCP cho Claude/GPT, Pro Widget Builder mạnh mẽ hơn, và làm mới dữ liệu ưu tiên — trên hơn 30 dịch vụ chỉ với một khóa."
   },
   "pricing": {
     "suffixForever": "mãi mãi",
@@ -359,23 +356,22 @@
       "free": {
         "description": "Bắt đầu với các tính năng cơ bản",
         "features": [
-          "Bảng điều khiển cốt lõi",
-          "Nguồn cấp tin tức toàn cầu",
-          "Cảnh báo động đất & thời tiết",
-          "Chế độ xem bản đồ cơ bản"
+          "Bản đồ trực tiếp đầy đủ — cả 56 lớp, hơn 500 nguồn tin",
+          "Phân tích cổ phiếu, kiểm thử ngược và tóm tắt thị trường AI hằng ngày",
+          "Trò chuyện WM Analyst trên hơn 30 dịch vụ trực tiếp",
+          "Tóm tắt quốc gia, chỉ số bất ổn và điểm khả năng phục hồi"
         ],
         "cta": "Bắt đầu"
       },
       "pro": {
         "description": "Bảng điều khiển trí tuệ đầy đủ",
         "features": [
-          "Tất cả trong Miễn phí",
-          "Phân tích cổ phiếu AI & backtesting",
-          "Tóm tắt thị trường hàng ngày",
-          "Theo dõi quân sự & địa chính trị",
-          "Trình tạo widget tùy chỉnh",
-          "Quyền truy cập MCP + SDK cho Claude Desktop và các ứng dụng khách AI khác (50 lượt gọi/ngày)",
-          "Làm mới dữ liệu ưu tiên"
+          "Tất cả những gì có trong Free",
+          "Bản tóm tắt AI cá nhân và cảnh báo theo thời gian thực — Slack, Discord, Telegram, Email, webhook",
+          "Quy tắc cảnh báo tùy chỉnh — giờ im lặng, kênh mã hóa AES-256",
+          "Quyền truy cập MCP + SDK cho Claude Desktop và các ứng dụng AI khác (50 lượt gọi/ngày)",
+          "Làm mới dữ liệu ưu tiên — gần như thời gian thực",
+          "Pro Widget Builder — mô hình mạnh mẽ hơn, nhiều lượt hơn, JS tương tác"
         ]
       },
       "api": {

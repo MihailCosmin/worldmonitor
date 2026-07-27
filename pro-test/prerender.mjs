@@ -232,9 +232,6 @@ const indexContent = `
   <p>${en.twoPath.proF4}</p>
   <p>${en.twoPath.proF5}</p>
   <p>${en.twoPath.proF6}</p>
-  <p>${en.twoPath.proF7}</p>
-  <p>${en.twoPath.proF8}</p>
-  <p>${en.twoPath.proF9}</p>
 
   <h3>${en.twoPath.entTitle}</h3>
   <p>${en.twoPath.entDesc}</p>
@@ -254,7 +251,7 @@ const indexContent = `
   <h3>${en.proShowcase.orbitalSurveillance}</h3><p>${en.proShowcase.orbitalSurveillanceDesc}</p>
   <h3>${en.proShowcase.morningBriefs}</h3><p>${en.proShowcase.morningBriefsDesc}</p>
   ${/* en.proShowcase.oneKeyDesc is intentionally NOT used here — the React UI renders that plain-text version at App.tsx:734; this prerender block ships a link-rich variant for AEO source-citation credit. Do not remove oneKeyDesc from en.json; the React app still depends on it. */ ''}
-  <h3>${en.proShowcase.oneKey}</h3><p>Ingested live: <a href="https://finnhub.io/">Finnhub</a>, <a href="https://fred.stlouisfed.org/">FRED</a>, <a href="https://acleddata.com/">ACLED</a>, <a href="https://ucdp.uu.se/">UCDP</a>, <a href="https://firms.modaps.eosdis.nasa.gov/">NASA FIRMS</a>, <a href="https://aisstream.io/">AISStream</a>, <a href="https://opensky-network.org/">OpenSky</a>, <a href="https://www.usgs.gov/programs/earthquake-hazards">USGS</a>, <a href="https://www.imf.org/en/Data">IMF</a>, <a href="https://www.bis.org/">BIS</a>, and more — all active under one key, no separate registrations.</p>
+  <h3>${en.proShowcase.oneKey}</h3><p>Critical events push the moment they happen through the same AES-256 encrypted channels as your scheduled digest — Slack, Discord, Telegram, Email or webhook — with no wait for the next send.</p>
 
   <h2>${en.deliveryDesk.title}</h2>
   <p>${en.deliveryDesk.body}</p>
@@ -423,7 +420,7 @@ const welcomeSeoPrerender = `
   <p>The full live map — every layer, 500+ feeds, country briefs and breaking alerts, all six monitors — is free with no signup and no trial clock. World Monitor Pro ($39.99/month or $399.99/year) adds the decision layer described below, and native desktop apps for Windows, macOS and Linux plus an Android TV app for wall displays are available too.</p>
 
   <h2>What World Monitor Pro and Enterprise add</h2>
-  <p>Pro turns the observatory into an operations room. WM Analyst answers questions across 30+ live services with citations; a Scenario Engine and Route Explorer let you game disruptions before they hit; a personal AI digest sends up to 30 ranked items daily, twice-daily or weekly to Slack, Discord, Telegram, Email or webhook; a custom widget builder assembles your own panels from HTML, CSS and JavaScript with AI assistance; and MCP plus a REST API expose 39 tools under one key. Enterprise adds team workspaces with SSO, MFA and RBAC; cloud, on-premises or air-gapped deployment; satellite imagery with change detection and SAR; tens of thousands of mapped infrastructure assets; and 100+ data connectors including Snowflake, Splunk and Sentinel.</p>
+  <p>Pro turns the observatory into an operations room. A personal AI digest sends up to 30 ranked items daily, twice-daily or weekly to Slack, Discord, Telegram, Email or webhook, with real-time alerts and custom rules for critical events; MCP connects Claude, GPT or custom LLMs directly to WorldMonitor (50 calls/day); a Pro Widget Builder upgrades the free custom-panel tool with a smarter model, more turns and interactive JavaScript; and every one of the 30+ services refreshes near real time instead of every 5-15 minutes. Enterprise adds team workspaces with SSO, MFA and RBAC; cloud, on-premises or air-gapped deployment; satellite imagery with change detection and SAR; tens of thousands of mapped infrastructure assets; a REST API with bulk export; and 100+ data connectors including Snowflake, Splunk and Sentinel.</p>
 
   <h2>The numbers, live in the dashboard today</h2>
   <p>Every figure below is live now, not a roadmap — open the app and count. Sources are cited on every panel.</p>
@@ -472,7 +469,7 @@ ${welcomeFaqEntries}
 
   <h2>Learn more</h2>
   <ul>
-    <li><a href="https://www.worldmonitor.app/pro">World Monitor Pro</a> — AI analyst, scheduled digests, MCP for Claude &amp; GPT</li>
+    <li><a href="https://www.worldmonitor.app/pro">World Monitor Pro</a> — personal AI digest, MCP for Claude &amp; GPT</li>
     <li><a href="https://www.worldmonitor.app/blog/">World Monitor Blog</a> — OSINT guides, geopolitics and market intelligence</li>
     <li><a href="https://www.worldmonitor.app/blog/posts/what-is-worldmonitor-real-time-global-intelligence/">What is World Monitor?</a></li>
     <li><a href="https://www.worldmonitor.app/blog/posts/worldmonitor-is-not-palantir/">WorldMonitor is not an open-source Palantir</a></li>

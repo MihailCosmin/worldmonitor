@@ -12,7 +12,7 @@
   "hero": {
     "noiseWord": "Bruit",
     "signalWord": "Signal",
-    "valueProps": "La couche d'IA géopolitique — interrogez-la, abonnez-vous, construisez dessus.",
+    "valueProps": "La couche de diffusion du renseignement — abonnez-vous, construisez, soyez informé en premier.",
     "reserveEarlyAccess": "Réservez votre accès anticipé",
     "launchingDate": "Disponible maintenant",
     "tryFreeDashboard": "Essayez le tableau de bord gratuit",
@@ -27,16 +27,13 @@
   },
   "twoPath": {
     "proTitle": "World Monitor Pro",
-    "proDesc": "Votre analyste IA. Un bureau de renseignement personnel. Une plateforme sur laquelle construire. Une clé pour 30+ services en direct.",
-    "proF1": "Chat WM Analyst — interrogez les 30+ services en langage naturel",
-    "proF2": "Digest IA — quotidien, biquotidien ou hebdomadaire — vers Slack, Discord, Telegram, Email ou webhook",
-    "proF3": "Constructeur de widgets personnalisés — HTML/CSS/JS avec modification assistée par IA",
-    "proF4": "Connecteurs MCP — branchez WorldMonitor à Claude, GPT ou vos LLMs",
-    "proF5": "Recherche actions, analyse boursière et backtesting",
-    "proF6": "Recherche de vols et comparaison de prix",
-    "proF7": "Moteur de règles d'alerte — déclencheurs personnalisés, heures de silence, canaux chiffrés AES-256",
-    "proF8": "Watchlist de marché, macro et banques centrales",
-    "proF9": "AI Market Implications et Regional Intelligence (Bientôt : surveillance orbitale, couches de carte premium, historique étendu)",
+    "proDesc": "Un bureau de renseignement personnel auquel vous vous abonnez. Une plateforme sur laquelle construire. Une seule clé pour 30+ services en direct.",
+    "proF1": "Digest IA personnel — quotidien, biquotidien ou hebdomadaire — vers Slack, Discord, Telegram, Email ou webhook",
+    "proF2": "Alertes en temps réel pour les événements critiques, pas seulement des digests programmés",
+    "proF3": "Règles d'alerte personnalisées — heures de silence, canaux chiffrés AES-256",
+    "proF4": "Connecteurs MCP — branchez WorldMonitor à Claude, GPT, vos LLMs (50 appels/jour)",
+    "proF5": "Actualisation prioritaire des données — quasi temps réel sur les 30+ services",
+    "proF6": "Pro Widget Builder — modèle plus performant, plus de tours, JS interactif",
     "proCta": "Réservez votre accès anticipé",
     "choosePlan": "Choisissez votre offre",
     "entTitle": "World Monitor Enterprise",
@@ -59,20 +56,20 @@
     "title": "Pourquoi passer Pro",
     "noiseTitle": "Sachez en premier",
     "noiseDesc": "Anomalie AIS → flambée du Brent → votre Slack en moins d'une minute. Du signal, pas des titres.",
-    "fasterTitle": "Demandez n'importe quoi",
-    "fasterDesc": "Chattez avec les mêmes 30+ services que votre tableau de bord. WM Analyst, toujours disponible.",
+    "fasterTitle": "Soyez informé plus vite",
+    "fasterDesc": "Chacun des 30+ services s'actualise quasiment en temps réel avec Pro — pas toutes les 5 à 15 minutes.",
     "controlTitle": "Construisez n'importe quoi",
-    "controlDesc": "Constructeur de widgets personnalisés (HTML/CSS/JS + IA) et MCP pour vos propres workflows IA.",
+    "controlDesc": "Connecteurs MCP pour vos propres flux IA, plus un Pro Widget Builder plus performant — plus de tours, des builds plus grands, JS interactif.",
     "deeperTitle": "Réveillez-vous informé",
     "deeperDesc": "Digest IA de 30 items classés par vos règles d'alerte. Critical, High, Medium — avec Assessment et Signals to watch."
   },
   "pillars": {
-    "askIt": "Interrogez-la",
-    "askItDesc": "Chat WM Analyst. Les 30+ services interrogeables en langage naturel.",
+    "askIt": "Soyez informé plus vite",
+    "askItDesc": "Chaque service s'actualise quasiment en temps réel avec Pro — pas toutes les 5 à 15 minutes comme en Free.",
     "subscribeIt": "Abonnez-vous",
     "subscribeItDesc": "Digest IA à votre cadence : quotidien, biquotidien ou hebdomadaire. Slack, Discord, Telegram, Email, webhook.",
     "buildOnIt": "Construisez dessus",
-    "buildOnItDesc": "Constructeur de widgets personnalisés (HTML/CSS/JS + IA) et MCP pour Claude, GPT, LLMs personnalisés."
+    "buildOnItDesc": "MCP pour Claude, GPT, vos LLMs, plus un Pro Widget Builder plus performant — plus de tours, des builds plus grands, JS interactif."
   },
   "deliveryDesk": {
     "eyebrow": "BUREAU DE LIVRAISON",
@@ -104,7 +101,7 @@
     "tradersTitle": "Traders énergie et matières premières",
     "tradersDesc": "Suivez mouvements de navires, inférence de cargaison, disruptions de chaîne d'approvisionnement et signaux géopolitiques qui font bouger les marchés.",
     "researchersTitle": "Chercheurs et analystes",
-    "researchersDesc": "Recherche actions, analytique économique et cadres géopolitiques pour analyse et reporting plus approfondis.",
+    "researchersDesc": "Corrélation multi-sources et analyses économiques, avec une seule clé connectée au MCP à travers 30+ services pour une analyse et des rapports plus approfondis.",
     "journalistsTitle": "Journalistes et médias",
     "journalistsDesc": "Suivez des événements rapides à travers marchés et régions sans agréger les sources manuellement.",
     "govTitle": "Gouvernement et institutions",
@@ -147,22 +144,22 @@
   },
   "proShowcase": {
     "proTier": "NIVEAU PRO",
-    "title": "Votre analyste IA qui ne dort jamais",
-    "subtitle": "Le tableau de bord gratuit vous montre le monde. Pro vous donne un analyste à interroger, un digest auquel s'abonner et des primitives sur lesquelles construire. Actions, macro, risque géopolitique — et les connexions entre eux.",
-    "equityResearch": "Recherche actions",
-    "equityResearchDesc": "Analyse boursière globale avec visualisation des états financiers, objectifs de prix d'analystes et métriques de valorisation. Suivez ce qui fait bouger les marchés.",
-    "geopoliticalAnalysis": "Analyse géopolitique",
-    "geopoliticalAnalysisDesc": "Cadre stratégique Grand Chessboard, modèles Prisoners of Geography et suivi de politique monétaire et banques centrales.",
-    "economyAnalytics": "Analytique économique",
-    "economyAnalyticsDesc": "PIB, inflation, taux d'intérêt et cycles de croissance. Données macro corrélées avec signaux de marché et événements géopolitiques.",
-    "riskMonitoring": "Monitoring de risque et scénarios",
-    "riskMonitoringDesc": "Scoring de risque global, analyse de scénarios et évaluation de risque géopolitique. Détection de convergences entre signaux de marché et politiques.",
+    "title": "Votre bureau de renseignement personnel, automatisé",
+    "subtitle": "Le tableau de bord gratuit inclut déjà l'analyse boursière, les scores de résilience et le Scenario Engine. Pro ajoute la couche de diffusion : un digest auquel s'abonner, des alertes en temps réel, MCP pour vos propres agents, et un widget builder plus performant.",
+    "equityResearch": "Actualisation prioritaire des données",
+    "equityResearchDesc": "Les 30+ services s'actualisent quasiment en temps réel avec Pro — contre toutes les 5 à 15 minutes en Free.",
+    "geopoliticalAnalysis": "Accès MCP & Agents",
+    "geopoliticalAnalysisDesc": "Connectez Claude, GPT ou vos LLMs directement à WorldMonitor via MCP — 50 appels/jour inclus.",
+    "economyAnalytics": "Pro Widget Builder",
+    "economyAnalyticsDesc": "Un modèle plus performant, plus de tours, des builds plus grands et du JavaScript interactif — créez des panneaux personnalisés plus riches qu'en Free.",
+    "riskMonitoring": "Règles d'alerte personnalisées",
+    "riskMonitoringDesc": "Déclencheurs de prix et d'événements, heures de silence, et canaux de diffusion chiffrés AES-256 — ajustés à ce que vous surveillez.",
     "orbitalSurveillance": "Surveillance orbitale",
-    "orbitalSurveillanceDesc": "(Bientôt) Prédictions de passages orbitaux, analyse de fréquence de revisite et alertes de fenêtre de prise. Sachez quand les satellites de renseignement observent vos zones d'intérêt.",
+    "orbitalSurveillanceDesc": "(Bientôt) Prévisions de passages et alertes de fenêtres d'imagerie pour des satellites nommés — au-delà des positions orbitales en direct déjà offertes en Free.",
     "morningBriefs": "Bureau de renseignement personnel",
     "morningBriefsDesc": "Jusqu'à 30 histoires classées par digest, dédoublonnées sur 500+ sources. Cadence au choix — quotidienne, biquotidienne ou hebdomadaire — ou alertes en temps réel pour les événements critiques. Assessment IA et Signals to watch livrés sur Slack, Discord, Telegram, Email ou webhook. Pas une newsletter — un analyste.",
-    "oneKey": "30+ services, 1 clé",
-    "oneKeyDesc": "Finnhub, FRED, ACLED, UCDP, NASA FIRMS, AISStream, OpenSky et plus — tous actifs, sans inscriptions séparées.",
+    "oneKey": "Escalade en temps réel",
+    "oneKeyDesc": "Les événements critiques sont envoyés dès qu'ils se produisent via les mêmes canaux chiffrés — sans attendre le prochain digest programmé.",
     "deliveryLabel": "Choisissez comment le renseignement vous trouve"
   },
   "slackMock": {
@@ -271,15 +268,15 @@
     "fStandard": "Standard",
     "fKeyAuth": "Auth par clé",
     "fSsoMfa": "SSO/MFA/RBAC/audit",
-    "noteBelow": "La plateforme de base reste gratuite. Les offres payantes débloquent recherche actions, analytique macro, briefings IA et usage organisationnel.",
+    "noteBelow": "La plateforme de base reste gratuite. Les offres payantes débloquent la diffusion IA programmée, l'accès MCP, l'actualisation prioritaire et l'usage organisationnel.",
     "f50plus": "50+"
   },
   "faq": {
     "title": "Questions fréquentes",
     "q1": "World Monitor est-il toujours gratuit ?",
-    "a1": "Oui. La plateforme de base reste gratuite. Pro ajoute recherche actions, analytique macro et briefings IA. Enterprise ajoute déploiements d'équipe et apps TV.",
+    "a1": "Oui. La plateforme de base reste gratuite — y compris l'analyse boursière, les scores de résilience et le Scenario Engine. Pro ajoute la diffusion IA programmée, les règles d'alerte personnalisées, l'accès MCP et l'actualisation prioritaire. Enterprise ajoute les déploiements d'équipe et les applications TV.",
     "q2": "Pourquoi payer pour Pro ?",
-    "a2": "Pro est pour les investisseurs, analystes et professionnels qui veulent suivi des actions, analyse géopolitique, analytique économique et briefings quotidiens IA — le tout sous une clé.",
+    "a2": "Pro s'adresse aux investisseurs, analystes et professionnels qui veulent leur propre digest IA livré sur un calendrier, des règles d'alerte personnalisées, un accès MCP pour leurs propres agents, et une actualisation prioritaire des données — le tout sous une seule clé.",
     "q3": "Pour qui est Enterprise ?",
     "a3": "Enterprise est pour les équipes qui ont besoin d'usage partagé, d'APIs, d'intégrations, d'options de déploiement et de support direct.",
     "q4": "Puis-je commencer avec Pro et monter plus tard ?",
@@ -293,7 +290,7 @@
     "q8": "Qu'est-ce que MCP ?",
     "a8": "MCP permet aux agents IA — Claude, GPT, LLMs personnalisés — d'utiliser WorldMonitor comme outil, interrogeant les 30+ services. Inclus dans Pro. Enterprise ajoute des serveurs MCP privés et des déploiements personnalisés.",
     "q9": "Puis-je construire mes propres panneaux ?",
-    "a9": "Oui. Pro inclut le Constructeur de widgets personnalisés — construisez des panneaux en HTML, CSS et JavaScript, avec modification assistée par IA.",
+    "a9": "Oui — pour tout le monde. L'offre gratuite inclut le Custom Widget Builder. Pro l'améliore avec un modèle plus performant, plus de tours, des builds plus grands et du JavaScript interactif.",
     "q10": "Puis-je connecter Claude ou GPT à WorldMonitor ?",
     "a10": "Oui. MCP est inclus dans Pro — branchez WorldMonitor à Claude, GPT ou tout LLM compatible MCP comme outil en direct.",
     "q11": "Quel est le degré de personnalisation du digest ?",
@@ -305,7 +302,7 @@
   },
   "finalCta": {
     "title": "Commencez avec Pro. Passez à Enterprise.",
-    "subtitle": "Continuez à utiliser World Monitor gratuitement, ou passez à la recherche actions, l'analytique macro et les briefings IA. Si votre organisation a besoin d'accès d'équipe, d'apps TV ou de support API, parlons-en.",
+    "subtitle": "Continuez à utiliser World Monitor gratuitement, ou passez à Pro pour la diffusion IA programmée, l'accès MCP et l'actualisation prioritaire. Si votre organisation a besoin d'accès en équipe, d'applications TV ou d'un support API, contactez-nous.",
     "getPro": "Réservez votre accès anticipé",
     "talkToSales": "Contacter les ventes"
   },
@@ -329,17 +326,17 @@
     "linkedin": "LinkedIn",
     "whatsapp": "WhatsApp",
     "telegram": "Telegram",
-    "shareText": "Je viens de rejoindre la liste d'attente World Monitor Pro — suivi d'actions, analyse géopolitique et briefings quotidiens IA sur une plateforme. Rejoignez-moi :",
+    "shareText": "Je viens de rejoindre la liste d'attente World Monitor Pro — un digest IA personnel, l'accès MCP et l'actualisation prioritaire en une seule plateforme. Rejoignez-moi :",
     "joinWaitlistShare": "Rejoignez la liste d'attente World Monitor Pro :",
     "youreIn": "Vous êtes dedans !",
     "invitedBanner": "Vous avez été invité — rejoignez la liste d'attente"
   },
   "soonBadge": "Bientôt",
   "meta": {
-    "title": "World Monitor Pro — Analyste IA, Bureau d'Intelligence Personnelle, MCP pour Claude & GPT",
-    "description": "La couche IA géopolitique. Posez-lui des questions, abonnez-vous, construisez dessus. Discussion WM Analyst à travers 30+ services en direct, un digest IA livré quotidiennement, deux fois par jour ou hebdomadairement à Slack, Discord, Telegram, Email ou webhook, un générateur de widget personnalisé (HTML/CSS/JS + IA), et connecteurs MCP pour Claude, GPT et LLMs personnalisés.",
-    "ogTitle": "World Monitor Pro — La Couche IA Géopolitique",
-    "ogDescription": "Posez des questions, abonnez-vous, construisez dessus. Discussion WM Analyst, un digest IA selon votre horaire (quotidien, deux fois par jour ou hebdomadaire), générateur de widget personnalisé, et MCP pour Claude/GPT — à travers 30+ services en direct sous une seule clé."
+    "title": "World Monitor Pro — Bureau de renseignement personnel, MCP pour Claude & GPT",
+    "description": "La couche de diffusion du renseignement. Un digest IA personnel à travers 30+ services en direct — quotidien, biquotidien ou hebdomadaire vers Slack, Discord, Telegram, Email ou webhook — avec des règles d'alerte personnalisées, des connecteurs MCP pour Claude, GPT et LLMs personnalisés, un Pro Widget Builder plus performant, et une actualisation prioritaire quasi temps réel.",
+    "ogTitle": "World Monitor Pro — La couche de diffusion du renseignement",
+    "ogDescription": "Abonnez-vous, construisez, soyez informé en premier. Un digest IA personnel selon votre calendrier, MCP pour Claude/GPT, un Pro Widget Builder plus performant, et une actualisation prioritaire — à travers 30+ services sous une seule clé."
   },
   "pricing": {
     "suffixForever": "à jamais",
@@ -359,23 +356,22 @@
       "free": {
         "description": "Commencez avec les éléments essentiels",
         "features": [
-          "Panneaux de tableau de bord principaux",
-          "Fil d'actualité mondial",
-          "Alertes tremblements de terre et météo",
-          "Vue cartographique basique"
+          "Carte en direct complète — 56 couches, 500+ flux",
+          "Analyse boursière, backtesting et briefings IA quotidiens",
+          "Chat WM Analyst à travers 30+ services en direct",
+          "Briefings pays, indice d'instabilité et scores de résilience"
         ],
         "cta": "Commencer"
       },
       "pro": {
         "description": "Tableau de bord de renseignement complet",
         "features": [
-          "Tout ce qui est dans Gratuit",
-          "Analyse boursière IA et backtesting",
-          "Synthèses de marché quotidiennes",
-          "Suivi militaire et géopolitique",
-          "Générateur de widgets personnalisés",
+          "Tout ce qui est inclus en Free",
+          "Digest IA personnel et alertes en temps réel — Slack, Discord, Telegram, Email, webhook",
+          "Règles d'alerte personnalisées — heures de silence, canaux chiffrés AES-256",
           "Accès MCP + SDK pour Claude Desktop et autres clients IA (50 appels/jour)",
-          "Actualisation des données en priorité"
+          "Actualisation prioritaire des données — quasi temps réel",
+          "Pro Widget Builder — modèle plus performant, plus de tours, JS interactif"
         ]
       },
       "api": {

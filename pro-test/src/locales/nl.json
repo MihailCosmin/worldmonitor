@@ -12,7 +12,7 @@
   "hero": {
     "noiseWord": "Ruis",
     "signalWord": "Signaal",
-    "valueProps": "De geopolitieke AI-laag — vraag het, abonneer je, bouw erop voort.",
+    "valueProps": "De intelligence-bezorglaag — abonneer erop, bouw erop, weet het eerst.",
     "reserveEarlyAccess": "Reserveer je vroege toegang",
     "launchingDate": "Nu beschikbaar",
     "tryFreeDashboard": "Probeer het gratis dashboard",
@@ -27,16 +27,13 @@
   },
   "twoPath": {
     "proTitle": "World Monitor Pro",
-    "proDesc": "Jouw AI-analist. Een persoonlijk intelligence desk. Een platform om op te bouwen. Eén sleutel voor 30+ live diensten.",
-    "proF1": "WM Analyst chat — bevraag alle 30+ diensten conversationeel",
-    "proF2": "AI digest — dagelijks, tweemaal daags of wekelijks — naar Slack, Discord, Telegram, E-mail of webhook",
-    "proF3": "Custom Widget Builder — HTML/CSS/JS met AI-ondersteunde aanpassing",
-    "proF4": "MCP-connectoren — koppel WorldMonitor aan Claude, GPT of eigen LLM's",
-    "proF5": "Equity research, aandelenanalyse en backtesting",
-    "proF6": "Vluchten zoeken en prijsvergelijking",
-    "proF7": "Alert rules engine — eigen triggers, stille uren, AES-256 versleutelde kanalen",
-    "proF8": "Market watchlist, macro- en centralebank-tracking",
-    "proF9": "AI Market Implications en Regional Intelligence (Binnenkort: orbitale surveillance, premium kaartlagen, langere historiek)",
+    "proDesc": "Een persoonlijk intelligence-bureau waarop je abonneert. Een platform om op te bouwen. Eén sleutel voor 30+ live diensten.",
+    "proF1": "Persoonlijke AI-digest — dagelijks, twee keer per dag of wekelijks — naar Slack, Discord, Telegram, e-mail of webhook",
+    "proF2": "Realtime waarschuwingen voor kritieke gebeurtenissen, niet alleen geplande digests",
+    "proF3": "Aangepaste alarmregels — stille uren, AES-256-versleutelde kanalen",
+    "proF4": "MCP-connectoren — koppel WorldMonitor aan Claude, GPT, eigen LLM's (50 aanroepen/dag)",
+    "proF5": "Prioritaire data-refresh — bijna realtime over alle 30+ diensten",
+    "proF6": "Pro Widget Builder — krachtiger model, meer beurten, interactieve JS",
     "proCta": "Reserveer je vroege toegang",
     "choosePlan": "Kies je plan",
     "entTitle": "World Monitor Enterprise",
@@ -59,20 +56,20 @@
     "title": "Waarom upgraden",
     "noiseTitle": "Weet het eerst",
     "noiseDesc": "AIS-anomalie → Brent-piek → jouw Slack in minder dan een minuut. Signaal, geen koppen.",
-    "fasterTitle": "Vraag alles",
-    "fasterDesc": "Chat met dezelfde 30+ diensten die jouw dashboard ziet. WM Analyst, altijd aan.",
+    "fasterTitle": "Sneller op de hoogte",
+    "fasterDesc": "Elk van de 30+ diensten wordt met Pro bijna realtime ververst — niet elke 5-15 minuten.",
     "controlTitle": "Bouw alles",
-    "controlDesc": "Custom widget builder (HTML/CSS/JS + AI) plus MCP voor je eigen AI-workflows.",
+    "controlDesc": "MCP-connectoren voor je eigen AI-workflows, plus een krachtigere Pro Widget Builder — meer beurten, grotere builds, interactieve JS.",
     "deeperTitle": "Word geïnformeerd wakker",
     "deeperDesc": "30-item AI digest gesorteerd op jouw alert rules. Critical, High, Medium — met Assessment en Signals to watch."
   },
   "pillars": {
-    "askIt": "Vraag het",
-    "askItDesc": "WM Analyst chat. Alle 30+ diensten in natuurlijke taal bevraagbaar.",
+    "askIt": "Sneller op de hoogte",
+    "askItDesc": "Elke dienst wordt met Pro bijna realtime ververst — niet elke 5-15 minuten zoals bij Free.",
     "subscribeIt": "Abonneer je",
     "subscribeItDesc": "AI digest op jouw cadans: dagelijks, tweemaal daags of wekelijks. Slack, Discord, Telegram, E-mail, webhook.",
     "buildOnIt": "Bouw erop voort",
-    "buildOnItDesc": "Custom Widget Builder (HTML/CSS/JS + AI) en MCP voor Claude, GPT, eigen LLM's."
+    "buildOnItDesc": "MCP voor Claude, GPT, eigen LLM's, plus een krachtigere Pro Widget Builder — meer beurten, grotere builds, interactieve JS."
   },
   "deliveryDesk": {
     "eyebrow": "DELIVERY DESK",
@@ -104,7 +101,7 @@
     "tradersTitle": "Energie- en grondstoffentraders",
     "tradersDesc": "Volg scheepsbewegingen, cargo-inferentie, verstoringen in de toeleveringsketen en geopolitieke signalen die markten bewegen.",
     "researchersTitle": "Onderzoekers en analisten",
-    "researchersDesc": "Equity research, economische analytics en geopolitieke frameworks voor diepere analyse en rapportage.",
+    "researchersDesc": "Bron-overstijgende correlatie en economische analyses, met één MCP-gekoppelde sleutel over 30+ diensten voor diepgaandere analyse en rapportage.",
     "journalistsTitle": "Journalisten en media",
     "journalistsDesc": "Volg snelle ontwikkelingen over markten en regio's zonder bronnen handmatig aan elkaar te knopen.",
     "govTitle": "Overheid en instellingen",
@@ -147,22 +144,22 @@
   },
   "proShowcase": {
     "proTier": "PRO-NIVEAU",
-    "title": "Jouw AI-analist die nooit slaapt",
-    "subtitle": "Het gratis dashboard toont je de wereld. Pro geeft je een analist om te bevragen, een digest om op te abonneren en primitieven om op te bouwen. Aandelen, macro, geopolitiek risico — en de verbanden ertussen.",
-    "equityResearch": "Equity research",
-    "equityResearchDesc": "Wereldwijde aandelenanalyse met visualisatie van cijfers, analistenkoersen en waarderingsmetrics. Volg wat markten beweegt.",
-    "geopoliticalAnalysis": "Geopolitieke analyse",
-    "geopoliticalAnalysisDesc": "Grand Chessboard strategisch framework, Prisoners of Geography modellen en tracking van centrale banken en monetair beleid.",
-    "economyAnalytics": "Economische analytics",
-    "economyAnalyticsDesc": "BBP, inflatie, rente en groeicycli. Macro-data gecorreleerd aan marktsignalen en geopolitieke events.",
-    "riskMonitoring": "Risicomonitoring en scenario's",
-    "riskMonitoringDesc": "Wereldwijde risicoscoring, scenario-analyse en geopolitieke risicobeoordeling. Detectie van convergentie tussen markt- en politieke signalen.",
+    "title": "Jouw persoonlijke intelligence-bureau, geautomatiseerd",
+    "subtitle": "Het gratis dashboard bevat al aandelenanalyse, veerkrachtscores en de Scenario Engine. Pro voegt de bezorglaag toe: een digest om op te abonneren, realtime waarschuwingen, MCP voor je eigen agents en een krachtigere widget builder.",
+    "equityResearch": "Prioritaire data-refresh",
+    "equityResearchDesc": "Alle 30+ diensten worden met Pro bijna realtime ververst — versus elke 5-15 minuten bij Free.",
+    "geopoliticalAnalysis": "MCP- & agent-toegang",
+    "geopoliticalAnalysisDesc": "Koppel Claude, GPT of eigen LLM's rechtstreeks aan WorldMonitor via MCP — 50 aanroepen/dag inbegrepen.",
+    "economyAnalytics": "Pro Widget Builder",
+    "economyAnalyticsDesc": "Een krachtiger model, meer beurten, grotere builds en interactieve JavaScript — bouw rijkere eigen panelen dan in het gratis niveau.",
+    "riskMonitoring": "Aangepaste alarmregels",
+    "riskMonitoringDesc": "Prijs- en gebeurtenistriggers, stille uren en AES-256-versleutelde bezorgkanalen — afgestemd op wat je in de gaten houdt.",
     "orbitalSurveillance": "Orbitale surveillance",
-    "orbitalSurveillanceDesc": "(Binnenkort) Voorspellingen van satellietpassages, analyse van revisit-frequentie en opname-venster-alerts. Weet wanneer inlichtingensatellieten jouw interessegebieden bekijken.",
+    "orbitalSurveillanceDesc": "(Binnenkort) Overkomstvoorspellingen en opnamevenster-waarschuwingen voor met naam genoemde satellieten — naast de live baanposities die al in het gratis niveau zitten.",
     "morningBriefs": "Persoonlijk intelligence desk",
     "morningBriefsDesc": "Tot 30 gerankte verhalen per digest, gededupliceerd over 400+ bronnen. Kies dagelijks, tweemaal daags of wekelijks — of realtime alerts bij kritieke gebeurtenissen. AI Assessment en Signals to watch geleverd aan Slack, Discord, Telegram, E-mail of webhook. Geen nieuwsbrief — een analist.",
-    "oneKey": "30+ diensten, 1 sleutel",
-    "oneKeyDesc": "Finnhub, FRED, ACLED, UCDP, NASA FIRMS, AISStream, OpenSky en meer — alles actief, geen aparte registraties.",
+    "oneKey": "Realtime escalatie",
+    "oneKeyDesc": "Kritieke gebeurtenissen worden meteen doorgestuurd via dezelfde versleutelde kanalen — zonder te wachten op de volgende geplande digest.",
     "deliveryLabel": "Kies hoe intelligence jou vindt"
   },
   "slackMock": {
@@ -271,15 +268,15 @@
     "fStandard": "Standaard",
     "fKeyAuth": "Sleutel-auth",
     "fSsoMfa": "SSO/MFA/RBAC/audit",
-    "noteBelow": "Het kernplatform blijft gratis. Betaalde plannen ontgrendelen equity research, macro-analytics, AI-briefings en organisatiegebruik.",
+    "noteBelow": "Het kernplatform blijft gratis. Betaalde plannen ontgrendelen geplande AI-bezorging, MCP-toegang, prioritaire refresh en organisatorisch gebruik.",
     "f50plus": "50+"
   },
   "faq": {
     "title": "Veelgestelde vragen",
     "q1": "Is World Monitor nog steeds gratis?",
-    "a1": "Ja. Het kernplatform blijft gratis. Pro voegt equity research, macro-analytics en AI-briefings toe. Enterprise voegt teamdeployments en TV-apps toe.",
+    "a1": "Ja. Het kernplatform blijft gratis — inclusief aandelenanalyse, veerkrachtscores en de Scenario Engine. Pro voegt geplande AI-bezorging, aangepaste alarmregels, MCP-toegang en prioritaire refresh toe. Enterprise voegt teamdeployments en tv-apps toe.",
     "q2": "Waarom betalen voor Pro?",
-    "a2": "Pro is voor beleggers, analisten en professionals die aandelen-monitoring, geopolitieke analyse, economische analytics en dagelijkse AI-briefings willen — alles onder één sleutel.",
+    "a2": "Pro is voor investeerders, analisten en professionals die hun eigen AI-digest op schema geleverd willen, aangepaste alarmregels, MCP-toegang voor hun eigen agents en prioritaire data-refresh — allemaal onder één sleutel.",
     "q3": "Voor wie is Enterprise?",
     "a3": "Enterprise is voor teams die gedeeld gebruik, API's, integraties, deployment-opties en directe support nodig hebben.",
     "q4": "Kan ik met Pro starten en later upgraden?",
@@ -293,7 +290,7 @@
     "q8": "Wat is MCP?",
     "a8": "MCP laat AI-agents — Claude, GPT, eigen LLM's — WorldMonitor als tool gebruiken en alle 30+ diensten bevragen. Inbegrepen in Pro. Enterprise voegt private MCP-servers en eigen deployments toe.",
     "q9": "Kan ik eigen panels bouwen?",
-    "a9": "Ja. Pro bevat de Custom Widget Builder — bouw panels vanuit HTML, CSS en JavaScript, met AI-ondersteunde wijziging.",
+    "a9": "Ja — voor iedereen. Het gratis niveau bevat de Custom Widget Builder. Pro verbetert deze met een krachtiger model, meer beurten, grotere builds en interactieve JavaScript.",
     "q10": "Kan ik Claude of GPT aan WorldMonitor koppelen?",
     "a10": "Ja. MCP is inbegrepen in Pro — koppel WorldMonitor aan Claude, GPT of elke MCP-compatibele LLM als live tool.",
     "q11": "Hoe gepersonaliseerd is de digest?",
@@ -305,7 +302,7 @@
   },
   "finalCta": {
     "title": "Start met Pro. Schaal naar Enterprise.",
-    "subtitle": "Gebruik World Monitor gratis, of upgrade voor equity research, macro-analytics en AI-briefings. Als je organisatie teamtoegang, TV-apps of API-support nodig heeft, praat met ons.",
+    "subtitle": "Blijf World Monitor gratis gebruiken, of upgrade naar Pro voor geplande AI-bezorging, MCP-toegang en prioritaire refresh. Heeft je organisatie teamtoegang, tv-apps of API-ondersteuning nodig, neem dan contact op.",
     "getPro": "Reserveer je vroege toegang",
     "talkToSales": "Praat met sales"
   },
@@ -329,17 +326,17 @@
     "linkedin": "LinkedIn",
     "whatsapp": "WhatsApp",
     "telegram": "Telegram",
-    "shareText": "Ik heb me net ingeschreven op de World Monitor Pro wachtlijst — aandelen-tracking, geopolitieke analyse en dagelijkse AI-briefings in één platform. Doe mee:",
+    "shareText": "Ik heb me net aangemeld voor de World Monitor Pro-wachtlijst — een persoonlijke AI-digest, MCP-toegang en prioritaire refresh in één platform. Doe mee:",
     "joinWaitlistShare": "Sluit je aan bij de World Monitor Pro wachtlijst:",
     "youreIn": "Je bent erbij!",
     "invitedBanner": "Je bent uitgenodigd — sluit je aan bij de wachtlijst"
   },
   "soonBadge": "Binnenkort",
   "meta": {
-    "title": "World Monitor Pro — AI Analyst, Personal Intelligence Desk, MCP voor Claude & GPT",
-    "description": "De geopolitieke AI-laag. Stel er vragen aan, abonneer je erop, bouw erop voort. WM Analyst chat over 30+ live services, een AI-digest dagelijks, twee keer per dag of wekelijks naar Slack, Discord, Telegram, Email of webhook, een custom widget builder (HTML/CSS/JS + AI), en MCP connectors voor Claude, GPT en aangepaste LLM's.",
-    "ogTitle": "World Monitor Pro — The Geopolitical AI Layer",
-    "ogDescription": "Stel er vragen aan, abonneer je erop, bouw erop voort. WM Analyst chat, een AI-digest volgens je schema (dagelijks, twee keer per dag of wekelijks), custom widget builder en MCP voor Claude/GPT — over 30+ live services onder één sleutel."
+    "title": "World Monitor Pro — Persoonlijk intelligence-bureau, MCP voor Claude & GPT",
+    "description": "De intelligence-bezorglaag. Een persoonlijke AI-digest over 30+ live diensten — dagelijks, twee keer per dag of wekelijks naar Slack, Discord, Telegram, e-mail of webhook — met aangepaste alarmregels, MCP-connectoren voor Claude, GPT en eigen LLM's, een krachtigere Pro Widget Builder en prioritaire, bijna realtime data-refresh.",
+    "ogTitle": "World Monitor Pro — De intelligence-bezorglaag",
+    "ogDescription": "Abonneer erop, bouw erop, weet het eerst. Een persoonlijke AI-digest op jouw schema, MCP voor Claude/GPT, een krachtigere Pro Widget Builder en prioritaire data-refresh — over 30+ diensten met één sleutel."
   },
   "pricing": {
     "suffixForever": "altijd",
@@ -359,23 +356,22 @@
       "free": {
         "description": "Aan de slag met de essentiële functies",
         "features": [
-          "Centrale dashboardpanelen",
-          "Wereldwijd nieuwsfeed",
-          "Aardbevings- en weerswaarschuwingen",
-          "Basiskaartweergave"
+          "Volledige live kaart — alle 56 lagen, 500+ feeds",
+          "Aandelenanalyse, backtesting & dagelijkse AI-marktberichten",
+          "WM Analyst-chat over 30+ live diensten",
+          "Landenrapporten, instabiliteitsindex & veerkrachtscores"
         ],
         "cta": "Aan de slag"
       },
       "pro": {
         "description": "Volledig intelligence-dashboard",
         "features": [
-          "Alles in Gratis",
-          "AI-aandelen analyse & backtesting",
-          "Dagelijkse marktbriefings",
-          "Militair- en geopolitieke tracking",
-          "Aangepaste widget builder",
-          "MCP + SDK-toegang voor Claude Desktop en andere AI-clients (50 aanroepen/dag)",
-          "Prioriteit gegevensvernieuwing"
+          "Alles van Free",
+          "Persoonlijke AI-digest & realtime waarschuwingen — Slack, Discord, Telegram, e-mail, webhook",
+          "Aangepaste alarmregels — stille uren, AES-256-versleutelde kanalen",
+          "MCP- + SDK-toegang voor Claude Desktop & andere AI-clients (50 aanroepen/dag)",
+          "Prioritaire data-refresh — bijna realtime",
+          "Pro Widget Builder — krachtiger model, meer beurten, interactieve JS"
         ]
       },
       "api": {

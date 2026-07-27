@@ -6,7 +6,7 @@ import {
   Globe, ShieldAlert, Zap, Terminal, Database,
   Send, MessageCircle, Mail, MessageSquare, ChevronDown,
   ArrowRight, Check, Lock, Server, Cpu, Layers,
-  Bell, Brain, Key, Plug, PanelTop, ExternalLink,
+  Bell, Key, Plug, PanelTop, ExternalLink,
   BarChart3, Clock, Radio, Ship, Plane, Flame,
   Cable, Wifi, MapPin, TrendingUp,
   Filter, Lightbulb, SlidersHorizontal, Telescope,
@@ -492,7 +492,7 @@ const TwoPathSplit = () => (
         <h3 className="font-display text-2xl font-bold mb-2">{t('twoPath.proTitle')}</h3>
         <p className="text-sm text-wm-muted mb-6">{t('twoPath.proDesc')}</p>
         <ul className="space-y-3 mb-8">
-          {[t('twoPath.proF1'), t('twoPath.proF2'), t('twoPath.proF3'), t('twoPath.proF4'), t('twoPath.proF5'), t('twoPath.proF6'), t('twoPath.proF7'), t('twoPath.proF8'), t('twoPath.proF9')].map((f, i) => (
+          {[t('twoPath.proF1'), t('twoPath.proF2'), t('twoPath.proF3'), t('twoPath.proF4'), t('twoPath.proF5'), t('twoPath.proF6')].map((f, i) => (
             <li key={i} className="flex items-start gap-3 text-sm">
               <Check className="w-4 h-4 shrink-0 mt-0.5 text-wm-green" aria-hidden="true" />
               <span className="text-wm-muted">{f}</span>
@@ -556,7 +556,7 @@ const WhyUpgrade = () => {
 /* ─── Three Flagship Pillars (new) ─── */
 const Pillars = () => {
   const items = [
-    { icon: <Brain className="w-7 h-7" aria-hidden="true" />, title: t('pillars.askIt'), desc: t('pillars.askItDesc') },
+    { icon: <Zap className="w-7 h-7" aria-hidden="true" />, title: t('pillars.askIt'), desc: t('pillars.askItDesc') },
     { icon: <Bell className="w-7 h-7" aria-hidden="true" />, title: t('pillars.subscribeIt'), desc: t('pillars.subscribeItDesc') },
     { icon: <Plug className="w-7 h-7" aria-hidden="true" />, title: t('pillars.buildOnIt'), desc: t('pillars.buildOnItDesc') },
   ];
