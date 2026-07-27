@@ -64,7 +64,7 @@ service SupplyChainService {
     option (sebuf.http.config) = {path: "/get-bypass-options", method: HTTP_METHOD_GET};
   }
 
-  // GetCountryCostShock returns cost shock and war risk data for a country+chokepoint. PRO-gated.
+  // GetCountryCostShock returns cost shock and war risk data for a country+chokepoint. Free for all users.
   rpc GetCountryCostShock(GetCountryCostShockRequest) returns (GetCountryCostShockResponse) {
     option (sebuf.http.config) = {path: "/get-country-cost-shock", method: HTTP_METHOD_GET};
   }
@@ -87,14 +87,14 @@ service SupplyChainService {
 
   // GetRouteExplorerLane returns the primary maritime route, chokepoint exposures,
   // bypass options with geometry, war risk, and static transit/freight estimates for
-  // a country pair + HS2 + cargo type. PRO-gated. Wraps the route-intelligence vendor
-  // endpoint's compute with browser-callable auth and adds fields needed by the
-  // Route Explorer UI.
+  // a country pair + HS2 + cargo type. Free for all users (Route Explorer). Reuses
+  // the route-intelligence vendor endpoint's compute function directly rather than
+  // proxying its gated HTTP route, and adds fields needed by the Route Explorer UI.
   rpc GetRouteExplorerLane(GetRouteExplorerLaneRequest) returns (GetRouteExplorerLaneResponse) {
     option (sebuf.http.config) = {path: "/get-route-explorer-lane", method: HTTP_METHOD_GET};
   }
 
-  // GetRouteImpact returns route-level trade exposure: lane value, primary exporter concentration, strategic products, resilience score, dependency flags, and Comtrade provenance. PRO-gated.
+  // GetRouteImpact returns route-level trade exposure: lane value, primary exporter concentration, strategic products, resilience score, dependency flags, and Comtrade provenance. Free for all users.
   rpc GetRouteImpact(GetRouteImpactRequest) returns (GetRouteImpactResponse) {
     option (sebuf.http.config) = {path: "/get-route-impact", method: HTTP_METHOD_GET};
   }

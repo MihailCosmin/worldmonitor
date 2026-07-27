@@ -13,7 +13,7 @@ paths:
             tags:
                 - ResilienceService
             summary: GetResilienceScore
-            description: GetResilienceScore returns the latest resilience score for a country.
+            description: GetResilienceScore returns the Country Resilience Index score, domain breakdown, and dimension-level confidence for a single country. Free for all users.
             operationId: GetResilienceScore
             parameters:
                 - name: countryCode
@@ -113,7 +113,7 @@ paths:
             tags:
                 - ResilienceService
             summary: GetResilienceRanking
-            description: GetResilienceRanking returns the latest resilience ranking snapshot.
+            description: GetResilienceRanking returns the full Country Resilience Index ranking across the public rankable universe. Free for all users.
             operationId: GetResilienceRanking
             parameters:
                 - name: jmespath

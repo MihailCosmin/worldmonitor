@@ -21,11 +21,11 @@ Panel id is `chat-analyst`; canonical component is `src/components/ChatAnalystPa
 ## How you reach it
 
 - **Cmd+K**: type *analyst* or *ask*.
-- **Availability by variant**: registered and enabled by default in the **full/geopolitical** variant only (`premium: 'locked'` at `src/config/panels.ts:52`). Not present in the tech, finance, commodity, or happy variants.
+- **Availability by variant**: registered and enabled by default in the **full/geopolitical** variant only (`src/config/panels.ts:52`, no `premium` field — free for all users). Not present in the tech, finance, commodity, or happy variants.
 
 ## Data sources
 
-The panel POSTs to `/api/chat-analyst` (edge function backed by `api/chat-analyst.ts`) via `premiumFetch()`, which injects the caller's credentials (`WORLDMONITOR_API_KEY` on desktop, Clerk bearer + PRO in the browser). The edge function composes context from the intelligence, conflict, markets, forecasts, and risk caches (scoped to the selected domain), streams tokens back, and the panel renders incrementally.
+The panel POSTs to `/api/chat-analyst` (edge function backed by `api/chat-analyst.ts`) via `premiumFetch()`. That wrapper only injects Bearer credentials on paths listed in `PREMIUM_RPC_PATHS`; `/api/chat-analyst` isn't one of them, so the call falls through to the normal unauthenticated fetch path for every user. The edge function composes context from the intelligence, conflict, markets, forecasts, and risk caches (scoped to the selected domain), streams tokens back, and the panel renders incrementally.
 
 No separate `/chat-analyst/v1/*` RPC surface — this is a first-class edge endpoint, not a proto-generated RPC.
 
@@ -41,7 +41,7 @@ Each send is a fresh LLM call — no caching of analyst answers. Typical respons
 
 ## Tier & gating
 
-**PRO (hard-locked).** `premium: 'locked'` in `src/config/panels.ts:52`. `isPanelEntitled` unlocks it when **either** a valid `WORLDMONITOR_API_KEY` is present **or** `isPro` is true (`src/config/panels.ts:973` — `apiKeyPanels` allowlist includes `chat-analyst`).
+**Free.** No `premium` field on the panel's registration, and `/api/chat-analyst` is not in `PREMIUM_RPC_PATHS` — available to anonymous and signed-in users alike.
 
 ## API reference
 

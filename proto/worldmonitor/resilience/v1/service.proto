@@ -10,10 +10,12 @@ import "worldmonitor/resilience/v1/get_resilience_score.proto";
 service ResilienceService {
   option (sebuf.http.service_config) = {base_path: "/api/resilience/v1"};
 
+  // GetResilienceScore returns the Country Resilience Index score, domain breakdown, and dimension-level confidence for a single country. Free for all users.
   rpc GetResilienceScore(GetResilienceScoreRequest) returns (GetResilienceScoreResponse) {
     option (sebuf.http.config) = {path: "/get-resilience-score", method: HTTP_METHOD_GET};
   }
 
+  // GetResilienceRanking returns the full Country Resilience Index ranking across the public rankable universe. Free for all users.
   rpc GetResilienceRanking(GetResilienceRankingRequest) returns (GetResilienceRankingResponse) {
     option (sebuf.http.config) = {path: "/get-resilience-ranking", method: HTTP_METHOD_GET};
   }

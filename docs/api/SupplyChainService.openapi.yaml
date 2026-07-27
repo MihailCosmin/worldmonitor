@@ -461,7 +461,7 @@ paths:
             tags:
                 - SupplyChainService
             summary: GetCountryChokepointIndex
-            description: GetCountryChokepointIndex returns per-chokepoint exposure scores for a country. PRO-gated. Requires entitlement tier >= 1.
+            description: GetCountryChokepointIndex returns per-chokepoint exposure scores for a country.
             operationId: GetCountryChokepointIndex
             parameters:
                 - name: iso2
@@ -672,12 +672,8 @@ paths:
             tags:
                 - SupplyChainService
             summary: GetCountryCostShock
-            description: GetCountryCostShock returns cost shock and war risk data for a country+chokepoint. PRO-gated. Requires entitlement tier >= 1.
+            description: GetCountryCostShock returns cost shock and war risk data for a country+chokepoint. Free for all users.
             operationId: GetCountryCostShock
-            security:
-                - WorldMonitorKey: []
-                - ApiKeyHeader: []
-                - BearerAuth: []
             parameters:
                 - name: iso2
                   in: query
@@ -737,7 +733,7 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/UnauthorizedError'
                 "403":
-                    description: PRO entitlement access denied.
+                    description: API access requires an active subscription (the API key's subscription is inactive or expired).
                     content:
                         application/json:
                             schema:
@@ -780,7 +776,7 @@ paths:
             tags:
                 - SupplyChainService
             summary: GetCountryProducts
-            description: GetCountryProducts returns the seeded bilateral-HS4 import basket for a country. PRO-gated. Requires entitlement tier >= 1.
+            description: GetCountryProducts returns the seeded bilateral-HS4 import basket for a country.
             operationId: GetCountryProducts
             parameters:
                 - name: iso2
@@ -879,7 +875,7 @@ paths:
             summary: GetMultiSectorCostShock
             description: |-
                 GetMultiSectorCostShock returns per-sector cost-shock estimates for a
-                 country+chokepoint+closure-window. PRO-gated. Requires entitlement tier >= 1.
+                 country+chokepoint+closure-window.
             operationId: GetMultiSectorCostShock
             parameters:
                 - name: iso2
@@ -989,7 +985,7 @@ paths:
             tags:
                 - SupplyChainService
             summary: GetSectorDependency
-            description: GetSectorDependency returns dependency flags and risk profile for a country+HS2 sector. PRO-gated. Requires entitlement tier >= 1.
+            description: GetSectorDependency returns dependency flags and risk profile for a country+HS2 sector.
             operationId: GetSectorDependency
             parameters:
                 - name: iso2
@@ -1090,9 +1086,9 @@ paths:
             description: |-
                 GetRouteExplorerLane returns the primary maritime route, chokepoint exposures,
                  bypass options with geometry, war risk, and static transit/freight estimates for
-                 a country pair + HS2 + cargo type. PRO-gated. Wraps the route-intelligence vendor
-                 endpoint's compute with browser-callable auth and adds fields needed by the
-                 Route Explorer UI. Requires entitlement tier >= 1.
+                 a country pair + HS2 + cargo type. Free for all users (Route Explorer). Reuses
+                 the route-intelligence vendor endpoint's compute function directly rather than
+                 proxying its gated HTTP route, and adds fields needed by the Route Explorer UI.
             operationId: GetRouteExplorerLane
             parameters:
                 - name: fromIso2
@@ -1216,7 +1212,7 @@ paths:
             tags:
                 - SupplyChainService
             summary: GetRouteImpact
-            description: 'GetRouteImpact returns route-level trade exposure: lane value, primary exporter concentration, strategic products, resilience score, dependency flags, and Comtrade provenance. PRO-gated. Requires entitlement tier >= 1.'
+            description: 'GetRouteImpact returns route-level trade exposure: lane value, primary exporter concentration, strategic products, resilience score, dependency flags, and Comtrade provenance. Free for all users.'
             operationId: GetRouteImpact
             parameters:
                 - name: fromIso2
@@ -2182,10 +2178,6 @@ components:
             in: header
             name: X-Api-Key
             description: Alias header for the WorldMonitor API key (X-WorldMonitor-Key).
-        BearerAuth:
-            type: http
-            scheme: bearer
-            description: 'Bearer token: a Clerk-issued JWT for browser session flows, passed as Authorization: Bearer <token>.'
     schemas:
         ChinaCorridorControlTowerResponse:
             type: "object"

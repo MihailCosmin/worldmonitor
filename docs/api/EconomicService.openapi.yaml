@@ -1311,7 +1311,7 @@ paths:
             tags:
                 - EconomicService
             summary: GetNationalDebt
-            description: GetNationalDebt retrieves national debt clock data for all countries. PRO-gated. Requires an active Pro subscription.
+            description: GetNationalDebt retrieves national debt clock data for all countries.
             operationId: GetNationalDebt
             parameters:
                 - name: jmespath
@@ -2782,7 +2782,7 @@ paths:
             tags:
                 - EconomicService
             summary: ListGlobalTenders
-            description: ListGlobalTenders returns the Pro-gated, paginated, seed-backed canonical procurement feed. Requires entitlement tier >= 1.
+            description: ListGlobalTenders returns the Pro-gated, paginated, seed-backed canonical procurement feed.
             operationId: ListGlobalTenders
             parameters:
                 - name: country

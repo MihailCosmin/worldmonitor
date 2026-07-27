@@ -19,7 +19,7 @@ Panel id is `telegram-intel`; canonical component is `src/components/TelegramInt
 ## How you reach it
 
 - **Cmd+K**: type *telegram*.
-- **Availability by variant**: registered and enabled by default in the **full/geopolitical** variant only (`priority: 2`). The full-variant registration layers `premium: 'locked'` on desktop (`_desktop && { premium: 'locked' as const }`), so the panel is **free on web** and **PRO-locked on desktop**. Not present in the tech, finance, commodity, or happy variants. Source: `'telegram-intel'` in `FULL_PANELS` of `src/config/panels.ts`.
+- **Availability by variant**: registered and enabled by default in the **full/geopolitical** variant only (`priority: 2`), free for all users on both web and desktop — no `premium` field. Not present in the tech, finance, commodity, or happy variants. Source: `'telegram-intel'` in `FULL_PANELS` of `src/config/panels.ts`.
 
 ## Data sources
 
@@ -38,7 +38,7 @@ Driven by the relay's poll cycle; the panel reads on mount and on relevant exter
 
 ## Tier & gating
 
-**Free on web; PRO-locked on desktop.** Registered without `premium` on the web path; the desktop variant spreads `premium: 'locked'` via the `_desktop &&` clause.
+**Free**, on both web and desktop. No `premium` field on the panel's registration.
 
 ## API reference
 

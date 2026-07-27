@@ -138,7 +138,7 @@ Published forecasts carry machine-checkable resolution specs. A daily resolver p
 
 ## Tier & gating
 
-On **web**, AI Forecasts is currently in **trial** — free to anyone, including unauthenticated readers. On **desktop**, the same panel ships with `premium: 'locked'` in `src/config/panels.ts` so it is gated there. This split reflects the product's current trial positioning; expect the web gating to tighten over time.
+**Free** — no `premium` field on the panel's registration, for anonymous and signed-in readers alike, on both web and desktop. One exception: `POST /api/forecast/v1/trigger-simulation` (an on-demand simulation run outside the cached cron output) remains Pro-gated (`PREMIUM_RPC_PATHS`); its read-side companion `get-simulation-outcome` is public like the rest of the panel.
 
 ## API reference
 

@@ -428,12 +428,8 @@ paths:
             tags:
                 - IntelligenceService
             summary: GetCountryIntelBrief
-            description: GetCountryIntelBrief generates a strategic brief for a specific country. PRO-gated. Requires entitlement tier >= 1.
+            description: GetCountryIntelBrief generates a strategic brief for a specific country.
             operationId: GetCountryIntelBrief
-            security:
-                - WorldMonitorKey: []
-                - ApiKeyHeader: []
-                - BearerAuth: []
             parameters:
                 - name: country_code
                   in: query
@@ -486,7 +482,7 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/UnauthorizedError'
                 "403":
-                    description: PRO entitlement access denied.
+                    description: API access requires an active subscription (the API key's subscription is inactive or expired).
                     content:
                         application/json:
                             schema:
@@ -671,12 +667,8 @@ paths:
             tags:
                 - IntelligenceService
             summary: DeductSituation
-            description: DeductSituation performs broad situational analysis using LLMs. PRO-gated. Requires an active Pro subscription.
+            description: DeductSituation performs broad situational analysis using LLMs.
             operationId: DeductSituation
-            security:
-                - WorldMonitorKey: []
-                - ApiKeyHeader: []
-                - BearerAuth: []
             requestBody:
                 content:
                     application/json:
@@ -773,7 +765,7 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/UnauthorizedError'
                 "403":
-                    description: Pro subscription required.
+                    description: API access requires an active subscription (the API key's subscription is inactive or expired).
                     content:
                         application/json:
                             schema:
@@ -1818,7 +1810,7 @@ paths:
             tags:
                 - IntelligenceService
             summary: ListMarketImplications
-            description: ListMarketImplications returns AI-generated trade-implication cards from live world state. PRO-gated. Requires an active Pro subscription.
+            description: ListMarketImplications returns AI-generated trade-implication cards from live world state.
             operationId: ListMarketImplications
             parameters:
                 - name: frameworkId
@@ -2370,7 +2362,7 @@ paths:
             description: |-
                 GetRegionalSnapshot returns the latest persisted RegionalSnapshot for a
                  region. The snapshot is written every 6h by scripts/seed-regional-snapshots.mjs;
-                 this handler only reads canonical state. Premium-gated. PRO-gated. Requires an active Pro subscription.
+                 this handler only reads canonical state. Premium-gated.
             operationId: GetRegionalSnapshot
             parameters:
                 - name: region_id
@@ -2496,7 +2488,7 @@ paths:
             description: |-
                 GetRegimeHistory returns the region's regime transition log newest-first.
                  Entries are append-only from the seed writer, recorded only when
-                 diffRegionalSnapshot reports regime_changed. Premium-gated. PRO-gated. Requires an active Pro subscription.
+                 diffRegionalSnapshot reports regime_changed. Premium-gated.
             operationId: GetRegimeHistory
             parameters:
                 - name: region_id
@@ -2603,7 +2595,7 @@ paths:
             summary: GetRegionalBrief
             description: |-
                 GetRegionalBrief returns the latest weekly intelligence brief for a region.
-                 Written by scripts/seed-regional-briefs.mjs on a weekly cron. Premium-gated. PRO-gated. Requires an active Pro subscription.
+                 Written by scripts/seed-regional-briefs.mjs on a weekly cron. Premium-gated.
             operationId: GetRegionalBrief
             parameters:
                 - name: region_id

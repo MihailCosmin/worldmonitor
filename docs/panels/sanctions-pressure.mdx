@@ -37,7 +37,7 @@ OFAC publishes list updates on an irregular cadence (daily-to-weekly). The panel
 
 ## Tier & gating
 
-**PRO-gated.** The panel is visible in its configured variants, but the sanctions-pressure RPC requires a PRO entitlement. Free or unentitled callers receive a documented `403` response instead of an empty sanctions payload.
+**Free.** `list-sanctions-pressure.ts` has no auth or entitlement check — it reads the seeded Redis snapshot and returns an empty response only on cache miss or upstream error, never a 403. The path is not in `PREMIUM_RPC_PATHS`.
 
 ## API reference
 

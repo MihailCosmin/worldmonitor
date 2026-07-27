@@ -22,7 +22,7 @@ Panel id is `strategic-posture`; canonical component is `src/components/Strategi
 ## How you reach it
 
 - **Cmd+K**: type *posture* or *strategic*.
-- **Availability by variant**: registered and enabled by default in the **full/geopolitical** variant only. Free on the web; on desktop the variant registration spreads `{ premium: 'enhanced' as const }` into the config so the panel becomes enhanced-gated on the desktop build. Source: `'strategic-posture'` entry in `FULL_PANELS` at `src/config/panels.ts:23` (no `premium` set; desktop variants elsewhere layer on enhanced gating per the `_desktop &&` pattern).
+- **Availability by variant**: registered and enabled by default in the **full/geopolitical** variant only, free on both web and desktop. Source: `'strategic-posture'` entry in `FULL_PANELS` at `src/config/panels.ts:23` (no `premium` field).
 
 ## Data sources
 
@@ -45,7 +45,7 @@ The panel is not on a polling timer — it fetches on mount and re-renders on re
 
 ## Tier & gating
 
-**Free on web; enhanced on desktop.** Registered without `premium` in the full-variant `FULL_PANELS` entry (`src/config/panels.ts:23`), so the web build doesn't gate it. The desktop build layers on `premium: 'enhanced'` in other variant contexts — this is why the panel appears free on web but behind an upgrade CTA on the desktop app.
+**Free**, on both web and desktop. No `premium` field on the panel's registration (`src/config/panels.ts:23`).
 
 ## API reference
 

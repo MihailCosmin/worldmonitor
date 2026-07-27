@@ -1,9 +1,9 @@
 ---
-title: "Authentication & Panel Gating"
-description: "How user authentication, premium panel gating, and server-side session enforcement work in World Monitor — Clerk, cookies, and entitlement checks."
+title: "Authentication & Premium Endpoint Gating"
+description: "How user authentication and server-side session enforcement work in World Monitor — Clerk, cookies, and entitlement checks. No dashboard panel is plan-gated; a small, fixed set of RPC endpoints still are."
 ---
 
-WorldMonitor uses [Clerk](https://clerk.com) for authentication. The auth system gates premium panels behind sign-in and tier checks, and enforces session-based access on server-side API endpoints via local JWT verification.
+WorldMonitor uses [Clerk](https://clerk.com) for authentication. No dashboard panel is gated behind sign-in or a plan tier anymore — every panel renders for anonymous visitors. What remains plan-gated is a small, fixed set of RPC endpoints (`PREMIUM_RPC_PATHS`), enforced session-based via local JWT verification.
 
 ---
 
@@ -28,87 +28,52 @@ WorldMonitor uses [Clerk](https://clerk.com) for authentication. The auth system
 
 ---
 
-## Panel Gating
+## Premium Endpoint Gating
 
-Premium panels show a CTA overlay instead of content until the user meets the access requirements.
+There is no more panel-level gating: `WEB_PREMIUM_PANELS`, `Panel.showLocked()`/`showGatedCta()`, the `PanelGateReason` type, and the locked-panel CSS have all been removed. Every panel in `src/config/panels.ts` renders for every user regardless of sign-in or plan — the `premium` field the type still permits on a `PanelConfig` is set on zero panels today.
 
-### Gate Reasons
+What remains is a small, fixed **endpoint allowlist** — `PREMIUM_RPC_PATHS` — for the handful of generated-RPC paths that are still genuinely plan-gated (MCP access and a couple of API-tier/partner routes; see below). This is enforced at the RPC path level, not the panel level: a panel can be fully public while one specific mutation it (rarely) calls still requires a session.
 
-| Reason | What the user sees | Resolution |
-|--------|-------------------|------------|
-| `ANONYMOUS` | "Sign In to Unlock" | Sign in via Clerk |
-| `FREE_TIER` | "Upgrade to Pro" | Upgrade subscription |
-| `NONE` | Normal panel content | Already unlocked |
+Scheduled digest and alert-rule delivery (`/api/notification-channels`) is gated separately and isn't in `PREMIUM_RPC_PATHS` at all — it's a standalone Vercel function (not a generated-RPC path) that always requires a Clerk bearer, then checks `entitlements.features.tier < 1` itself and returns its own 403 ("Real-time alerts are available on the Pro plan.").
 
-### How to Configure Which Panels Are Premium
+### How to gate a new RPC path
 
-Three files control gating. **All three must stay in sync** when adding or removing premium panels.
+Two files must stay in sync:
 
-#### 1. Panel config — `src/config/panels.ts`
-
-Add `premium: 'locked'` to the panel entry in the relevant variant:
+#### 1. Path allowlist — `src/shared/premium-paths.ts`
 
 ```ts
-// In FULL_PANELS, FINANCE_PANELS, etc.
-'my-panel': { name: 'My Panel', enabled: true, premium: 'locked' }
-```
-
-#### 2. Client-side gate set — `src/app/panel-layout.ts`
-
-Add the panel key to `WEB_PREMIUM_PANELS`:
-
-```ts
-const WEB_PREMIUM_PANELS = new Set([
-  'stock-analysis',
-  'stock-backtest',
-  'daily-market-brief',
-  'my-panel',  // <-- add here
-]);
-```
-
-This set drives the reactive UI gating — when auth state changes, panels in this set get checked and show/hide CTAs accordingly.
-
-#### 3. Server-side API enforcement (if the panel calls premium APIs)
-
-**Client token injection** — `src/services/runtime.ts` (`WEB_PREMIUM_API_PATHS`):
-
-```ts
-const WEB_PREMIUM_API_PATHS = new Set([
-  '/api/market/v1/analyze-stock',
-  '/api/market/v1/get-stock-analysis-history',
-  '/api/market/v1/backtest-stock',
-  '/api/market/v1/list-stored-stock-backtests',
+export const PREMIUM_RPC_PATHS = new Set<string>([
+  '/api/intelligence/v1/classify-event',
+  '/api/forecast/v1/trigger-simulation',
+  '/api/v2/shipping/route-intelligence',
+  '/api/v2/shipping/webhooks',
+  '/api/mcp-proxy',
   '/api/my-domain/v1/my-endpoint',  // <-- add here
 ]);
 ```
 
-When a fetch request matches a path in this set and the user has a Clerk session, the client automatically injects `Authorization: Bearer <token>`.
+This single source of truth is imported by both the client (`src/services/premium-fetch.ts`, `src/services/runtime.ts`'s `WEB_PREMIUM_API_PATHS` alias) for Bearer-token injection, and the server gateway for enforcement.
 
-**Server gateway** — `server/gateway.ts` (`PREMIUM_RPC_PATHS`):
+#### 2. Server gateway — `server/gateway.ts`
 
-```ts
-const PREMIUM_RPC_PATHS = new Set([
-  '/api/market/v1/analyze-stock',
-  '/api/market/v1/get-stock-analysis-history',
-  '/api/market/v1/backtest-stock',
-  '/api/market/v1/list-stored-stock-backtests',
-  '/api/my-domain/v1/my-endpoint',  // <-- add here
-]);
-```
+The gateway imports `PREMIUM_RPC_PATHS`, validates the bearer token via local JWKS verification (jose), and checks `session.role === 'pro'` (falling back to a live Convex entitlement lookup for Dodo-subscribed users whose Clerk role claim hasn't caught up yet). Returns 403 if neither check passes.
 
-The gateway validates the bearer token via local JWKS verification (jose) and checks `session.role === 'pro'`. Returns 403 if the user isn't pro.
+### Currently gated endpoints
 
-### Currently Gated Panels
+| Path | What it protects |
+|------|-------------------|
+| `/api/intelligence/v1/classify-event` | LLM-spend throttle — anonymous sessions fall back to keyword classification instead |
+| `/api/forecast/v1/trigger-simulation` | On-demand simulation run outside the cached cron output (its read-side companion, `get-simulation-outcome`, is public) |
+| `/api/v2/shipping/route-intelligence` | Partner-facing vendor compute (the public Route Explorer UI reuses this compute function directly rather than proxying the gated route) |
+| `/api/v2/shipping/webhooks` | Partner webhook registration |
+| `/api/mcp-proxy` | MCP access for browser-based Pro users |
 
-| Panel | Variants | Gate type |
-|-------|----------|-----------|
-| `stock-analysis` | full, finance | `locked` (web) |
-| `stock-backtest` | full, finance | `locked` (web) |
-| `daily-market-brief` | full, finance | `locked` (web) |
+No dashboard panel — including Stock Analysis, Backtesting, Daily Market Brief, WM Analyst, and every other panel formerly listed here — appears in this set.
 
 ### Desktop Behavior
 
-Desktop users with a valid `WORLDMONITOR_API_KEY` in the Tauri keychain bypass all panel gating. The existing API key flow is unaffected — bearer tokens are a **second auth path**, not a replacement.
+Desktop users with a valid `WORLDMONITOR_API_KEY` in the Tauri keychain are treated as entitled on the endpoints above. The existing API key flow is unaffected — bearer tokens are a **second auth path**, not a replacement.
 
 ---
 

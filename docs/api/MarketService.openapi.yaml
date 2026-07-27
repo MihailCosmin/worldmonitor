@@ -812,7 +812,7 @@ paths:
             tags:
                 - MarketService
             summary: AnalyzeStock
-            description: AnalyzeStock retrieves a premium stock analysis report with technicals, news, and AI synthesis. PRO-gated. Requires entitlement tier >= 1.
+            description: AnalyzeStock retrieves a stock analysis report with technicals, news, and AI synthesis. Free for all users.
             operationId: AnalyzeStock
             parameters:
                 - name: symbol
@@ -920,7 +920,7 @@ paths:
             tags:
                 - MarketService
             summary: GetStockAnalysisHistory
-            description: GetStockAnalysisHistory retrieves shared premium stock analysis history from the backend store. PRO-gated. Requires entitlement tier >= 1.
+            description: GetStockAnalysisHistory retrieves shared stock analysis history from the backend store. Free for all users.
             operationId: GetStockAnalysisHistory
             parameters:
                 - name: symbols
@@ -1037,7 +1037,7 @@ paths:
             tags:
                 - MarketService
             summary: BacktestStock
-            description: BacktestStock replays premium stock-analysis signals over recent price history. PRO-gated. Requires entitlement tier >= 1.
+            description: BacktestStock replays stock-analysis signals over recent price history. Free for all users.
             operationId: BacktestStock
             parameters:
                 - name: symbol
@@ -1141,7 +1141,7 @@ paths:
             tags:
                 - MarketService
             summary: ListStoredStockBacktests
-            description: ListStoredStockBacktests retrieves stored premium backtest snapshots from the backend store. PRO-gated. Requires entitlement tier >= 1.
+            description: ListStoredStockBacktests retrieves stored backtest snapshots from the backend store. Free for all users.
             operationId: ListStoredStockBacktests
             parameters:
                 - name: symbols

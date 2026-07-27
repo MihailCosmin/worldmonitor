@@ -11,8 +11,8 @@ Live tier/price/product-ID data (JSON): `GET https://www.worldmonitor.app/api/pr
 - Price: $0/month
 - Signup required: No
 - Best for: Public situational awareness, OSINT research, market/geopolitical context, news monitoring
-- Includes: 56 map layers, 500+ curated feeds, country briefs, hotspots, instability scores, chokepoints, cables, cascade analysis, breaking alert pipeline and watchlists
-- Limits: Free dashboard refresh cadence is typically 5-15 minutes; digest, API and team workflows require paid plans
+- Includes: 56 map layers, 500+ curated feeds, country briefs, hotspots, instability scores, chokepoints, cables, cascade analysis, breaking alert pipeline, watchlists, WM Analyst chat, Stock Analysis and Backtesting, the Scenario Engine, Route Explorer, and the Custom Widget Builder
+- Limits: Free dashboard refresh cadence is typically 5-15 minutes; scheduled digest delivery, API and team workflows require paid plans
 
 ## Pro
 
@@ -20,7 +20,7 @@ Live tier/price/product-ID data (JSON): `GET https://www.worldmonitor.app/api/pr
 - Annual price: $399.99/year
 - Annual savings: 2 months free versus monthly billing
 - Best for: Investors, analysts, researchers, traders and operators who need scheduled delivery and build workflows on top of the free dashboard
-- Includes: Personal AI digest, notification routing, custom widget builder, MCP access and 40 tools under one key
+- Includes: Personal AI digest, custom alert rules with quiet hours and AES-256 encrypted channels, priority near-real-time data refresh, MCP access (42 tools under one key, 50 calls/day), and the Pro Widget Builder (smarter model, more turns, interactive JS — the base Widget Builder is free)
 - Digest cadence: Daily, twice-daily or weekly
 - Delivery channels: Slack, Discord, Telegram, email and webhook
 
@@ -71,13 +71,13 @@ Live tier/price/product-ID data (JSON): `GET https://www.worldmonitor.app/api/pr
       "name": "Free",
       "price_usd_monthly": 0,
       "signup_required": false,
-      "features": ["56 map layers", "500+ feeds", "country briefs", "chokepoints", "instability scores", "watchlists"]
+      "features": ["56 map layers", "500+ feeds", "country briefs", "chokepoints", "instability scores", "watchlists", "WM Analyst chat", "stock analysis", "backtesting", "scenario engine", "route explorer", "custom widget builder"]
     },
     {
       "name": "Pro",
       "price_usd_monthly": 39.99,
       "price_usd_yearly": 399.99,
-      "features": ["AI digest", "notification routing", "custom widget builder", "MCP"]
+      "features": ["AI digest", "custom alert rules", "priority data refresh", "MCP", "Pro widget builder"]
     },
     {
       "name": "API",

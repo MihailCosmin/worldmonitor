@@ -25,7 +25,7 @@ All values from **Clerk Dashboard → API Keys** ([dashboard.clerk.com](https://
 #### Clerk Dashboard Setup
 
 1. **JWT Template**: Create a template named **`convex`** with custom claim: `{ "plan": "{{user.public_metadata.plan}}" }`
-2. **Pro users**: Set `public_metadata.plan` to `"pro"` on test users to verify premium access
+2. **Pro users**: Set `public_metadata.plan` to `"pro"` on test users to verify Pro-tier entitlements (scheduled digest delivery, MCP access, priority data refresh, Pro Widget Builder) — no dashboard panel is plan-gated anymore
 3. **Sign-in methods**: Configure email OTP (or whichever methods you want) under User & Authentication
 
 ---
@@ -60,7 +60,7 @@ API key + webhook secret from **Dodo Dashboard** ([app.dodopayments.com](https:/
 2. Create Clerk JWT template named "convex"
 3. Merge feat/better-auth → main
 4. Deploy to Vercel
-5. Verify: Sign in works, Pro user sees premium panels, bearer tokens appear on premium API routes
+5. Verify: Sign in works, bearer tokens appear on the still-gated premium API routes (`PREMIUM_RPC_PATHS`: classify-event, trigger-simulation, route-intelligence, shipping webhooks, mcp-proxy)
 ```
 
 ### Step 2 — Merge PR #2024 (Dodo Payments)
@@ -78,9 +78,9 @@ API key + webhook secret from **Dodo Dashboard** ([app.dodopayments.com](https:/
 
 ### Post-Deploy Verification
 
-- [ ] Anonymous user sees locked premium panels
+- [ ] Anonymous user sees no locked panels anywhere in the dashboard
 - [ ] Clerk sign-in works (email OTP or configured method)
-- [ ] Pro user (`public_metadata.plan: "pro"`) sees unlocked panels + data loads
+- [ ] Pro user (`public_metadata.plan: "pro"`) can configure a scheduled digest / alert rule, gets an MCP bearer token, and sees the faster (near-real-time) refresh tier
 - [ ] Dodo test checkout (`4242 4242 4242 4242`) creates subscription
 - [ ] Webhook fires → subscription + entitlements appear in Convex Dashboard
 - [ ] Billing portal opens from Settings

@@ -1,27 +1,27 @@
 ---
-title: "Premium Finance"
-description: "The finance-variant layer that adds stock-analysis capabilities to World Monitor — tickers, targets, backtests, and analyst signals in one panel."
+title: "Stock Analysis & Backtesting Architecture"
+description: "The finance-variant layer that adds stock-analysis capabilities to World Monitor — tickers, targets, backtests, and analyst signals in one panel. Free for all users."
 ---
-Premium finance is the finance-variant layer providing stock-analysis capabilities within World Monitor. These features were originally inspired by a standalone `daily_stock_analysis` project but are now fully integrated into the World Monitor codebase.
+This layer provides stock-analysis capabilities within World Monitor. These features were originally inspired by a standalone `daily_stock_analysis` project but are now fully integrated into the World Monitor codebase, and are free for all users — no sign-in or plan required.
 
 This layer is intentionally split into:
 
-- `core premium finance`
+- `core stock-analysis engine`
 - `extra enrichment layers`
 
-The core layer is the part required for the premium feature to work. Extra layers improve output quality or efficiency but are not the source of truth.
+The core layer is the part required for the feature to work. Extra layers improve output quality or efficiency but are not the source of truth.
 
 ---
 
 ## Core Scope
 
-The current premium finance scope includes:
+The current scope includes:
 
-- premium stock analysis
+- stock analysis
 - shared analysis history
 - stored backtest summaries
 - scheduled daily market brief generation
-- finance-variant premium panels
+- finance-variant panels
 - Redis-backed shared backend persistence for analysis history and backtests
 
 The original standalone project included capabilities that were intentionally not carried over:
@@ -40,9 +40,9 @@ The original standalone project included capabilities that were intentionally no
 
 ### Request Flow
 
-1. Finance premium panels load through the normal app shell and panel loader.
-2. Premium stock RPCs are called through `MarketService`.
-3. Premium endpoints require `WORLDMONITOR_API_KEY` server-side, not just a locked UI.
+1. Finance panels load through the normal app shell and panel loader.
+2. Stock RPCs are called through `MarketService`.
+3. None of these endpoints require authentication or a plan — see [Access](#access) below.
 4. Results are persisted into Redis-backed shared storage.
 5. Panels prefer stored shared results before recomputing fresh analyses or backtests.
 
@@ -54,7 +54,7 @@ Primary handlers:
 - [get-stock-analysis-history.ts](https://github.com/koala73/worldmonitor/blob/main/server/worldmonitor/market/v1/get-stock-analysis-history.ts)
 - [backtest-stock.ts](https://github.com/koala73/worldmonitor/blob/main/server/worldmonitor/market/v1/backtest-stock.ts)
 - [list-stored-stock-backtests.ts](https://github.com/koala73/worldmonitor/blob/main/server/worldmonitor/market/v1/list-stored-stock-backtests.ts)
-- [premium-stock-store.ts](https://github.com/koala73/worldmonitor/blob/main/server/worldmonitor/market/v1/premium-stock-store.ts)
+- [premium-stock-store.ts](https://github.com/koala73/worldmonitor/blob/main/server/worldmonitor/market/v1/premium-stock-store.ts) (filename predates ungating; the store itself has no plan gate)
 
 Primary contracts:
 
@@ -84,7 +84,7 @@ Services and loading:
 
 ## Stock Analysis
 
-The premium stock-analysis engine was originally a TypeScript port of core logic from the standalone project, now fully native to World Monitor.
+The stock-analysis engine was originally a TypeScript port of core logic from the standalone project, now fully native to World Monitor.
 
 It computes:
 
@@ -113,7 +113,7 @@ Those fields matter because backtesting now validates stored analysis records ra
 
 ## Shared Store
 
-World Monitor still lacks a general-purpose relational backend, so premium finance currently uses Redis as the backend-owned source of truth.
+World Monitor still lacks a general-purpose relational backend, so this layer currently uses Redis as the backend-owned source of truth.
 
 ### What Redis Stores
 
@@ -136,7 +136,7 @@ Redis is used as:
 
 - shared product memory
 - cache-backed persistence
-- the current source of truth for premium finance artifacts
+- the current source of truth for these artifacts
 
 It is **not** a relational finance ledger yet. Long-lived querying, rich pagination, and full auditability would still be better served by a future database layer.
 
@@ -153,13 +153,13 @@ Current flow:
 3. Evaluate forward performance from each stored record's saved signal and target levels.
 4. Store the resulting backtest summary in Redis for shared reuse.
 
-This makes the feature closer to "validate prior premium analyses" than "rerun whatever the latest strategy code happens to do."
+This makes the feature closer to "validate prior analyses" than "rerun whatever the latest strategy code happens to do."
 
 ---
 
 ## Daily Market Brief
 
-The daily market brief is a premium finance panel layered on top of the project's existing market and news infrastructure.
+The daily market brief is a panel layered on top of the project's existing market and news infrastructure.
 
 It:
 
@@ -172,22 +172,17 @@ This is a World Monitor native feature, not a direct port of the original projec
 
 ---
 
-## Premium Access Control
+## Access
 
-Premium finance endpoints are enforced server-side.
+Stock Analysis, Backtesting, and the Daily Market Brief are free for every user — anonymous or signed in, on every variant that carries them. None of `analyze-stock`, `get-stock-analysis-history`, `backtest-stock`, or `list-stored-stock-backtests` is in [`PREMIUM_RPC_PATHS`](https://github.com/koala73/worldmonitor/blob/main/src/shared/premium-paths.ts) or `ENDPOINT_ENTITLEMENTS`, and no panel here sets a `premium` field in `src/config/panels.ts`.
 
-Premium RPC paths are gated in:
-
-- [gateway.ts](https://github.com/koala73/worldmonitor/blob/main/server/gateway.ts)
-- [api/_api-key.js](https://github.com/koala73/worldmonitor/blob/main/api/_api-key.js)
-
-This matters because a UI-only lock would still allow direct API usage from trusted browser origins.
+`src/services/stock-analysis.ts` calls `analyze-stock` via `premiumFetch(..., { forcePremium: true })`, which attaches a Clerk bearer or `WORLDMONITOR_API_KEY` when one is available. This is a boot-window auth-race workaround for signed-in callers (see the file-level comment in [`premium-fetch.ts`](https://github.com/koala73/worldmonitor/blob/main/src/services/premium-fetch.ts)) — anonymous callers fall straight through to the normal unauthenticated path and are served identically.
 
 ---
 
 ## Data Sources
 
-Core premium finance currently depends on:
+This layer currently depends on:
 
 - Yahoo Finance chart/history endpoints
 - Finnhub for broader market data already used elsewhere in World Monitor
@@ -202,7 +197,7 @@ The provider-backed targeted stock-news layer is documented separately in [PREMI
 
 There are three distinct cache or persistence behaviors in play:
 
-- Redis shared storage for premium analysis history and backtests
+- Redis shared storage for analysis history and backtests
 - Redis response caching for expensive server recomputation
 - client-side cache only as a rendering/performance layer
 
@@ -212,20 +207,19 @@ The data loader refreshes stale symbols individually rather than recomputing the
 
 ## Separation Of Layers
 
-### Core Premium Finance
+### Core Layer
 
 The core layer is:
 
 - analysis engine
 - stored history
 - stored backtests
-- premium auth
-- premium UI panels
+- UI panels
 - daily brief
 
 ### Extra Layer: Targeted Search Enrichment
 
-The search-backed stock-news layer is intentionally separate because it improves analysis quality but is not required for the feature to function. If all search providers are unavailable, premium stock analysis still works using Google News RSS fallback.
+The search-backed stock-news layer is intentionally separate because it improves analysis quality but is not required for the feature to function. If all search providers are unavailable, stock analysis still works using Google News RSS fallback.
 
 See [PREMIUM_FINANCE_SEARCH.md](/premium-finance-search).
 

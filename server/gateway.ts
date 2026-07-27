@@ -367,17 +367,13 @@ const RPC_CACHE_TIER: Record<string, CacheTier> = {
   '/api/intelligence/v1/get-country-energy-profile': 'slow',
   '/api/intelligence/v1/compute-energy-shock': 'fast',
   '/api/intelligence/v1/get-country-port-activity': 'slow',
-  // NOTE: get-regional-snapshot is premium-gated via PREMIUM_RPC_PATHS; the
-  // gateway short-circuits to 'slow-browser' before consulting this map. The
-  // entry below exists to satisfy the parity contract enforced by
-  // tests/route-cache-tier.test.mjs (every generated GET route needs a tier)
-  // and documents the intended tier if the endpoint ever becomes non-premium.
+  // Regional Intelligence (get-regional-snapshot, get-regime-history,
+  // get-regional-brief) is free for all users — none of these paths are in
+  // PREMIUM_RPC_PATHS. Plain 'slow' entries required by the parity contract
+  // enforced by tests/route-cache-tier.test.mjs (every generated GET route
+  // needs a tier).
   '/api/intelligence/v1/get-regional-snapshot': 'slow',
-  // get-regime-history is premium-gated same as get-regional-snapshot; this
-  // entry is required by tests/route-cache-tier.test.mjs even though the
-  // gateway short-circuits premium paths to slow-browser.
   '/api/intelligence/v1/get-regime-history': 'slow',
-  // get-regional-brief is premium-gated; slow-browser in practice, slow entry for route-parity.
   '/api/intelligence/v1/get-regional-brief': 'slow',
   '/api/resilience/v1/get-resilience-score': 'slow',
   '/api/resilience/v1/get-resilience-ranking': 'slow',

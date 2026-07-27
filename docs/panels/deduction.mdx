@@ -26,7 +26,7 @@ Panel id is `deduction`; canonical component is `src/components/DeductionPanel.t
 ## How you reach it
 
 - **Cmd+K**: type *deduce*, *situation*, or *what if*.
-- **Availability by variant**: registered in the **full/geopolitical** variant only, and **disabled by default** (`enabled: false, premium: 'locked'` at `src/config/panels.ts:111`). PRO users must opt into it. Not present in the tech, finance, commodity, or happy variants.
+- **Availability by variant**: registered in the **full/geopolitical** variant only, and **disabled by default** (`enabled: false` at `src/config/panels.ts:111`; no `premium` field). Any user can opt into it. Not present in the tech, finance, commodity, or happy variants.
 
 ## Data sources
 
@@ -38,7 +38,7 @@ Each submission is a fresh LLM call — no caching. A 5-second cooldown applies 
 
 ## Tier & gating
 
-**PRO (hard-locked) and opt-in.** `enabled: false, premium: 'locked'` in `src/config/panels.ts:111`. `isPanelEntitled` unlocks it when **either** a valid `WORLDMONITOR_API_KEY` is present **or** `isPro` is true (`deduction` is in the `apiKeyPanels` allowlist at `src/config/panels.ts:973`). Per the render path, `hasPremiumAccess()` is also checked before submit.
+**Free, opt-in, and signed-in only.** `enabled: false` in `src/config/panels.ts:111` (no `premium` field) — the panel itself has no plan gate. The one requirement is identity: `canUseDeductionAnalysis()` in `src/components/DeductionPanel.ts` requires `hasPremiumAccess() || getCurrentClerkUser() !== null`, so any signed-in user (free or paid) can submit — anonymous callers cannot, because the gateway needs a real Clerk bearer to bind direct-LLM spend to a user rather than an anonymous session.
 
 ## API reference
 

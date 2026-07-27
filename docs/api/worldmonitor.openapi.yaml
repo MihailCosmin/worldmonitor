@@ -5293,7 +5293,7 @@ paths:
             tags:
                 - EconomicService
             summary: GetNationalDebt
-            description: GetNationalDebt retrieves national debt clock data for all countries. PRO-gated. Requires an active Pro subscription.
+            description: GetNationalDebt retrieves national debt clock data for all countries.
             operationId: GetNationalDebt
             parameters:
                 - name: jmespath
@@ -6764,7 +6764,7 @@ paths:
             tags:
                 - EconomicService
             summary: ListGlobalTenders
-            description: ListGlobalTenders returns the Pro-gated, paginated, seed-backed canonical procurement feed. Requires entitlement tier >= 1.
+            description: ListGlobalTenders returns the Pro-gated, paginated, seed-backed canonical procurement feed.
             operationId: ListGlobalTenders
             parameters:
                 - name: country
@@ -9827,12 +9827,8 @@ paths:
             tags:
                 - IntelligenceService
             summary: GetCountryIntelBrief
-            description: GetCountryIntelBrief generates a strategic brief for a specific country. PRO-gated. Requires entitlement tier >= 1.
+            description: GetCountryIntelBrief generates a strategic brief for a specific country.
             operationId: GetCountryIntelBrief
-            security:
-                - WorldMonitorKey: []
-                - ApiKeyHeader: []
-                - BearerAuth: []
             parameters:
                 - name: country_code
                   in: query
@@ -9885,7 +9881,7 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/UnauthorizedError'
                 "403":
-                    description: PRO entitlement access denied.
+                    description: API access requires an active subscription (the API key's subscription is inactive or expired).
                     content:
                         application/json:
                             schema:
@@ -10070,12 +10066,8 @@ paths:
             tags:
                 - IntelligenceService
             summary: DeductSituation
-            description: DeductSituation performs broad situational analysis using LLMs. PRO-gated. Requires an active Pro subscription.
+            description: DeductSituation performs broad situational analysis using LLMs.
             operationId: DeductSituation
-            security:
-                - WorldMonitorKey: []
-                - ApiKeyHeader: []
-                - BearerAuth: []
             requestBody:
                 content:
                     application/json:
@@ -10172,7 +10164,7 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/UnauthorizedError'
                 "403":
-                    description: Pro subscription required.
+                    description: API access requires an active subscription (the API key's subscription is inactive or expired).
                     content:
                         application/json:
                             schema:
@@ -11217,7 +11209,7 @@ paths:
             tags:
                 - IntelligenceService
             summary: ListMarketImplications
-            description: ListMarketImplications returns AI-generated trade-implication cards from live world state. PRO-gated. Requires an active Pro subscription.
+            description: ListMarketImplications returns AI-generated trade-implication cards from live world state.
             operationId: ListMarketImplications
             parameters:
                 - name: frameworkId
@@ -11769,7 +11761,7 @@ paths:
             description: |-
                 GetRegionalSnapshot returns the latest persisted RegionalSnapshot for a
                  region. The snapshot is written every 6h by scripts/seed-regional-snapshots.mjs;
-                 this handler only reads canonical state. Premium-gated. PRO-gated. Requires an active Pro subscription.
+                 this handler only reads canonical state. Premium-gated.
             operationId: GetRegionalSnapshot
             parameters:
                 - name: region_id
@@ -11895,7 +11887,7 @@ paths:
             description: |-
                 GetRegimeHistory returns the region's regime transition log newest-first.
                  Entries are append-only from the seed writer, recorded only when
-                 diffRegionalSnapshot reports regime_changed. Premium-gated. PRO-gated. Requires an active Pro subscription.
+                 diffRegionalSnapshot reports regime_changed. Premium-gated.
             operationId: GetRegimeHistory
             parameters:
                 - name: region_id
@@ -12002,7 +11994,7 @@ paths:
             summary: GetRegionalBrief
             description: |-
                 GetRegionalBrief returns the latest weekly intelligence brief for a region.
-                 Written by scripts/seed-regional-briefs.mjs on a weekly cron. Premium-gated. PRO-gated. Requires an active Pro subscription.
+                 Written by scripts/seed-regional-briefs.mjs on a weekly cron. Premium-gated.
             operationId: GetRegionalBrief
             parameters:
                 - name: region_id
@@ -13469,7 +13461,7 @@ paths:
             tags:
                 - MarketService
             summary: AnalyzeStock
-            description: AnalyzeStock retrieves a premium stock analysis report with technicals, news, and AI synthesis. PRO-gated. Requires entitlement tier >= 1.
+            description: AnalyzeStock retrieves a stock analysis report with technicals, news, and AI synthesis. Free for all users.
             operationId: AnalyzeStock
             parameters:
                 - name: symbol
@@ -13577,7 +13569,7 @@ paths:
             tags:
                 - MarketService
             summary: GetStockAnalysisHistory
-            description: GetStockAnalysisHistory retrieves shared premium stock analysis history from the backend store. PRO-gated. Requires entitlement tier >= 1.
+            description: GetStockAnalysisHistory retrieves shared stock analysis history from the backend store. Free for all users.
             operationId: GetStockAnalysisHistory
             parameters:
                 - name: symbols
@@ -13694,7 +13686,7 @@ paths:
             tags:
                 - MarketService
             summary: BacktestStock
-            description: BacktestStock replays premium stock-analysis signals over recent price history. PRO-gated. Requires entitlement tier >= 1.
+            description: BacktestStock replays stock-analysis signals over recent price history. Free for all users.
             operationId: BacktestStock
             parameters:
                 - name: symbol
@@ -13798,7 +13790,7 @@ paths:
             tags:
                 - MarketService
             summary: ListStoredStockBacktests
-            description: ListStoredStockBacktests retrieves stored premium backtest snapshots from the backend store. PRO-gated. Requires entitlement tier >= 1.
+            description: ListStoredStockBacktests retrieves stored backtest snapshots from the backend store. Free for all users.
             operationId: ListStoredStockBacktests
             parameters:
                 - name: symbols
@@ -17235,7 +17227,7 @@ paths:
             tags:
                 - ResilienceService
             summary: GetResilienceScore
-            description: GetResilienceScore returns the latest resilience score for a country.
+            description: GetResilienceScore returns the Country Resilience Index score, domain breakdown, and dimension-level confidence for a single country. Free for all users.
             operationId: GetResilienceScore
             parameters:
                 - name: countryCode
@@ -17335,7 +17327,7 @@ paths:
             tags:
                 - ResilienceService
             summary: GetResilienceRanking
-            description: GetResilienceRanking returns the latest resilience ranking snapshot.
+            description: GetResilienceRanking returns the full Country Resilience Index ranking across the public rankable universe. Free for all users.
             operationId: GetResilienceRanking
             parameters:
                 - name: jmespath
@@ -17506,12 +17498,8 @@ paths:
             tags:
                 - SanctionsService
             summary: ListSanctionsPressure
-            description: ListSanctionsPressure retrieves normalized OFAC designation summaries and recent additions. PRO-gated. Requires entitlement tier >= 1.
+            description: ListSanctionsPressure retrieves normalized OFAC designation summaries and recent additions.
             operationId: ListSanctionsPressure
-            security:
-                - WorldMonitorKey: []
-                - ApiKeyHeader: []
-                - BearerAuth: []
             parameters:
                 - name: max_items
                   in: query
@@ -17569,7 +17557,7 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/UnauthorizedError'
                 "403":
-                    description: PRO entitlement access denied.
+                    description: API access requires an active subscription (the API key's subscription is inactive or expired).
                     content:
                         application/json:
                             schema:
@@ -19024,7 +19012,7 @@ paths:
             tags:
                 - SupplyChainService
             summary: GetCountryChokepointIndex
-            description: GetCountryChokepointIndex returns per-chokepoint exposure scores for a country. PRO-gated. Requires entitlement tier >= 1.
+            description: GetCountryChokepointIndex returns per-chokepoint exposure scores for a country.
             operationId: GetCountryChokepointIndex
             parameters:
                 - name: iso2
@@ -19235,12 +19223,8 @@ paths:
             tags:
                 - SupplyChainService
             summary: GetCountryCostShock
-            description: GetCountryCostShock returns cost shock and war risk data for a country+chokepoint. PRO-gated. Requires entitlement tier >= 1.
+            description: GetCountryCostShock returns cost shock and war risk data for a country+chokepoint. Free for all users.
             operationId: GetCountryCostShock
-            security:
-                - WorldMonitorKey: []
-                - ApiKeyHeader: []
-                - BearerAuth: []
             parameters:
                 - name: iso2
                   in: query
@@ -19300,7 +19284,7 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/UnauthorizedError'
                 "403":
-                    description: PRO entitlement access denied.
+                    description: API access requires an active subscription (the API key's subscription is inactive or expired).
                     content:
                         application/json:
                             schema:
@@ -19343,7 +19327,7 @@ paths:
             tags:
                 - SupplyChainService
             summary: GetCountryProducts
-            description: GetCountryProducts returns the seeded bilateral-HS4 import basket for a country. PRO-gated. Requires entitlement tier >= 1.
+            description: GetCountryProducts returns the seeded bilateral-HS4 import basket for a country.
             operationId: GetCountryProducts
             parameters:
                 - name: iso2
@@ -19442,7 +19426,7 @@ paths:
             summary: GetMultiSectorCostShock
             description: |-
                 GetMultiSectorCostShock returns per-sector cost-shock estimates for a
-                 country+chokepoint+closure-window. PRO-gated. Requires entitlement tier >= 1.
+                 country+chokepoint+closure-window.
             operationId: GetMultiSectorCostShock
             parameters:
                 - name: iso2
@@ -19552,7 +19536,7 @@ paths:
             tags:
                 - SupplyChainService
             summary: GetSectorDependency
-            description: GetSectorDependency returns dependency flags and risk profile for a country+HS2 sector. PRO-gated. Requires entitlement tier >= 1.
+            description: GetSectorDependency returns dependency flags and risk profile for a country+HS2 sector.
             operationId: GetSectorDependency
             parameters:
                 - name: iso2
@@ -19653,9 +19637,9 @@ paths:
             description: |-
                 GetRouteExplorerLane returns the primary maritime route, chokepoint exposures,
                  bypass options with geometry, war risk, and static transit/freight estimates for
-                 a country pair + HS2 + cargo type. PRO-gated. Wraps the route-intelligence vendor
-                 endpoint's compute with browser-callable auth and adds fields needed by the
-                 Route Explorer UI. Requires entitlement tier >= 1.
+                 a country pair + HS2 + cargo type. Free for all users (Route Explorer). Reuses
+                 the route-intelligence vendor endpoint's compute function directly rather than
+                 proxying its gated HTTP route, and adds fields needed by the Route Explorer UI.
             operationId: GetRouteExplorerLane
             parameters:
                 - name: fromIso2
@@ -19779,7 +19763,7 @@ paths:
             tags:
                 - SupplyChainService
             summary: GetRouteImpact
-            description: 'GetRouteImpact returns route-level trade exposure: lane value, primary exporter concentration, strategic products, resilience score, dependency flags, and Comtrade provenance. PRO-gated. Requires entitlement tier >= 1.'
+            description: 'GetRouteImpact returns route-level trade exposure: lane value, primary exporter concentration, strategic products, resilience score, dependency flags, and Comtrade provenance. Free for all users.'
             operationId: GetRouteImpact
             parameters:
                 - name: fromIso2
@@ -20945,7 +20929,7 @@ paths:
             tags:
                 - TradeService
             summary: GetTariffTrends
-            description: Get tariff rate timeseries for a country pair. PRO-gated. Requires entitlement tier >= 1.
+            description: Get tariff rate timeseries for a country pair.
             operationId: GetTariffTrends
             parameters:
                 - name: reporting_country
@@ -21373,7 +21357,7 @@ paths:
             tags:
                 - TradeService
             summary: ListComtradeFlows
-            description: List UN Comtrade strategic commodity flows with anomaly detection. PRO-gated. Requires entitlement tier >= 1.
+            description: List UN Comtrade strategic commodity flows with anomaly detection.
             operationId: ListComtradeFlows
             parameters:
                 - name: reporter_code

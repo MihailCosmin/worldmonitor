@@ -1,14 +1,14 @@
 ---
-title: "Premium Finance Search Layer"
-description: "The targeted stock-news search layer that powers Premium Finance — how ticker queries are dispatched, ranked, and cached across upstream providers."
+title: "Stock-News Search Layer"
+description: "The targeted stock-news search layer that powers Stock Analysis — how ticker queries are dispatched, ranked, and cached across upstream providers. Free for all users."
 ---
-This document covers the **extra** targeted stock-news search layer used by premium finance.
+This document covers the **extra** targeted stock-news search layer used by Stock Analysis. Stock Analysis itself is free for all users — see [Access](/premium-finance#access).
 
-It is separate from the core premium-finance architecture on purpose.
+It is separate from the core stock-analysis architecture on purpose.
 
-Core premium finance can still function without this layer. The search layer exists to improve stock-news discovery quality for targeted ticker analysis, especially where feed-only coverage is weak.
+The core stock-analysis engine can still function without this layer. The search layer exists to improve stock-news discovery quality for targeted ticker analysis, especially where feed-only coverage is weak.
 
-See the core system document in [PREMIUM_FINANCE.md](/premium-finance).
+See the core system document in [Stock Analysis & Backtesting Architecture](/premium-finance).
 
 ---
 
@@ -22,7 +22,7 @@ World Monitor is mostly feed-first:
 
 The source repo being migrated from uses a broader search-provider layer for stock-specific news lookup. That produces better targeted coverage for:
 
-- single-symbol premium analysis
+- single-symbol stock analysis
 - less prominent tickers
 - recent company-specific developments not well represented in the feed inventory
 
@@ -39,7 +39,7 @@ The current provider chain is:
 3. `SerpAPI`
 4. Google News RSS fallback
 
-`Bocha` was intentionally not added because the current premium-finance direction is not China-focused.
+`Bocha` was intentionally not added because the current stock-analysis direction is not China-focused.
 
 ---
 
@@ -116,7 +116,7 @@ Search results are cached in Redis under a query-derived key. The cache key incl
 - result limit
 - hashed query
 
-This avoids repeated provider calls when multiple users request the same premium stock analysis.
+This avoids repeated provider calls when multiple users request the same stock analysis.
 
 The cache is intentionally short-lived because search-backed finance news gets stale quickly.
 
@@ -132,7 +132,7 @@ If provider-backed search is unavailable, empty, or unconfigured, the system fal
 
 That means:
 
-- premium stock analysis does not hard-depend on paid search providers
+- stock analysis does not hard-depend on paid search providers
 - provider keys improve coverage, not feature availability
 
 ---
@@ -151,9 +151,9 @@ It should **not** be treated as:
 
 - the canonical market/news ingestion architecture
 - a replacement for feed digest aggregation
-- the source of truth for premium finance persistence
+- the source of truth for stock-analysis persistence
 
-That separation matters because it keeps the premium finance feature understandable:
+That separation matters because it keeps the stock-analysis feature understandable:
 
 - core finance product logic stays stable
 - search-backed enrichment can evolve independently
@@ -164,7 +164,7 @@ That separation matters because it keeps the premium finance feature understanda
 
 The current implementation does not yet expose a standalone public stock-news search RPC.
 
-Right now it is an internal backend helper used by premium stock analysis. That is deliberate:
+Right now it is an internal backend helper used by stock analysis. That is deliberate:
 
 - it keeps the surface area small
 - it avoids adding a premature UI/API product surface
