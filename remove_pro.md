@@ -251,7 +251,7 @@ These surfaces already have real feature logic, data structures, or fetch/render
 - Acceptance:
   - `Trade Policy` appears as a working panel with live data for free users.
 
-### [ ] F7. Ungate Latest Brief
+### [x] F7. Ungate Latest Brief
 
 - Files:
   - `src/components/LatestBriefPanel.ts`

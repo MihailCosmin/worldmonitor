@@ -13,20 +13,20 @@ Three states are rendered, depending on the reader and the composer's progress:
 
 - **Ready** — a cover-card thumbnail, the brief's greeting, the edition's thread count, and a **Read brief →** button that opens the signed magazine URL in a new tab.
 - **Composing** — a soft empty state when the composer has not yet produced the current slot. The panel auto-refreshes on the next user-visible interaction; no manual retry is needed.
-- **Locked** — a premium-upgrade overlay drawn by the base panel framework when the reader does not meet the PRO gate.
+- **Sign-in required** — a neutral empty state when the reader is signed out. The brief is still tied to the signed-in WorldMonitor account that owns it.
 
 Panel id is `latest-brief`; canonical component is `src/components/LatestBriefPanel.ts`.
 
 ## How you reach it
 
 - **Cmd+K** — type *brief* (matches "Panel: Latest Brief" in the command palette).
-- **Availability by variant**: registered and enabled by default in the **full/geopolitical**, **tech**, **finance**, and **commodity** variants (all of them as `premium: 'locked'`). Not present in the happy variant. Source: `FULL_PANELS`, `TECH_PANELS`, `FINANCE_PANELS`, `COMMODITY_PANELS` in `src/config/panels.ts`.
+- **Availability by variant**: registered and enabled by default in the **full/geopolitical**, **tech**, **finance**, **commodity**, and **energy** variants. Not present in the happy variant. Source: `FULL_PANELS`, `TECH_PANELS`, `FINANCE_PANELS`, `COMMODITY_PANELS`, `ENERGY_PANELS` in `src/config/panels.ts`.
 
 Clicking **Read brief →** opens the full magazine-style reader in a new tab. Sharing the brief is a separate, explicit action — see [AI Brief Endpoints](/api-brief) for how share links are materialised.
 
 ## Data sources
 
-The panel calls `GET /api/latest-brief` (Clerk JWT required, PRO gated). The response is either the ready payload (`issueDate`, `dateLong`, `greeting`, `threadCount`, `magazineUrl`) or a `{ status: "composing", issueDate }` stub. The signed `magazineUrl` is generated server-side — the HMAC signing secret never lives in the client bundle.
+The panel calls `GET /api/latest-brief` (Clerk JWT required). The response is either the ready payload (`issueDate`, `dateLong`, `greeting`, `threadCount`, `magazineUrl`) or a `{ status: "composing", issueDate }` stub. The signed `magazineUrl` is generated server-side — the HMAC signing secret never lives in the client bundle.
 
 The brief itself is composed by a Railway job from:
 
@@ -69,7 +69,7 @@ summarise durable event-driven intelligence.
 
 ## Tier & gating
 
-Latest Brief is **PRO**. The panel is registered with `premium: 'locked'` in `src/config/panels.ts`, so free-tier readers see the upgrade overlay and never see the brief body. Verification runs server-side in `api/latest-brief.ts` — a valid Clerk JWT and an active PRO entitlement are both required; otherwise the endpoint returns `403 pro_required`. No content is exposed over the wire for non-PRO readers.
+Latest Brief is available to any signed-in WorldMonitor user. The panel is no longer registered with `premium: 'locked'`, and `api/latest-brief.ts` now checks only for a valid Clerk JWT before returning the caller's latest composed brief preview. Signed-out visitors still see the neutral sign-in state because the brief remains tied to the owning account.
 
 ## API reference
 

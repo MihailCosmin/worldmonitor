@@ -132,7 +132,6 @@ describe('Pro-gated endpoint billing denial ordering (#5600)', () => {
   // notification-channels proves that is achievable. Until then this at least
   // makes the ordering regression red instead of invisible.
   const endpoints: Array<{ file: string; generic: string }> = [
-    { file: 'api/latest-brief.ts', generic: "error: 'pro_required'" },
     { file: 'api/notify.ts', generic: "error: 'pro_required'" },
     { file: 'api/brief/share-url.ts', generic: "error: 'pro_required'" },
     { file: 'api/slack/oauth/start.ts', generic: "error: 'pro_required'" },

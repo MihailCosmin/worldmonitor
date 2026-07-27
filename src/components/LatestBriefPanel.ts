@@ -9,10 +9,9 @@
  *   - composing  → soft empty state. The composer hasn't produced
  *                  today's brief yet; the panel auto-refreshes on
  *                  the next user-visible interaction.
- *   - locked     → the PRO gate (ANONYMOUS or FREE_TIER) is
- *                  handled by the base Panel class via the
- *                  premium-locked-content pattern — the panel itself
- *                  is marked premium and the base draws the overlay.
+ *   - sign-in    → soft empty state. The brief remains tied to the
+ *                  signed-in WorldMonitor account that owns it, so
+ *                  logged-out viewers see a neutral sign-in prompt.
  *
  * The signed URL is generated server-side in `api/latest-brief.ts`
  * so the token never lives in the client bundle. The panel only
@@ -21,14 +20,11 @@
 
 import { Panel } from './Panel';
 import { getClerkToken, clearClerkTokenCache } from '@/services/clerk';
-import { PanelGateReason, hasPremiumAccess, readClientEntitlementBelief } from '@/services/panel-gating';
 import { getAuthState, subscribeAuthState } from '@/services/auth-state';
-import { getEntitlementState } from '@/services/entitlements';
 import {
   classifyDenialResponse,
   isTransientDenial,
   routeDenial,
-  shouldSkipDoomedFetch,
   type PremiumDenialVerdict,
 } from '@/services/premium-denial';
 import { trackBriefThreadOpen } from '@/services/analytics';
@@ -52,7 +48,7 @@ type LatestBriefResponse = LatestBriefReady | LatestBriefComposing;
 
 /**
  * Typed access-failure surface. Lets the refresh loop branch on the
- * specific condition (sign-in / upgrade / server-side desync) instead
+ * specific condition (sign-in / server-side desync) instead
  * of collapsing every denial into one render.
  */
 class BriefAccessError extends Error {
@@ -108,7 +104,6 @@ export class LatestBriefPanel extends Panel {
    * detect a downgrade-while-fetching race and abort the render
    * even if abort() on the fetch signal was too late.
    */
-  private gateLocked = false;
   private inflightAbort: AbortController | null = null;
   private composingPollId: ReturnType<typeof setTimeout> | null = null;
   private unsubscribeAuth: (() => void) | null = null;
@@ -128,13 +123,6 @@ export class LatestBriefPanel extends Panel {
       title: 'Latest Brief',
       infoTooltip:
         "Your personalised daily editorial magazine. One brief per day, assembled from the news-intelligence layer and delivered via email, Telegram, Slack, and here.",
-      // premium: 'locked' marks this as PRO-gated. The base Panel
-      // handles the ANONYMOUS + FREE_TIER overlay via
-      // panel-gating.ts's getPanelGateReason. No story content,
-      // headline, or greeting leaks through DOM attributes on the
-      // locked state — the base renders a generic "Upgrade to Pro"
-      // card without touching our `content` element.
-      premium: 'locked',
     });
 
     this.renderLoading();
@@ -155,7 +143,7 @@ export class LatestBriefPanel extends Panel {
       this.inflightAbort = null;
       this.clearComposingPoll();
       // New account, new retry budget — the previous user's desync says
-      // nothing about this one's entitlement.
+      // nothing about this one's access.
       this.transientDenials = 0;
       // The Clerk token cache is keyed by time, not user. On every
       // id transition we MUST drop it so the next fetch reflects
@@ -170,7 +158,7 @@ export class LatestBriefPanel extends Panel {
         void this.refresh();
       } else {
         // Sign-out. Don't leave the previous user's content on
-        // screen even when premium keys keep the panel unlocked.
+        // screen after sign-out.
         this.renderSignInRequired();
       }
     });
@@ -191,10 +179,9 @@ export class LatestBriefPanel extends Panel {
    * user-facing state always reflects the most recent intent
    * (e.g. retry after error, fresh fetch after a visibility change).
    *
-   * Entitlement is checked THREE times to close the downgrade-
-   * mid-fetch leak: before starting, on AbortController signal, and
-   * again after the response resolves. All three are required — a
-   * user can sign out between any two of them.
+   * Sign-in is checked before the request and again after the
+   * response resolves. Both are required — a user can sign out or
+   * switch accounts between either step.
    */
   public async refresh(): Promise<void> {
     if (this.refreshing) {
@@ -206,41 +193,12 @@ export class LatestBriefPanel extends Panel {
       return;
     }
     this.clearComposingPoll();
-    // Check #1: gate before starting.
     const authState = getAuthState();
-    if (this.gateLocked || !hasPremiumAccess(authState)) return;
-    // Per-user endpoint needs a Clerk userId. Desktop API key +
-    // browser tester keys satisfy hasPremiumAccess but don't bind
-    // to a Clerk user, so there's nothing to fetch.
+    // Per-user endpoint needs a Clerk userId, so desktop API keys
+    // and anonymous browser sessions still render the sign-in state.
     const requestUserId = authState.user?.id ?? null;
     if (!requestUserId) {
       this.renderSignInRequired();
-      return;
-    }
-    // Client-side entitlement is NOT authoritative. /api/latest-brief
-    // does its own server-side entitlement check against the Clerk
-    // JWT — that IS the source of truth. We only use the client
-    // snapshot for AFFIRMATIVE DENIAL: skip the doomed fetch when
-    // we KNOW the user is free. If the snapshot is missing, stale,
-    // or the Convex subscription failed to establish, we fall
-    // through and let the server decide, and fetchLatest classifies
-    // its denial (via BriefAccessError).
-    //
-    // "KNOW the user is free" means a snapshot arrived AND no signal
-    // contradicts it — a snapshot that says free while the Clerk
-    // session claims the Pro role is a contradiction, not knowledge,
-    // so we let the server break the tie rather than paint an upsell
-    // over it (#5608).
-    //
-    // Consequence: an API-key-only user with a free Clerk account
-    // will fire one doomed fetch per refresh and see the upgrade
-    // CTA a beat later than they would with a client-side gate.
-    // Accepted — the alternative (trusting the client snapshot as
-    // a gate) locked legitimate Pro users out whenever the Convex
-    // entitlement subscription was skipped or failed, which is a
-    // worse failure mode.
-    if (shouldSkipDoomedFetch(getEntitlementState() !== null, readClientEntitlementBelief(authState))) {
-      this.renderUpgradeRequired();
       return;
     }
     this.refreshing = true;
@@ -248,12 +206,11 @@ export class LatestBriefPanel extends Panel {
     this.inflightAbort = controller;
     try {
       const data = await this.fetchLatest(controller.signal);
-      // Check #3 (post-response): verify we're still on the SAME
+      // Verify we're still on the SAME
       // user AND still unlocked. A Clerk account switch during the
       // await (A→B) would otherwise paint user A's brief into user
       // B's session because getClerkToken caches for up to 50s
       // across account changes.
-      if (this.gateLocked || !hasPremiumAccess(getAuthState())) return;
       if ((getAuthState().user?.id ?? null) !== requestUserId) return;
       // We have data — retire any auto-retry countdown a previous transient
       // denial (entitlement_desync / access_denied) left armed, and refund the
@@ -266,36 +223,24 @@ export class LatestBriefPanel extends Panel {
         this.renderComposing(data);
       }
     } catch (err) {
-      // AbortError comes from showGatedCta's abort() → render nothing.
       if ((err as { name?: string } | null)?.name === 'AbortError') return;
-      if (this.gateLocked || !hasPremiumAccess(getAuthState())) return;
       if ((getAuthState().user?.id ?? null) !== requestUserId) return;
-      // Terminal access errors render a CTA — retrying can't flip a
-      // missing session or a genuinely free plan. Transient ones fall
-      // through to showError(), which retries on the panel's backoff.
+      // Terminal access errors render a sign-in CTA or neutral
+      // recovery state. Transient ones fall through to showError(),
+      // which retries on the panel's backoff.
       if (err instanceof BriefAccessError) {
         if (isTransientDenial(err.code)) this.transientDenials += 1;
-        // routeDenial owns the truth table (see premium-denial.ts) so the
-        // transient-vs-upsell decision is unit-tested rather than asserted by
-        // a source-level regex — this branch is exactly where #5608 lived.
         switch (routeDenial(err.code, this.transientDenials, MAX_TRANSIENT_DENIALS)) {
           case 'sign_in':
             this.renderSignInRequired();
             return;
-          case 'upgrade':
-            this.renderUpgradeRequired();
-            return;
           case 'give_up':
-            // Auto-retry has had longer than the #5600 poison window to
-            // resolve and hasn't. An endless "verifying…" spinner is its own
-            // kind of lie, and a permanently-contradicted client belief (a
-            // stale Pro role on a free account) would spin here forever.
             this.renderDesyncExhausted();
             return;
           default:
             this.showError(
               err.code === 'entitlement_desync'
-                ? 'Verifying your Pro access — your brief will appear shortly.'
+                ? 'Verifying your brief access — your brief will appear shortly.'
                 : 'Brief service unavailable — retrying shortly.',
               () => { void this.refresh(); },
             );
@@ -314,42 +259,9 @@ export class LatestBriefPanel extends Panel {
     }
   }
 
-  /**
-   * Override to abort any in-flight fetch so the response can't
-   * overwrite the locked CTA after it's painted. Check #2 in the
-   * three-gate sequence above.
-   */
-  public override showGatedCta(reason: PanelGateReason, onAction: () => void): void {
-    this.gateLocked = true;
-    this.inflightAbort?.abort();
-    this.inflightAbort = null;
-    this.clearComposingPoll();
-    super.showGatedCta(reason, onAction);
-  }
-
-  /**
-   * Override to catch the unlock transition. `updatePanelGating`
-   * calls this when a user upgrades (free/anon → PRO). The base
-   * clears locked content but leaves us empty — without this
-   * override the panel stays blank until page reload. Trigger a
-   * fresh fetch on transition.
-   */
-  public override unlockPanel(): void {
-    const wasLocked = this.gateLocked;
-    this.gateLocked = false;
-    super.unlockPanel();
-    if (wasLocked) {
-      this.renderLoading();
-      void this.refresh();
-    }
-  }
-
   private async fetchLatest(signal: AbortSignal): Promise<LatestBriefResponse> {
-    // /api/latest-brief is user-scoped and Bearer-only. premiumFetch
-    // short-circuits on desktop WORLDMONITOR_API_KEY / tester keys
-    // and never sends Clerk, producing a 401 we can't recover from.
-    // Always mint a fresh Bearer here — the refresh() pre-check
-    // guaranteed authState.user exists.
+    // /api/latest-brief is user-scoped and Bearer-only, so we always
+    // mint a fresh Clerk token here rather than relying on API keys.
     const token = await getClerkToken();
     if (!token) {
       // Clerk token evicted between the pre-check and now (logout,
@@ -360,15 +272,9 @@ export class LatestBriefPanel extends Panel {
       signal,
       headers: { Authorization: `Bearer ${token}` },
     });
-    // 401/403 are classified rather than assumed. `/api/latest-brief`
-    // returns 403 for BOTH a free plan (`pro_required`) and a rejected
-    // origin (`Origin not allowed`), and a `pro_required` the client's own
-    // entitlement state contradicts is a server-side desync — rendering
-    // any of those as "Upgrade to Pro" tells a paying user to buy the
-    // plan they already bought (#5608).
-    // classifyDenialResponse reads the body ONLY on a denial status, so
-    // res.json() below still has an unconsumed stream on the success path.
-    const verdict = await classifyDenialResponse(res, readClientEntitlementBelief(getAuthState()));
+    // 401/403 are classified rather than assumed so rejected origins
+    // and stale sessions do not collapse into a misleading upsell.
+    const verdict = await classifyDenialResponse(res, { entitlementTier: null, authRole: null });
     if (verdict !== null) {
       // Reading the body is awaited, so a gate-lock or account-switch abort
       // can land mid-parse — where readDenialErrorCode swallows it. Without
@@ -420,35 +326,10 @@ export class LatestBriefPanel extends Panel {
   }
 
   /**
-   * Free Clerk account, confirmed by BOTH the client snapshot and the
-   * server (or asserted by the server while the client has no opinion).
-   * Render an upgrade CTA instead of retrying — the user needs a plan
-   * change, not a fresh fetch. A 403 the client's own entitlement state
-   * contradicts does NOT land here; see classifyPremiumDenial (#5608).
-   */
-  private renderUpgradeRequired(): void {
-    // Terminal state — retire any auto-retry a prior transient denial armed.
-    this.clearErrorState();
-    clearChildren(this.content);
-    const logo = h('div', { className: 'latest-brief-logo' });
-    logo.appendChild(rawHtml(WM_LOGO_SVG));
-    this.content.appendChild(
-      h('div', { className: 'latest-brief-card latest-brief-card--composing' },
-        logo,
-        h('div', { className: 'latest-brief-empty-title' }, 'Pro required.'),
-        h('div', { className: 'latest-brief-empty-body' },
-          'The WorldMonitor Brief is included with the Pro plan. Upgrade to unlock today\u2019s issue.',
-        ),
-      ),
-    );
-  }
-
-  /**
    * Auto-retry spent its budget and the server still denies us while the
-   * client's own entitlement state says otherwise. Deliberately NOT an upsell
-   * — we have no evidence the user needs to buy anything, which is the whole
-   * point of #5608 — and deliberately no armed retry, so the panel stops
-   * polling. Returning to the tab re-runs refresh() via visibilitychange.
+   * current session still looks valid. Deliberately no armed retry, so the
+   * panel stops polling. Returning to the tab re-runs refresh() via
+   * visibilitychange.
    */
   private renderDesyncExhausted(): void {
     this.clearErrorState();
@@ -458,7 +339,7 @@ export class LatestBriefPanel extends Panel {
     this.content.appendChild(
       h('div', { className: 'latest-brief-card latest-brief-card--composing' },
         logo,
-        h('div', { className: 'latest-brief-empty-title' }, 'We couldn’t confirm your plan.'),
+        h('div', { className: 'latest-brief-empty-title' }, 'We couldn’t confirm your brief access.'),
         h('div', { className: 'latest-brief-empty-body' },
           'Your account looks active here, but the brief service still can’t verify it. '
           + 'Reload the page — if this keeps happening, contact support and we’ll sort it out.',

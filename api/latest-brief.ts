@@ -1,7 +1,7 @@
 /**
  * Latest-brief preview endpoint.
  *
- * GET /api/latest-brief (Clerk JWT required, PRO tier gated)
+ * GET /api/latest-brief (Clerk JWT required)
  *   -> 200 { status: 'ready', issueDate, issueSlot, dateLong, greeting,
  *      threadCount, magazineUrl } when a composed brief exists for this
  *      user's current/requested slot.
@@ -11,7 +11,7 @@
  *      dashboard panel uses this to render an empty state instead of an
  *      error.
  *   -> 401 UNAUTHENTICATED on missing/bad JWT
- *   -> 403 pro_required for non-PRO users
+ *   -> 403 on rejected origins
  *   -> 503 if BRIEF_URL_SIGNING_SECRET is not configured
  *
  * The returned magazineUrl is freshly signed per request. It is safe
@@ -34,7 +34,6 @@ import { readRawJsonFromUpstash } from './_upstash-json.js';
 // @ts-expect-error — JS module, no declaration file
 import { captureSilentError } from './_sentry-edge.js';
 import { validateBearerToken } from '../server/auth-session';
-import { getBillingVerificationDenial, getEntitlements } from '../server/_shared/entitlement-check';
 import { signBriefUrl, BriefUrlError } from '../server/_shared/brief-url';
 import { assertBriefEnvelope } from '../server/_shared/brief-render.js';
 
@@ -45,7 +44,7 @@ const ISSUE_SLOT_RE = /^\d{4}-\d{2}-\d{2}-\d{4}$/;
 // Per-attempt timeouts for the cache-read retry helper. Worst-case wall
 // time = FIRST_ATTEMPT_MS + RETRY_ATTEMPT_MS per read × 2 reads = 18s,
 // which leaves headroom under Vercel Edge's ~25s initial-response cap
-// after `validateBearerToken` + `getEntitlements` preflight. Retry uses
+// after bearer validation. Retry uses
 // a shorter budget on the theory that a transient blip clears in <3s; a
 // real Upstash outage will time out the retry quickly and fall through
 // to the 503 fallback before the platform kills the function.
@@ -72,7 +71,7 @@ export const RETRY_ATTEMPT_MS = 3_000;
 //
 // Exported as a test seam (like `executeTool` in api/mcp/dispatch.ts) so
 // the retry semantics can be asserted directly without standing up Clerk
-// JWT validation + Convex entitlement reads.
+// JWT validation + Upstash reads.
 export async function readWithOneRetry<T>(
   attempt: (timeoutMs: number) => Promise<T>,
   label: string,
@@ -192,29 +191,6 @@ export default async function handler(
   const session = await validateBearerToken(jwt);
   if (!session.valid || !session.userId) {
     return jsonResponse({ error: 'UNAUTHENTICATED' }, 401, cors);
-  }
-
-  const ent = await getEntitlements(session.userId);
-  if (!ent || ent.features.tier < 1) {
-    // #5600: an entitlement the backend could not VERIFY is not a confirmed
-    // free user. This is the endpoint the live repro caught rendering "Pro
-    // required. Upgrade to unlock" to a customer who had paid 90 seconds
-    // earlier — answer the shared retryable contract (503 + Retry-After) for
-    // those states before the terminal upsell. Note this covers lookup failure
-    // and renewal verification only; the day-0 poisoned-marker cohort arrives
-    // as a plain tier-0 answer and is bounded by
-    // NOT_APPLICABLE_VERIFICATION_TTL_SECONDS instead.
-    const billingDenial = getBillingVerificationDenial(ent, cors, 1);
-    if (billingDenial) return billingDenial;
-    return jsonResponse(
-      {
-        error: 'pro_required',
-        message: 'The Brief is available on the Pro plan.',
-        upgradeUrl: 'https://worldmonitor.app/pro',
-      },
-      403,
-      cors,
-    );
   }
 
   const secret = process.env.BRIEF_URL_SIGNING_SECRET ?? '';

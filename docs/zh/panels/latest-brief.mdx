@@ -13,20 +13,20 @@ description: "最新简报面板将 WorldMonitor 每日 AI 情报简报浓缩为
 
 - **就绪** — 封面卡片缩略图、简报问候语、该期线程数，以及一个 **Read brief →** 按钮在新标签页中打开已签名的杂志 URL。
 - **组合中** — 当组合器尚未产出当前时段时的柔和空状态。面板在下一次用户可见交互时自动刷新；无需手动重试。
-- **已锁定** — 当读者不满足 PRO 门控时，由基础面板框架绘制的 premium 升级覆盖层。
+- **需要登录** — 当读者已登出时显示中性空状态。简报仍绑定到拥有它的已登录 WorldMonitor 账户。
 
 面板 id 为 `latest-brief`；规范组件为 `src/components/LatestBriefPanel.ts`。
 
 ## 如何访问
 
 - **Cmd+K** — 输入 *brief*（在命令面板中匹配 "Panel: Latest Brief"）。
-- **按变体的可用性**：在 **full/geopolitical**、**tech**、**finance** 和 **commodity** 变体中注册并默认启用（全部为 `premium: 'locked'`）。在 happy 变体中不存在。来源：`src/config/panels.ts` 中的 `FULL_PANELS`、`TECH_PANELS`、`FINANCE_PANELS`、`COMMODITY_PANELS`。
+- **按变体的可用性**：在 **full/geopolitical**、**tech**、**finance**、**commodity** 和 **energy** 变体中注册并默认启用。在 happy 变体中不存在。来源：`src/config/panels.ts` 中的 `FULL_PANELS`、`TECH_PANELS`、`FINANCE_PANELS`、`COMMODITY_PANELS`、`ENERGY_PANELS`。
 
 点击 **Read brief →** 在新标签页中打开完整的杂志风格阅读器。分享简报是一个独立的、显式的操作 — 请参见 [AI Brief Endpoints](/zh/api-brief) 了解分享链接如何生成。
 
 ## 数据来源
 
-面板调用 `GET /api/latest-brief`（需要 Clerk JWT，PRO 门控）。响应要么是就绪载荷（`issueDate`、`dateLong`、`greeting`、`threadCount`、`magazineUrl`），要么是 `{ status: "composing", issueDate }` 占位响应。已签名的 `magazineUrl` 在服务端生成 — HMAC 签名密钥永远不会存在于客户端包中。
+面板调用 `GET /api/latest-brief`（需要 Clerk JWT）。响应要么是就绪载荷（`issueDate`、`dateLong`、`greeting`、`threadCount`、`magazineUrl`），要么是 `{ status: "composing", issueDate }` 占位响应。已签名的 `magazineUrl` 在服务端生成 — HMAC 签名密钥永远不会存在于客户端包中。
 
 简报本身由 Railway 作业从以下来源组合：
 
@@ -58,7 +58,7 @@ description: "最新简报面板将 WorldMonitor 每日 AI 情报简报浓缩为
 
 ## 层级与门控
 
-Latest Brief 是 **PRO**。面板在 `src/config/panels.ts` 中以 `premium: 'locked'` 注册，因此免费层读者看到升级覆盖层，永远看不到简报正文。验证在 `api/latest-brief.ts` 的服务端运行 — 需要有效的 Clerk JWT 和活动的 PRO 权限；否则端点返回 `403 pro_required`。非 PRO 读者不会通过网络暴露任何内容。
+Latest Brief 现已向任何已登录的 WorldMonitor 用户开放。面板不再以 `premium: 'locked'` 注册，`api/latest-brief.ts` 现在也只检查有效的 Clerk JWT，然后返回调用者最近一次已生成的简报预览。已登出访客仍会看到中性的登录提示，因为简报仍绑定到所属账户。
 
 ## API 参考
 

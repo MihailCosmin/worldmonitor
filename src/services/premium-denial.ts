@@ -66,7 +66,6 @@ function normalizeCode(code: string): string {
  * Codes that are a genuine "this account is not on the required plan" verdict,
  * as opposed to a 403 raised before entitlement was ever consulted.
  *
- *   api/latest-brief.ts:201                 → pro_required
  *   api/widget-agent.ts:179                 → Pro subscription required
  *   server/_shared/entitlement-check.ts:556 → Upgrade required
  *   api/internal/mcp-grant-*.ts             → INSUFFICIENT_TIER

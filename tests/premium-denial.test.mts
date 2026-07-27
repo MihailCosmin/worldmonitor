@@ -134,7 +134,7 @@ describe('classifyPremiumDenial — 403 entitlement denials', () => {
 
   /**
    * Every entitlement 403 our own handlers emit carries a JSON `error` string
-   * (api/latest-brief.ts:199-207, api/widget-agent.ts:179, and every branch of
+   * (api/widget-agent.ts:179 and every branch of
    * entitlement-check.ts). So a 403 with no parseable code did NOT come from
    * our entitlement logic — it is an intermediary (WAF, CDN, proxy). Calling
    * that "Pro required" is the exact conflation this change exists to remove.
@@ -152,7 +152,6 @@ describe('classifyPremiumDenial — 403 entitlement denials', () => {
   /**
    * Every string a 403 actually carries today. Drift here silently turns an
    * upsell into a retry loop (or back again), so they are pinned explicitly:
-   *   api/latest-brief.ts:201                  → 'pro_required'
    *   api/widget-agent.ts:179                  → 'Pro subscription required'
    *   server/_shared/entitlement-check.ts:556  → 'Upgrade required'
    *   server/_shared/entitlement-check.ts:446  → 'Subscription lapsed'
@@ -398,23 +397,22 @@ describe('premium panels route their denials through the classifier', () => {
    * because a neighbouring branch supplied the token it searched for.
    *
    * What IS worth pinning in source: the panel must route through routeDenial
-   * rather than re-deriving the decision inline, and there must be exactly the
-   * expected number of upsell call sites — a third one is the mutation that
-   * reintroduces the bug.
+   * rather than re-deriving the decision inline, and after the unlock it must
+   * not retain any dedicated upsell renderer.
    */
   it('LatestBriefPanel routes its denials through routeDenial', () => {
     assert.match(readSource('src/components/LatestBriefPanel.ts'), /routeDenial\(/);
   });
 
-  it('LatestBriefPanel has exactly two renderUpgradeRequired call sites', () => {
+  it('LatestBriefPanel no longer carries a dedicated upgrade renderer', () => {
     const source = readSource('src/components/LatestBriefPanel.ts');
     const calls = [...source.matchAll(/this\.renderUpgradeRequired\(\)/g)];
     assert.equal(
       calls.length,
-      2,
-      'expected exactly two upsell call sites — the pre-fetch affirmative-denial '
-      + "gate and routeDenial's 'upgrade' case. A third is how #5608 comes back.",
+      0,
+      'LatestBriefPanel is unlocked, so it must not retain Pro-specific upsell call sites.',
     );
+    assert.doesNotMatch(source, /private renderUpgradeRequired\(/);
   });
 
   it('ChatAnalystPanel keeps denial copy neutral after the unlock', () => {
@@ -640,7 +638,7 @@ describe('classifyDenialResponse', () => {
     assert.equal(res.bodyUsed, false);
   });
 
-  it("#5608: the real api/latest-brief 403 body + a Pro client → desync, not upsell", async () => {
+  it('a generic pro_required body + a Pro client still resolves to desync, not upsell', async () => {
     const res = denial({
       error: 'pro_required',
       message: 'The Brief is available on the Pro plan.',

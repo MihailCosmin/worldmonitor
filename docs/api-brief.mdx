@@ -14,7 +14,7 @@ For source selection, filtering, deduplication, LLM grounding, and bias
 controls, see [News Digest and Briefing Methodology](/methodology/news-digest-and-briefing).
 
 <Info>
-All read routes require a valid Clerk session and a PRO tier, except the public share route (`/api/brief/public/{hash}`).
+`GET /api/latest-brief` requires a valid Clerk session but no PRO tier. Share creation (`/api/brief/share-url`) still requires PRO, and the public share route (`/api/brief/public/{hash}`) remains unauthenticated.
 </Info>
 
 ## Latest brief (authenticated)
@@ -30,8 +30,8 @@ brief yet.
 | 200 OK | `{ status: "ready", issueDate, issueSlot, dateLong, greeting, threadCount, magazineUrl }` |
 | 200 OK | `{ status: "composing", issueDate, issueSlot? }` — no brief for the current/requested slot yet |
 | 401 | Missing / invalid Clerk JWT |
-| 403 | `pro_required` (entitlement confirmed non-Pro) / `subscription_lapsed` (lapse confirmed with the provider, `X-Billing-Verification` set) |
-| 503 | `BRIEF_URL_SIGNING_SECRET` not configured — **or** entitlement verification in doubt: `entitlement_verification_unavailable` / `renewal_verification_pending` / `renewal_verification_failed`, with `Retry-After` and `X-Billing-Verification`. Distinguish on the `code` field. See [Error handling](/usage-errors) |
+| 403 | Rejected origin |
+| 503 | `BRIEF_URL_SIGNING_SECRET` not configured |
 
 `issueDate` remains the display/date field (`YYYY-MM-DD`). `issueSlot` is the
 frozen edition key (`YYYY-MM-DD-HHMM`) used for Redis lookup and HMAC binding;
