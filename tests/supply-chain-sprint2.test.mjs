@@ -3,10 +3,10 @@
  *
  * - bypass-corridors.ts: data integrity + BYPASS_CORRIDORS_BY_CHOKEPOINT index
  * - _insurance-tier.ts: threatLevelToInsurancePremiumBps pure function
- * - get-bypass-options handler: unauthenticated returns empty
+ * - get-bypass-options handler: bypass corridor ranking on public data
  * - get-country-cost-shock handler: unauthenticated returns zeros
  * - gateway.ts: new slow-browser entries for both RPCs
- * - premium-paths.ts: both paths registered as PRO-gated
+ * - premium-paths.ts: remaining premium supply-chain routes stay registered
  * - proto: new messages in generated types
  */
 
@@ -166,9 +166,9 @@ describe('BYPASS_CORRIDORS_BY_CHOKEPOINT index', () => {
 describe('get-bypass-options handler source code', () => {
   const src = readSrc('server/worldmonitor/supply-chain/v1/get-bypass-options.ts');
 
-  it('calls isCallerPremium and returns empty when not PRO', () => {
-    assert.match(src, /isCallerPremium/);
-    assert.match(src, /if \(!isPro\) return empty/);
+  it('does not short-circuit on premium access', () => {
+    assert.doesNotMatch(src, /isCallerPremium/);
+    assert.doesNotMatch(src, /if \(!isPro\) return empty/);
   });
 
   it('filters by suitableCargoTypes.length === 0 (no-bypass placeholder guard)', () => {
@@ -268,8 +268,8 @@ describe('Gateway slow-browser tier registration', () => {
 describe('Premium paths registration', () => {
   const src = readSrc('src/shared/premium-paths.ts');
 
-  it('get-bypass-options is in PREMIUM_RPC_PATHS', () => {
-    assert.match(src, /\/api\/supply-chain\/v1\/get-bypass-options/);
+  it('get-bypass-options is not in PREMIUM_RPC_PATHS', () => {
+    assert.doesNotMatch(src, /\/api\/supply-chain\/v1\/get-bypass-options/);
   });
 
   it('get-country-cost-shock is in PREMIUM_RPC_PATHS', () => {

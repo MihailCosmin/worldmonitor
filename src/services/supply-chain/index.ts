@@ -57,7 +57,7 @@ export type CountryProductsResponse = GetCountryProductsResponse;
 export type MultiSectorShockResponse = GetMultiSectorCostShockResponse;
 export type MultiSectorShock = MultiSectorCostShock;
 
-// premiumFetch for the whole client: 8 of 13 methods target paths in
+// premiumFetch for the whole client: 7 of 13 methods target paths in
 // PREMIUM_RPC_PATHS. The gateway runs validateApiKey with forceKey=true on
 // those paths *before* isCallerPremium; globalThis.fetch here would 401 for
 // signed-in browser pros (no Clerk bearer / no WM key injected) and the
@@ -246,8 +246,6 @@ export async function fetchBypassOptions(
   closurePct = 100,
 ): Promise<GetBypassOptionsResponse> {
   const empty: GetBypassOptionsResponse = { chokepointId, cargoType, closurePct, options: [], primaryChokepointWarRiskTier: 'WAR_RISK_TIER_UNSPECIFIED', fetchedAt: '' };
-  // Pro-gated path — see fetchCountryChokepointIndex.
-  if (!hasPremiumAccess()) return empty;
   try {
     return await client.getBypassOptions({ chokepointId, cargoType, closurePct });
   } catch {

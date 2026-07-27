@@ -59,7 +59,7 @@ service SupplyChainService {
     option (sebuf.http.config) = {path: "/get-country-chokepoint-index", method: HTTP_METHOD_GET};
   }
 
-  // GetBypassOptions returns ranked bypass corridors for a chokepoint. PRO-gated.
+  // GetBypassOptions returns ranked bypass corridors for a chokepoint.
   rpc GetBypassOptions(GetBypassOptionsRequest) returns (GetBypassOptionsResponse) {
     option (sebuf.http.config) = {path: "/get-bypass-options", method: HTTP_METHOD_GET};
   }

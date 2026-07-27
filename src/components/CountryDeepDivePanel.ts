@@ -1985,56 +1985,49 @@ export class CountryDeepDivePanel implements CountryBriefPanel {
     bypassSection.append(bypassHeading);
     const bypassContent = this.el('div');
 
-    const isPro = hasPremiumAccess(getAuthState());
-    if (!isPro) {
-      const gateEl = this.makeProLocked('Bypass corridors available with PRO');
-      gateEl.addEventListener('click', () => trackGateHit('sector-bypass-corridors'), { once: true });
-      bypassContent.append(gateEl);
-    } else {
-      bypassContent.append(this.makeLoading('Loading bypass options\u2026'));
-      this.sectorBypassAbort = new AbortController();
-      const signal = this.sectorBypassAbort.signal;
-      void fetchBypassOptions(sector.primaryChokepointId, 'container', 100).then(resp => {
-        if (signal.aborted) return;
-        bypassContent.replaceChildren();
-        const top3 = resp.options.slice(0, 3);
-        if (top3.length === 0) {
-          bypassContent.append(this.el('div', 'cdp-route-path', 'No bypass options available'));
-          return;
-        }
-        const tbl = this.el('table', 'cdp-trade-exposure-table');
-        const tHead = this.el('thead');
-        const hRow = this.el('tr');
-        hRow.append(this.el('th', '', 'Corridor'), this.el('th', '', '+Days'), this.el('th', '', '+Cost'), this.el('th', '', 'Risk'));
-        tHead.append(hRow);
-        tbl.append(tHead);
-        const tBody = this.el('tbody');
-        const riskTierMap: Record<string, string> = {
-          WAR_RISK_TIER_UNSPECIFIED: 'Normal',
-          WAR_RISK_TIER_WAR_ZONE: 'War Zone',
-          WAR_RISK_TIER_CRITICAL: 'Critical',
-          WAR_RISK_TIER_HIGH: 'High',
-          WAR_RISK_TIER_ELEVATED: 'Elevated',
-          WAR_RISK_TIER_NORMAL: 'Normal',
-        };
-        for (const opt of top3) {
-          const r = this.el('tr');
-          r.append(
-            this.el('td', '', opt.name),
-            this.el('td', '', opt.addedTransitDays > 0 ? `+${opt.addedTransitDays}d` : '\u2014'),
-            this.el('td', '', opt.addedCostMultiplier > 1 ? `+${((opt.addedCostMultiplier - 1) * 100).toFixed(0)}%` : '\u2014'),
-            this.el('td', '', riskTierMap[opt.bypassWarRiskTier] ?? opt.bypassWarRiskTier),
-          );
-          tBody.append(r);
-        }
-        tbl.append(tBody);
-        bypassContent.append(tbl);
-      }).catch(() => {
-        if (signal.aborted) return;
-        bypassContent.replaceChildren();
-        bypassContent.append(this.el('div', 'cdp-route-path', 'Bypass data unavailable'));
-      });
-    }
+    bypassContent.append(this.makeLoading('Loading bypass options\u2026'));
+    this.sectorBypassAbort = new AbortController();
+    const signal = this.sectorBypassAbort.signal;
+    void fetchBypassOptions(sector.primaryChokepointId, 'container', 100).then(resp => {
+      if (signal.aborted) return;
+      bypassContent.replaceChildren();
+      const top3 = resp.options.slice(0, 3);
+      if (top3.length === 0) {
+        bypassContent.append(this.el('div', 'cdp-route-path', 'No bypass options available'));
+        return;
+      }
+      const tbl = this.el('table', 'cdp-trade-exposure-table');
+      const tHead = this.el('thead');
+      const hRow = this.el('tr');
+      hRow.append(this.el('th', '', 'Corridor'), this.el('th', '', '+Days'), this.el('th', '', '+Cost'), this.el('th', '', 'Risk'));
+      tHead.append(hRow);
+      tbl.append(tHead);
+      const tBody = this.el('tbody');
+      const riskTierMap: Record<string, string> = {
+        WAR_RISK_TIER_UNSPECIFIED: 'Normal',
+        WAR_RISK_TIER_WAR_ZONE: 'War Zone',
+        WAR_RISK_TIER_CRITICAL: 'Critical',
+        WAR_RISK_TIER_HIGH: 'High',
+        WAR_RISK_TIER_ELEVATED: 'Elevated',
+        WAR_RISK_TIER_NORMAL: 'Normal',
+      };
+      for (const opt of top3) {
+        const r = this.el('tr');
+        r.append(
+          this.el('td', '', opt.name),
+          this.el('td', '', opt.addedTransitDays > 0 ? `+${opt.addedTransitDays}d` : '\u2014'),
+          this.el('td', '', opt.addedCostMultiplier > 1 ? `+${((opt.addedCostMultiplier - 1) * 100).toFixed(0)}%` : '\u2014'),
+          this.el('td', '', riskTierMap[opt.bypassWarRiskTier] ?? opt.bypassWarRiskTier),
+        );
+        tBody.append(r);
+      }
+      tbl.append(tBody);
+      bypassContent.append(tbl);
+    }).catch(() => {
+      if (signal.aborted) return;
+      bypassContent.replaceChildren();
+      bypassContent.append(this.el('div', 'cdp-route-path', 'Bypass data unavailable'));
+    });
 
     bypassSection.append(bypassContent);
     wrap.append(bypassSection);

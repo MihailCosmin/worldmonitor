@@ -6,7 +6,6 @@ import type {
   ChokepointInfo,
 } from '../../../../src/generated/server/worldmonitor/supply_chain/v1/service_server';
 
-import { isCallerPremium } from '../../../_shared/premium-check';
 import { BYPASS_CORRIDORS_BY_CHOKEPOINT } from '../../../../src/config/bypass-corridors';
 import { getCachedJson } from '../../../_shared/redis';
 import { CHOKEPOINT_STATUS_KEY } from '../../../_shared/cache-keys';
@@ -21,7 +20,6 @@ export async function getBypassOptions(
   ctx: ServerContext,
   req: GetBypassOptionsRequest,
 ): Promise<GetBypassOptionsResponse> {
-  const isPro = await isCallerPremium(ctx.request);
   const empty: GetBypassOptionsResponse = {
     chokepointId: req.chokepointId,
     cargoType: req.cargoType || 'container',
@@ -30,7 +28,6 @@ export async function getBypassOptions(
     primaryChokepointWarRiskTier: 'WAR_RISK_TIER_UNSPECIFIED',
     fetchedAt: new Date().toISOString(),
   };
-  if (!isPro) return empty;
 
   const chokepointId = req.chokepointId?.trim().toLowerCase();
   if (!chokepointId) return empty;

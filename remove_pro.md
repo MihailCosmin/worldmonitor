@@ -357,7 +357,7 @@ These surfaces already have real feature logic, data structures, or fetch/render
 - Acceptance:
   - Free users can activate a scenario and see map + supply-chain updates.
 
-### [ ] F13. Ungate bypass corridors in supply-chain and country detail views
+### [x] F13. Ungate bypass corridors in supply-chain and country detail views
 
 - Files:
   - `src/components/SupplyChainPanel.ts`
