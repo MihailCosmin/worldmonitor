@@ -782,7 +782,7 @@ export class DataLoaderManager implements AppModule {
         tasks.push({ name: 'bis', task: () => runGuarded('bis', () => this.loadBisData()) });
         tasks.push({ name: 'bls', task: () => runGuarded('bls', () => this.loadBlsData()) });
       }
-      if (hasPremiumAccess() && shouldLoad('global-procurement')) {
+      if (shouldLoad('global-procurement')) {
         tasks.push({ name: 'global-tenders', task: () => runGuarded('global-tenders', () => this.loadGlobalTenders()) });
       }
       if (shouldLoad('energy-complex')) {
@@ -3367,25 +3367,17 @@ export class DataLoaderManager implements AppModule {
     procurementPanel.setRequestHandler((nextFilters, shouldAppend) => {
       void this.loadGlobalTenders(nextFilters, shouldAppend);
     });
-    if (!hasPremiumAccess()) {
-      procurementPanel?.clear();
-      return;
-    }
     procurementPanel.setLoading(true, append);
     try {
       const { fetchGlobalTenders } = await import('@/services/global-tenders');
       const data = await fetchGlobalTenders(requestFilters);
       if (requestGeneration !== this.globalTenderGeneration) return;
-      if (!hasPremiumAccess()) {
-        procurementPanel.clear();
-        return;
-      }
       procurementPanel.update(data, append);
       this.ctx.statusPanel?.updateApi('Global Procurement', {
         status: !data.dataAvailable ? 'error' : ['partial', 'stale'].includes(data.availability) ? 'warning' : 'ok',
       });
     } catch (error) {
-      if (requestGeneration !== this.globalTenderGeneration || !hasPremiumAccess()) return;
+      if (requestGeneration !== this.globalTenderGeneration) return;
       console.warn('[App] Global tenders failed:', error);
       procurementPanel.showUnavailable();
       this.ctx.statusPanel?.updateApi('Global Procurement', { status: 'error' });

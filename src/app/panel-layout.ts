@@ -118,7 +118,6 @@ const WEB_PREMIUM_PANELS = new Set([
   'latest-brief',
   'regional-intelligence',
   'trade-policy',
-  'global-procurement',
 ]);
 
 /**

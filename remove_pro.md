@@ -218,7 +218,7 @@ These surfaces already have real feature logic, data structures, or fetch/render
 - Acceptance:
   - A free user can use the analyst panel end-to-end.
 
-### [ ] F5. Ungate Global Procurement
+### [x] F5. Ungate Global Procurement
 
 - Files:
   - `src/components/GlobalProcurementPanel.ts`

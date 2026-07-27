@@ -103,7 +103,6 @@ const ENDPOINT_ENTITLEMENTS: Record<string, number> = {
   '/api/forecast/v1/trigger-simulation': 1,
   '/api/intelligence/v1/classify-event': 1,
   '/api/intelligence/v1/get-country-intel-brief': 1,
-  '/api/economic/v1/list-global-tenders': 1,
   '/api/sanctions/v1/list-sanctions-pressure': 1,
   '/api/scenario/v1/run-scenario': 1,
   '/api/scenario/v1/get-scenario-status': 1,

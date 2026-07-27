@@ -5,9 +5,9 @@ description: "WorldMonitor 如何汇聚活跃公共招标机会、说明来源�
 
 WorldMonitor 将**开放机会**与历史**近期授标**分开处理。开放机会显示在独立的 **Global Procurement** 面板中，是面向未来、由定时种子任务维护的数据流；授标记录仍在 Economic 面板中来自 USASpending。
 
-Global Procurement 是 **Pro 功能**。免费用户会看到标准登录或升级门槛，RPC 还会在服务器端独立验证有效的一级订阅。浏览器仅在 Pro 权限有效时请求并保留招标数据；退出登录或降级会清除面板数据及其内存响应缓存。近期授标仍保留在免费的 Economic 面板中。
+Global Procurement 现在是**公开功能**。免费用户无需订阅门槛即可搜索、筛选并分页浏览同一份规范招标数据流。面板仍会把响应缓存保留在当前浏览器会话中；近期授标仍保留在免费的 Economic 面板中。
 
-Pro 用户可以搜索标题和描述，按买方、两位国家代码和来源筛选，选择排序方式，并分页浏览完整结果集。面板不会直接读取 Upstash，而是调用分页 RPC，由 RPC 读取规范化的种子快照。
+用户可以搜索标题和描述，按买方、两位国家代码和来源筛选，选择排序方式，并分页浏览完整结果集。面板不会直接读取 Upstash，而是调用分页 RPC，由 RPC 读取规范化的种子快照。
 
 ## 覆盖范围与新鲜度
 
@@ -59,7 +59,7 @@ Railway 种子任务每小时运行一次，并把规范快照写入 `economic:g
 
 ## API
 
-`GET /api/economic/v1/list-global-tenders` 仅向 Pro 开放、有意采用分页，且**不会**进入启动批量载荷。它支持 `country`、重复的 `countries`、`region`、`source`、`status`、`buyer`、`published_from`、`published_to`、`deadline_from`、`deadline_to`、`min_value`、`max_value`、`currency`、`category`、`query`、`min_automation_score`、`page_size`、`cursor` 和 `sort`。
+`GET /api/economic/v1/list-global-tenders` 现已公开、有意采用分页，且**不会**进入启动批量载荷。它支持 `country`、重复的 `countries`、`region`、`source`、`status`、`buyer`、`published_from`、`published_to`、`deadline_from`、`deadline_to`、`min_value`、`max_value`、`currency`、`category`、`query`、`min_automation_score`、`page_size`、`cursor` 和 `sort`。
 
 支持的排序方式为 `newest`、`closing_soon`、`estimated_value` 和 `relevance`。`page_size` 最大为 100。响应包含已应用的筛选条件、游标、快照时间、可用性和各来源健康摘要。
 
@@ -71,7 +71,7 @@ Railway 种子任务每小时运行一次，并把规范快照写入 `economic:g
 
 紧凑投影省略描述文本、资格要求和提交 URL，同时保留每条机会的官方 URL、来源、标题、买方、日期、金额、分类、领域、`participationMode` 和精简的 `automationFit`。它还保留游标分页、`total`、`appliedFilters`、`countryCoverage`、可用性、快照时间和来源健康摘要。25 条的 MCP 上限有意小于 REST 路由 100 条的上限。
 
-MCP 工具与 HTTP 路由一样仅限 Pro，且不属于 bootstrap。无筛选工具调用会保留所有开放机会；`min_automation_score` 始终是可选项。完整参数契约见 [MCP 工具参考](/zh/mcp-tools-reference#get_procurement_opportunities)。
+MCP 工具使用同一条公开 HTTP 路由，且不属于 bootstrap。无筛选工具调用会保留所有开放机会；`min_automation_score` 始终是可选项。完整参数契约见 [MCP 工具参考](/zh/mcp-tools-reference#get_procurement_opportunities)。
 
 ## 技术相关性
 

@@ -298,7 +298,7 @@ export const RPC_TOOLS: ToolDef[] = [
   {
     name: 'get_procurement_opportunities',
     _outputBudgetBytes: 65536,
-    description: 'Search open global public-procurement opportunities through the canonical Pro route. Default output is 10 compact records (maximum 25), without descriptions or submission/eligibility payloads. automationFit is keyword relevance evidence only, never bidding eligibility; participationMode "unknown" remains unknown.',
+    description: 'Search open global public-procurement opportunities through the canonical paginated route. Default output is 10 compact records (maximum 25), without descriptions or submission/eligibility payloads. automationFit is keyword relevance evidence only, never bidding eligibility; participationMode "unknown" remains unknown.',
     inputSchema: {
       type: 'object',
       properties: {

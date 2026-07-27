@@ -5,9 +5,9 @@ description: "How WorldMonitor aggregates active public tender opportunities, co
 
 WorldMonitor separates **open opportunities** from historical **recent awards**. Open opportunities live in the dedicated **Global Procurement** panel as a forward-looking, seed-backed feed; awards remain sourced from USASpending in the Economic panel.
 
-Global Procurement is a **Pro feature**. The panel shows the standard sign-in or upgrade gate to free users, and the RPC independently enforces an active tier-1 subscription server-side. The browser only requests and retains tender data while Pro access is active; sign-out or downgrade clears both the panel payload and its in-memory response cache. Recent awards remain part of the free Economic panel behavior.
+Global Procurement is now a **public feature**. Free users can search, filter, and paginate the same canonical tender feed without a subscription gate. The panel still keeps its own response cache local to the browser session, and recent awards remain part of the free Economic panel behavior.
 
-Pro users can search titles and descriptions, filter by buyer, two-letter country code, and source, choose a supported sort, and page through the complete result set. The panel never reads Upstash directly: it calls the paginated RPC, which reads the canonical seeded snapshot.
+Users can search titles and descriptions, filter by buyer, two-letter country code, and source, choose a supported sort, and page through the complete result set. The panel never reads Upstash directly: it calls the paginated RPC, which reads the canonical seeded snapshot.
 
 ## Coverage and freshness
 
@@ -59,7 +59,7 @@ This feed never represents a record without a verifiable future closing date, so
 
 ## API
 
-`GET /api/economic/v1/list-global-tenders` is Pro-gated, deliberately paginated, and is **not** part of the bootstrap payload. It supports `country`, repeated `countries`, `region`, `source`, `status`, `buyer`, `published_from`, `published_to`, `deadline_from`, `deadline_to`, `min_value`, `max_value`, `currency`, `category`, `query`, `min_automation_score`, `page_size`, `cursor`, and `sort`.
+`GET /api/economic/v1/list-global-tenders` is public, deliberately paginated, and is **not** part of the bootstrap payload. It supports `country`, repeated `countries`, `region`, `source`, `status`, `buyer`, `published_from`, `published_to`, `deadline_from`, `deadline_to`, `min_value`, `max_value`, `currency`, `category`, `query`, `min_automation_score`, `page_size`, `cursor`, and `sort`.
 
 Supported sorts are `newest`, `closing_soon`, `estimated_value`, and `relevance`. `page_size` is bounded to 100. The response includes applied filters, a cursor, snapshot time, availability, and source-health summaries.
 
@@ -71,7 +71,7 @@ Every record contains a stable WorldMonitor ID (`source:sourceNoticeId`), its of
 
 The compact projection omits description text, eligibility requirements, and submission URLs while retaining each opportunity's official URL, source, title, buyer, dates, money, categories, sectors, `participationMode`, and compact `automationFit`. It also retains cursor pagination, `total`, `appliedFilters`, `countryCoverage`, availability, snapshot time, and source-health summaries. The 25-record MCP maximum is deliberately tighter than the REST route's 100-record maximum.
 
-The MCP tool is Pro-gated exactly like the HTTP route and is not part of bootstrap. An unfiltered tool call preserves all open opportunities; `min_automation_score` remains opt-in. See the [MCP tool reference](/mcp-tools-reference#get_procurement_opportunities) for the complete parameter contract.
+The MCP tool uses the same public HTTP route and is not part of bootstrap. An unfiltered tool call preserves all open opportunities; `min_automation_score` remains opt-in. See the [MCP tool reference](/mcp-tools-reference#get_procurement_opportunities) for the complete parameter contract.
 
 ## Technology relevance
 

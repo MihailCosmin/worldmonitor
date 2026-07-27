@@ -18,7 +18,7 @@ const docs = readFileSync(resolve(import.meta.dirname, '../docs/global-procureme
 
 test('dedicated procurement panel supports discovery controls, pagination, and safe official links', () => {
   assert.match(panel, /id: 'global-procurement'/);
-  assert.match(panel, /premium: 'locked'/);
+  assert.doesNotMatch(panel, /premium: 'locked'/);
   assert.match(panel, /data-procurement-query/);
   assert.match(panel, /data-procurement-country/);
   assert.match(panel, /data-procurement-source/);
@@ -45,19 +45,20 @@ test('procurement keeps the complete canonical feed behind the paginated RPC', (
   assert.match(service, /client\.listGlobalTenders\(request/);
 });
 
-test('procurement is Pro-enforced and free clients neither fetch nor retain its data', () => {
-  assert.match(premiumPaths, /'\/api\/economic\/v1\/list-global-tenders'/);
-  assert.match(entitlementCheck, /'\/api\/economic\/v1\/list-global-tenders': 1/);
+test('procurement is public and free clients can fetch and retain paginated results', () => {
+  assert.doesNotMatch(premiumPaths, /'\/api\/economic\/v1\/list-global-tenders'/);
+  assert.doesNotMatch(entitlementCheck, /'\/api\/economic\/v1\/list-global-tenders': 1/);
 
-  assert.match(panelConfig, /'global-procurement': \{ name: 'Global Procurement', enabled: true, priority: 1, premium: 'locked'/);
-  assert.match(panelConfig, /apiKeyPanels = \[[^\]]*'global-procurement'/s);
-  assert.match(panelLayout, /WEB_PREMIUM_PANELS = new Set\(\[[^\]]*'global-procurement'/s);
+  assert.match(panelConfig, /'global-procurement': \{ name: 'Global Procurement', enabled: true, priority: 1 \}/);
+  assert.doesNotMatch(panelConfig, /apiKeyPanels = \[[^\]]*'global-procurement'/s);
+  assert.doesNotMatch(panelLayout, /WEB_PREMIUM_PANELS = new Set\(\[[^\]]*'global-procurement'/s);
   assert.match(panelLayout, /lazyDefaultPanel\('global-procurement'.*GlobalProcurementPanel/s);
 
-  assert.match(loader, /if \(!hasPremiumAccess\(\)\) \{\s*procurementPanel\?\.clear\(\);\s*return;\s*\}/);
-  assert.match(loader, /hasPremiumAccess\(\) && shouldLoad\('global-procurement'\)/);
-  assert.match(app, /shouldPrime\('global-procurement'\) && hasPremiumAccess\(\)[\s\S]*primeTask\('global-tenders'/);
-  assert.match(app, /condition: \(\) => hasPremiumAccess\(\) && this\.isPanelNearViewport\('global-procurement'\)/);
+  assert.doesNotMatch(loader, /if \(!hasPremiumAccess\(\)\) \{\s*procurementPanel\?\.clear\(\);\s*return;\s*\}/);
+  assert.match(loader, /if \(shouldLoad\('global-procurement'\)\) \{\s*tasks\.push\(\{ name: 'global-tenders'/);
+  assert.doesNotMatch(loader, /requestGeneration !== this\.globalTenderGeneration \|\| !hasPremiumAccess\(\)/);
+  assert.match(app, /if \(shouldPrime\('global-procurement'\)\) \{\s*primeTask\('global-tenders'/);
+  assert.match(app, /condition: \(\) => this\.isPanelNearViewport\('global-procurement'\)/);
   assert.match(app, /void this\.dataLoader\.loadGlobalTenders\(\)/);
   assert.match(app, /void this\.dataLoader\.clearGlobalTenders\(\)/);
 
@@ -71,6 +72,7 @@ test('procurement deployment documentation identifies the sole optional source c
   assert.match(envExample, /SAM_GOV_API_KEY=/);
   assert.match(docs, /SAM_GOV_API_KEY/);
   assert.match(docs, /TED, Contracts Finder, CanadaBuys, GETS, and World Bank do not require API keys/);
+  assert.match(docs, /GET \/api\/economic\/v1\/list-global-tenders` is public/);
 });
 
 test('the documented AusTender blocker stays documented and no scraper ships in its place', () => {
