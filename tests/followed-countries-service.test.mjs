@@ -82,7 +82,6 @@ beforeEach(() => {
 // ---------------------------------------------------------------------------
 
 const svc = await import('../src/services/followed-countries.ts');
-const convexConstants = await import('../convex/constants.ts');
 const {
   addCountry,
   removeCountry,
@@ -90,7 +89,6 @@ const {
   isFollowed,
   subscribe,
   serviceEntitlementState,
-  FREE_TIER_FOLLOW_LIMIT,
   FOLLOWED_COUNTRIES_STORAGE_KEY,
   WM_FOLLOWED_COUNTRIES_CHANGED,
   installFollowedCountriesAuthListener,
@@ -115,7 +113,7 @@ const FAKE_API = {
   },
 };
 
-function makeFakeConvex({ tier, capLimit = 3 }) {
+function makeFakeConvex() {
   const rows = []; // {country, addedAt}
   let listFollowedCb = null;
   const fireSnapshot = () => {
@@ -135,17 +133,6 @@ function makeFakeConvex({ tier, capLimit = 3 }) {
         const { country } = args;
         if (rows.find((r) => r.country === country)) {
           return { ok: true, idempotent: true };
-        }
-        if (tier < 1 && rows.length >= capLimit) {
-          // Post-refactor: server returns the FREE_CAP discriminated union
-          // instead of throwing ConvexError. See convex/followedCountries.ts
-          // and companion skill `convex-gotchas/reference/convex-autosentry-forwards-intentional-convexerror-throws.md`.
-          return {
-            ok: false,
-            reason: 'FREE_CAP',
-            currentCount: rows.length,
-            limit: capLimit,
-          };
         }
         rows.push({ country, addedAt: Date.now() + rows.length });
         fireSnapshot();
@@ -175,16 +162,7 @@ function makeFakeConvex({ tier, capLimit = 3 }) {
         const canonical = [];
         for (const c of validInputs) if (!seen.has(c)) { seen.add(c); canonical.push(c); }
         const existingSet = new Set(rows.map((r) => r.country));
-        const newCandidates = canonical.filter((c) => !existingSet.has(c));
-        let accepted, droppedDueToCap;
-        if (tier < 1) {
-          const remaining = Math.max(0, capLimit - rows.length);
-          accepted = newCandidates.slice(0, remaining);
-          droppedDueToCap = newCandidates.slice(remaining);
-        } else {
-          accepted = newCandidates;
-          droppedDueToCap = [];
-        }
+        const accepted = canonical.filter((c) => !existingSet.has(c));
         for (const country of accepted) {
           rows.push({ country, addedAt: Date.now() + rows.length });
         }
@@ -193,7 +171,6 @@ function makeFakeConvex({ tier, capLimit = 3 }) {
           totalCount: rows.length,
           accepted,
           droppedInvalid,
-          droppedDueToCap,
         };
       }
       throw new Error(`unmocked mutation: ${ref}`);
@@ -229,7 +206,7 @@ function setAnonymous() {
 }
 
 async function setSignedInPro() {
-  const fake = makeFakeConvex({ tier: 1 });
+  const fake = makeFakeConvex();
   _setDepsForTests({
     getCurrentClerkUser: () => ({ id: 'user_pro' }),
     getEntitlementState: () => ({ features: { tier: 1 } }),
@@ -246,7 +223,7 @@ async function setSignedInPro() {
 }
 
 async function setSignedInFreeLoaded() {
-  const fake = makeFakeConvex({ tier: 0 });
+  const fake = makeFakeConvex();
   _setDepsForTests({
     getCurrentClerkUser: () => ({ id: 'user_free' }),
     getEntitlementState: () => ({ features: { tier: 0 } }),
@@ -281,10 +258,6 @@ beforeEach(() => {
 // ---------------------------------------------------------------------------
 
 describe('followed-countries service — constants & key', () => {
-  it('exports FREE_TIER_FOLLOW_LIMIT in parity with convex/constants.ts', () => {
-    assert.equal(FREE_TIER_FOLLOW_LIMIT, convexConstants.FREE_TIER_FOLLOW_LIMIT);
-  });
-
   it('uses storage key wm-followed-countries-v1', () => {
     assert.equal(FOLLOWED_COUNTRIES_STORAGE_KEY, 'wm-followed-countries-v1');
   });
@@ -399,18 +372,14 @@ describe('followed-countries service — STORAGE_FULL', () => {
   });
 });
 
-describe('followed-countries service — FREE_CAP', () => {
-  it('signed-in free user at cap of 3: 4th add returns FREE_CAP, list unchanged', async () => {
+describe('followed-countries service — public follow limits removed', () => {
+  it('signed-in free user can add a fourth country without a tier cap', async () => {
     await setSignedInFreeLoaded();
     assert.deepEqual(await addCountry('US'), { ok: true });
     assert.deepEqual(await addCountry('FR'), { ok: true });
     assert.deepEqual(await addCountry('DE'), { ok: true });
-    const res = await addCountry('JP');
-    assert.equal(res.ok, false);
-    assert.equal(res.reason, 'FREE_CAP');
-    assert.equal(res.currentCount, 3);
-    assert.equal(res.limit, 3);
-    assert.deepEqual(getFollowed().sort(), ['DE', 'FR', 'US']);
+    assert.deepEqual(await addCountry('JP'), { ok: true });
+    assert.deepEqual(getFollowed().sort(), ['DE', 'FR', 'JP', 'US']);
   });
 });
 
@@ -447,15 +416,14 @@ describe('followed-countries service — entitlement loading', () => {
 });
 
 describe('followed-countries service — anonymous never blocks on entitlement loading', () => {
-  it("Codex round-2 finding #1: anon user with entitlement null treated as 'free' immediately, can add 3, 4th hits FREE_CAP", async () => {
+  it("Codex round-2 finding #1: anon user with entitlement null treated as 'free' immediately, can add a fourth follow", async () => {
     // Default `setAnonymous()` already gives null entitlement.
     assert.equal(serviceEntitlementState(), 'free');
     assert.deepEqual(await addCountry('US'), { ok: true });
     assert.deepEqual(await addCountry('FR'), { ok: true });
     assert.deepEqual(await addCountry('DE'), { ok: true });
-    const res = await addCountry('JP');
-    assert.equal(res.ok, false);
-    assert.equal(res.reason, 'FREE_CAP');
+    assert.deepEqual(await addCountry('JP'), { ok: true });
+    assert.deepEqual(getFollowed().sort(), ['DE', 'FR', 'JP', 'US']);
   });
 });
 

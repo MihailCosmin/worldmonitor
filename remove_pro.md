@@ -648,7 +648,7 @@ Intentional paid boundaries that are not part of this follow-up remain allowed: 
 - Acceptance:
   - Free users can enable every available panel and source, and no layout or settings path silently disables items because of plan tier.
 
-### [ ] D5. Remove the paid followed-country cap and checkout path
+### [x] D5. Remove the paid followed-country cap and checkout path
 
 - Files:
   - `src/App.ts`

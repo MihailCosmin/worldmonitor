@@ -10,41 +10,11 @@ import {
 } from "./_generated/server";
 import {
   COUNTRY_COUNT_PRIVACY_FLOOR,
-  FREE_TIER_FOLLOW_LIMIT,
   MAX_MERGE_INPUT,
   SHARD_COUNT,
 } from "./constants";
 import { isValidIso2, validIso2Codes } from "./lib/iso2";
 import { userIdToShard } from "./lib/shards";
-
-/**
- * Layer-2 entitlement gate for the followed-countries watchlist primitive
- * (plan U13). Returns the user's effective tier (0 = free, ≥1 = PRO).
- *
- * Mirrors `convex/alertRules.ts::assertProEntitlement` — kept inline (not
- * imported from a shared helper) for security-review readability.
- *
- *   - no entitlement row → tier 0 (free)
- *   - validUntil < Date.now() → expired, treat as tier 0
- *   - tier ≥ 1 → PRO
- *
- * Unlike alertRules (which throws PRO_REQUIRED), the watchlist gate is
- * NOT all-or-nothing: free users may follow up to FREE_TIER_FOLLOW_LIMIT
- * countries; only over-cap inserts throw FREE_CAP. So we return the tier
- * for the caller to decide.
- */
-async function readEntitlementTier(
-  ctx: MutationCtx,
-  userId: string,
-): Promise<number> {
-  const entitlement = await ctx.db
-    .query("entitlements")
-    .withIndex("by_userId", (q) => q.eq("userId", userId))
-    .first();
-  if (!entitlement) return 0;
-  if (entitlement.validUntil < Date.now()) return 0;
-  return entitlement.features.tier ?? 0;
-}
 
 /**
  * Read the pre-seeded shard row for `userId` and throw a loud
@@ -168,8 +138,8 @@ async function readUserMeta(
  * read the same `meta._id` will conflict here, and Convex retries the
  * loser. The retry re-reads everything (including the row that the winner
  * inserted), so the second attempt sees the post-winner state and either
- * passes correctly (still under cap), throws FREE_CAP, or returns
- * idempotent (winner already inserted the same `(userId, country)`).
+ * returns idempotent (winner already inserted the same `(userId, country)`)
+ * or succeeds with the updated count baseline.
  */
 async function writeUserMeta(
   ctx: MutationCtx,
@@ -267,35 +237,21 @@ async function readRawCountryFollowerCount(
  * Discriminated return shape for `followCountry` and `unfollowCountry`.
  * `idempotent: true` means the mutation observed the desired end state
  * already and made no changes (counter NOT touched).
- *
- * `ok: false, reason: 'FREE_CAP'` is `followCountry`-only — emitted when a
- * tier=0 caller hits the free-tier cap. Previously thrown as
- * `ConvexError({kind:'FREE_CAP', ...})`; the throw was forwarded by Convex
- * Cloud's server-side auto-Sentry directly to our DSN (bypassing browser
- * `Sentry.init({ignoreErrors:[...]})`), producing high-volume noise from
- * an expected business condition. Return-instead-of-throw eliminates the
- * source — see also `convex/userPreferences.ts:81-83` (CAS-guard CONFLICT)
- * for the same pattern. Skill:
- * `convex-gotchas/reference/convex-autosentry-forwards-intentional-convexerror-throws.md`.
  */
 export type FollowMutationResult =
   | { ok: true; idempotent: false }
-  | { ok: true; idempotent: true }
-  | { ok: false; reason: "FREE_CAP"; currentCount: number; limit: number };
+  | { ok: true; idempotent: true };
 
 /**
  * Return shape for `mergeAnonymousLocal`. `accepted` is the list of
  * NEWLY-inserted countries (in canonicalized first-seen order); existing
  * rows are silently deduped against table state. `droppedInvalid` is
- * inputs that failed `isValidIso2`; `droppedDueToCap` is valid-but-
- * over-cap inputs for free users that the client should surface in an
- * upgrade modal. PRO users receive `droppedDueToCap: []`.
+ * inputs that failed `isValidIso2`.
  */
 export type MergeAnonymousLocalResult = {
   totalCount: number;
   accepted: string[];
   droppedInvalid: string[];
-  droppedDueToCap: string[];
 };
 
 /**
@@ -306,15 +262,10 @@ export type MergeAnonymousLocalResult = {
  *    ConvexError({kind:'INVALID_COUNTRY', country}) on miss.
  * 3. Idempotent on (userId, country) — second call returns
  *    {idempotent:true} and does NOT touch the counter or user-meta.
- * 4. Free-tier cap: tier=0 callers with currentCount >= FREE_TIER_FOLLOW_LIMIT
- *    RETURN {ok:false, reason:'FREE_CAP', currentCount, limit} (was thrown
- *    as ConvexError pre-PR; switched to return-instead-of-throw to avoid
- *    Convex auto-Sentry noise on an expected business condition). PRO callers
- *    are unlimited.
- * 5. Atomic counter +1 in the same transaction as the row insert.
- * 6. Atomic per-user-meta count patch — THIS is the OCC-serializing write.
+ * 4. Atomic counter +1 in the same transaction as the row insert.
+ * 5. Atomic per-user-meta count patch — THIS is the OCC-serializing write.
  *
- * Two-tier per-user serialization (cap-bypass mitigation):
+ * Two-tier per-user serialization:
  *   Tier 1 — pre-seeded shard row (Codex round-4 P0 v2): EVERY mutation
  *   reads + patches `followedCountriesShards[userIdToShard(userId)]` at
  *   the boundaries of the handler. Because the row is pre-seeded, its
@@ -324,12 +275,12 @@ export type MergeAnonymousLocalResult = {
  *
  *   Tier 2 — denormalized user-meta count (Codex round-3 P0): under the
  *   shard lock, we safely lazy-create the per-user `followedCountriesUserMeta`
- *   row (kept additionally for the O(1) cap-check denominator and as the
- *   parity invariant `count === COUNT(followedCountries WHERE userId=X)`).
+ *   row and preserve the parity invariant
+ *   `count === COUNT(followedCountries WHERE userId=X)`.
  *
  * Without Tier 1, two parallel first-ever mutations could both read
  * `meta=undefined`, both INSERT, and produce duplicate meta rows that
- * break the `.unique()` read AND re-open the cap-bypass window. With
+ * break the `.unique()` read and reopen the brand-new-user race. With
  * Tier 1 in place, the brand-new-user race is closed deterministically.
  *
  * Errors are typed `ConvexError({kind, ...})` with object data so callers
@@ -365,27 +316,6 @@ export const followCountry = mutation({
       .first();
     if (existingRow) {
       return { ok: true, idempotent: true };
-    }
-
-    // P3 #21 — Tier-first cap check using the denormalized count. PRO
-    // users have no cap (returned for free); for free users the
-    // denormalized count is the cap input — no `.collect()` needed.
-    //
-    // Return-instead-of-throw: see FollowMutationResult doc comment and
-    // companion skill `convex-gotchas/reference/convex-autosentry-forwards-intentional-convexerror-throws.md`.
-    // Throwing here forwarded to Sentry via Convex auto-Sentry on every
-    // hit (high-volume by nature, expected business behavior). Other
-    // throws in this handler (UNAUTHENTICATED, INVALID_COUNTRY, shard
-    // missing) intentionally still throw — those ARE bugs and we WANT
-    // them in Sentry.
-    const tier = await readEntitlementTier(ctx, userId);
-    if (tier < 1 && currentCount >= FREE_TIER_FOLLOW_LIMIT) {
-      return {
-        ok: false,
-        reason: "FREE_CAP",
-        currentCount,
-        limit: FREE_TIER_FOLLOW_LIMIT,
-      };
     }
 
     await ctx.db.insert("followedCountries", {
@@ -470,20 +400,9 @@ export const unfollowCountry = mutation({
  *   5. Canonicalize: dedupe in first-seen order.
  *   6. Read existing rows; build existingSet.
  *   7. newCandidates = canonicalized.filter(c => !existingSet.has(c)).
- *   8. tier=0 free user: accept up to (LIMIT - existingCount); rest →
- *      droppedDueToCap.
- *   9. tier>=1 PRO: accept all newCandidates.
- *  10. Insert accepted rows; +1 counter for each (atomic).
- *  11. Return {totalCount, accepted, droppedInvalid, droppedDueToCap}.
- *  12. If droppedDueToCap.length > 0, log structured warning.
- *
- * Resolves Codex-deepening round-1 P0 (server-side cap on merge) and
- * round-2 P1 (canonicalize duplicates before counting). Free users with
- * existingCount >= LIMIT accept zero new rows — never silently grow above
- * the cap during merge. (Grandfathering above-cap rows on PRO→free
- * downgrade is a separate concern handled by NOT auto-deleting on
- * downgrade; merge is the FIRST sign-in and has no PRO history to
- * grandfather.)
+ *   8. accept all newCandidates.
+ *   9. Insert accepted rows; +1 counter for each (atomic).
+ *  10. Return {totalCount, accepted, droppedInvalid}.
  */
 export const mergeAnonymousLocal = mutation({
   args: { countries: v.array(v.string()) },
@@ -550,22 +469,9 @@ export const mergeAnonymousLocal = mutation({
     // Step 7: filter against existing.
     const newCandidates = canonicalized.filter((c) => !existingSet.has(c));
 
-    // Step 8/9: cap-bounded accept based on entitlement tier. Uses the
-    // OCC-tracked meta count as the cap denominator — under concurrency,
-    // the loser retries against the post-winner count.
-    const tier = await readEntitlementTier(ctx, userId);
-    let accepted: string[];
-    let droppedDueToCap: string[];
-    if (tier < 1) {
-      const remaining = Math.max(0, FREE_TIER_FOLLOW_LIMIT - existingCount);
-      accepted = newCandidates.slice(0, remaining);
-      droppedDueToCap = newCandidates.slice(remaining);
-    } else {
-      accepted = newCandidates;
-      droppedDueToCap = [];
-    }
+    const accepted = newCandidates;
 
-    // Step 10: insert accepted rows + atomic counter +1 each.
+    // Step 9: insert accepted rows + atomic counter +1 each.
     const now = Date.now();
     for (const country of accepted) {
       await ctx.db.insert("followedCountries", {
@@ -586,44 +492,14 @@ export const mergeAnonymousLocal = mutation({
       await touchShard(ctx, shard);
     }
 
-    // Step 12: structured warning when free users overflow cap. No
-    // server-side Sentry SDK in convex/ today; emit a structured
-    // console.warn that the platform log aggregator can pick up.
-    if (droppedDueToCap.length > 0) {
-      const userIdHashed = hashUserIdForLog(userId);
-      console.warn(
-        JSON.stringify({
-          breadcrumb: "followed_countries_merge_cap_drop",
-          userIdHashed,
-          existingCount,
-          droppedCount: droppedDueToCap.length,
-        }),
-      );
-    }
-
-    // Step 11: return shape.
+    // Step 10: return shape.
     return {
       totalCount: existingCount + accepted.length,
       accepted,
       droppedInvalid,
-      droppedDueToCap,
     };
   },
 });
-
-/**
- * Stable, non-cryptographic hash of a userId for log breadcrumbs. We do
- * NOT want raw Clerk subjects in our log aggregator. djb2 is fine — this
- * is for grouping/correlation, not security.
- */
-function hashUserIdForLog(userId: string): string {
-  let h = 5381;
-  for (let i = 0; i < userId.length; i++) {
-    h = ((h << 5) + h + userId.charCodeAt(i)) | 0;
-  }
-  // Convert to unsigned 32-bit hex for compact log readability.
-  return (h >>> 0).toString(16).padStart(8, "0");
-}
 
 // ---------------------------------------------------------------------------
 // Queries (plan U14)

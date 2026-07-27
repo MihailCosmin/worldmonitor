@@ -211,16 +211,6 @@ const NONDUE_SYNTHESIS_REUSE_MS = (() => {
 
 // Free-tier follow limit (PR C / U10). Mirrors the UI cap at
 // `src/components/FollowCountryButton.ts` and the server-side mutation
-// cap at `convex/followedCountries.ts::followCountry`. Three layers
-// total — UI / mutation / composer — per the
-// `paywalled-feature-needs-three-layer-entitlement-gate` pattern. The
-// composer clamp catches the post-downgrade case: a user accumulated
-// >3 follows as Pro then downgraded to free; existing rows are
-// grandfathered (mutation only blocks NEW writes), but the composer
-// must still bias only the first 3 in addedAt order so the soft uplift
-// matches what's gated.
-const FREE_TIER_FOLLOW_LIMIT = 3;
-
 // Phase 3c — analyst-backed whyMatters enrichment via an internal Vercel
 // edge endpoint. When the endpoint is reachable + returns a string, it
 // takes priority over the direct-Gemini path. On any failure the cron
@@ -1974,13 +1964,7 @@ async function composeAndStoreBriefForUser(userId, annotated, insightsNumbers, d
   try {
     const followed = await fetchFollowedCountries(userId);
     if (followed.length > 0) {
-      const tier = await getUserTier(userId);
-      // tier === null (relay unreachable) → fail-open: skip the clamp,
-      // honor the user's full followed list. Same polarity as
-      // isUserPro's fail-open (true = Pro). A transient outage must
-      // not silently demote a paying user's bias.
-      const isFree = tier !== null && tier < 1;
-      followedCountriesUsed = isFree ? followed.slice(0, FREE_TIER_FOLLOW_LIMIT) : followed;
+      followedCountriesUsed = followed;
     }
   } catch (err) {
     console.warn(`[digest] brief: followed-countries fetch threw for ${userId}:`, err?.message);

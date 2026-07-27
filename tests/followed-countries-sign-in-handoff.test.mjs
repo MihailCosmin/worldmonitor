@@ -98,7 +98,6 @@ const {
   subscribe,
   FOLLOWED_COUNTRIES_STORAGE_KEY,
   WM_FOLLOWED_COUNTRIES_CHANGED,
-  WM_FOLLOWED_COUNTRIES_CAP_DROP,
   _setDepsForTests,
   _resetStateForTests,
   _emitAuthStateForTests,
@@ -156,16 +155,6 @@ function makeFakeConvex({
         calls.follow.push(args);
         const { country } = args;
         if (rows.find((r) => r.country === country)) return { ok: true, idempotent: true };
-        if (tier < 1 && rows.length >= capLimit) {
-          // Post-refactor: server returns discriminated union instead of
-          // throwing. Mock mirrors convex/followedCountries.ts behavior.
-          return {
-            ok: false,
-            reason: 'FREE_CAP',
-            currentCount: rows.length,
-            limit: capLimit,
-          };
-        }
         rows.push({ country, addedAt: Date.now() + rows.length });
         fireSnapshot();
         return { ok: true, idempotent: false };
@@ -195,16 +184,7 @@ function makeFakeConvex({
         const canonical = [];
         for (const c of validInputs) if (!seen.has(c)) { seen.add(c); canonical.push(c); }
         const existingSet = new Set(rows.map((r) => r.country));
-        const newCandidates = canonical.filter((c) => !existingSet.has(c));
-        let accepted, droppedDueToCap;
-        if (tier < 1) {
-          const remaining = Math.max(0, capLimit - rows.length);
-          accepted = newCandidates.slice(0, remaining);
-          droppedDueToCap = newCandidates.slice(remaining);
-        } else {
-          accepted = newCandidates;
-          droppedDueToCap = [];
-        }
+        const accepted = canonical.filter((c) => !existingSet.has(c));
         for (const country of accepted) {
           rows.push({ country, addedAt: Date.now() + rows.length });
         }
@@ -213,7 +193,6 @@ function makeFakeConvex({
           totalCount: rows.length,
           accepted,
           droppedInvalid,
-          droppedDueToCap,
         };
       }
       throw new Error(`unmocked mutation ref: ${ref}`);
@@ -367,42 +346,29 @@ describe('U3 — edge: corrupt localStorage cleared unconditionally', () => {
   });
 });
 
-describe('U3 — edge: free user cap-bounded merge', () => {
-  it("anon ['US','GB'], table ['JP','CN'] → accepts 'US' only, drops 'GB'; cap-drop event fires", async () => {
+describe('U3 — edge: public merge accepts all supported follows', () => {
+  it("anon ['US','GB'], table ['JP','CN'] → accepts both follows without cap drops", async () => {
     setLocalStorageList(['US', 'GB']);
     const fake = makeFakeConvex({ tier: 0, capLimit: 3, initialRows: ['JP', 'CN'] });
     setupSignedIn('user_f', { tier: 0, fakeClient: fake });
 
-    let capDropDetail = null;
-    const handler = (ev) => { capDropDetail = ev.detail; };
-    _window.addEventListener(WM_FOLLOWED_COUNTRIES_CAP_DROP, handler);
-
     await _emitAuthStateForTests({ id: 'user_f' });
     await flushMicrotasks();
 
-    assert.deepEqual(fake._getRows().sort(), ['CN', 'JP', 'US']);
-    assert.deepEqual(capDropDetail, { kept: 1, dropped: 1 });
-
-    _window.removeEventListener(WM_FOLLOWED_COUNTRIES_CAP_DROP, handler);
+    assert.deepEqual(fake._getRows().sort(), ['CN', 'GB', 'JP', 'US']);
   });
 });
 
-describe('U3 — edge: mutation returns multi-cap drops', () => {
-  it("anon ['US','GB','JP','CN'], no rows → kept 3, dropped 1; toast detail kept=3 dropped=1", async () => {
+describe('U3 — edge: merge keeps full anonymous list', () => {
+  it("anon ['US','GB','JP','CN'], no rows → all four countries merge through", async () => {
     setLocalStorageList(['US', 'GB', 'JP', 'CN']);
     const fake = makeFakeConvex({ tier: 0, capLimit: 3, initialRows: [] });
     setupSignedIn('user_m', { tier: 0, fakeClient: fake });
 
-    let detail = null;
-    const handler = (ev) => { detail = ev.detail; };
-    _window.addEventListener(WM_FOLLOWED_COUNTRIES_CAP_DROP, handler);
-
     await _emitAuthStateForTests({ id: 'user_m' });
     await flushMicrotasks();
 
-    assert.deepEqual(detail, { kept: 3, dropped: 1 });
-
-    _window.removeEventListener(WM_FOLLOWED_COUNTRIES_CAP_DROP, handler);
+    assert.deepEqual(fake._getRows().sort(), ['CN', 'GB', 'JP', 'US']);
   });
 });
 
@@ -441,7 +407,7 @@ describe('U3 — edge: network failure → handoffState=failed, localStorage ret
           if (shouldFail) throw new Error('NetworkError');
           for (const c of args.countries) rows.push(c);
           if (listCb) listCb(rows.slice());
-          return { totalCount: rows.length, accepted: args.countries, droppedInvalid: [], droppedDueToCap: [] };
+          return { totalCount: rows.length, accepted: args.countries, droppedInvalid: [] };
         }
         throw new Error(`unmocked: ${ref}`);
       },
@@ -715,10 +681,7 @@ describe('U3 — concurrent two-tab sign-in merge dedupes via OCC', () => {
 });
 
 describe('U3 — followCountry post-handoff: wire-level Convex error mapping', () => {
-  it("followCountry returns FREE_CAP with currentCount/limit when Convex returns {ok:false, reason:'FREE_CAP'}", async () => {
-    // Post-refactor: server returns the discriminated union directly. Mock
-    // mirrors convex/followedCountries.ts behavior. Companion skill:
-    // `convex-gotchas/reference/convex-autosentry-forwards-intentional-convexerror-throws.md`.
+  it('signed-in free user with three existing follows can still add a fourth country', async () => {
     setLocalStorageList([]);
     const fake = makeFakeConvex({ tier: 0, capLimit: 3, initialRows: ['JP', 'CN', 'DE'] });
     setupSignedIn('user_cap', { tier: 0, fakeClient: fake });
@@ -726,53 +689,8 @@ describe('U3 — followCountry post-handoff: wire-level Convex error mapping', (
     await _emitAuthStateForTests({ id: 'user_cap' });
     await flushMicrotasks();
 
-    const res = await addCountry('FR');
-    assert.equal(res.ok, false);
-    assert.equal(res.reason, 'FREE_CAP');
-    assert.equal(res.currentCount, 3);
-    assert.equal(res.limit, 3);
-  });
-
-  it("followCountry returns FREE_CAP with currentCount/limit when LEGACY server throws ConvexError({kind:'FREE_CAP'}) — deploy-skew safety", async () => {
-    // During the deploy window between server-refactor merge and Convex
-    // deploy completing, a new client may briefly receive a thrown
-    // ConvexError from the OLD server. The client's catch block still
-    // handles this path (src/services/followed-countries.ts FREE_CAP catch).
-    // Safe to drop this test one Convex deploy cycle after the server
-    // refactor lands. Tracking via the inline `Legacy deploy-skew path`
-    // comment in src/services/followed-countries.ts.
-    const ConvexErrorCtor = class extends Error {
-      constructor(data) {
-        super(`ConvexError: ${JSON.stringify(data)}`);
-        this.data = data;
-      }
-    };
-    const legacyThrowingClient = {
-      async mutation(ref) {
-        if (ref === FAKE_API.followedCountries.followCountry) {
-          throw new ConvexErrorCtor({ kind: 'FREE_CAP', currentCount: 3, limit: 3 });
-        }
-        throw new Error('unmocked');
-      },
-      onUpdate(ref, _a, cb) {
-        if (ref === FAKE_API.followedCountries.listFollowed) {
-          Promise.resolve().then(() => cb(['JP', 'CN', 'DE']));
-          return () => {};
-        }
-        throw new Error('unmocked');
-      },
-    };
-    setLocalStorageList([]);
-    setupSignedIn('user_legacy_cap', { tier: 0, fakeClient: legacyThrowingClient });
-
-    await _emitAuthStateForTests({ id: 'user_legacy_cap' });
-    await flushMicrotasks();
-
-    const res = await addCountry('FR');
-    assert.equal(res.ok, false);
-    assert.equal(res.reason, 'FREE_CAP');
-    assert.equal(res.currentCount, 3);
-    assert.equal(res.limit, 3);
+    assert.deepEqual(await addCountry('FR'), { ok: true });
+    assert.deepEqual(fake._getRows().sort(), ['CN', 'DE', 'FR', 'JP']);
   });
 
   it("followCountry returns INVALID_INPUT for ConvexError({kind:'INVALID_COUNTRY'})", async () => {
@@ -1198,7 +1116,7 @@ describe('Codex round-4 P1 — UNAUTHENTICATED transient retry path', () => {
             const sorted = [...rows].sort((a, b) => a.addedAt - b.addedAt).map((r) => r.country);
             listCb(sorted);
           }
-          return { totalCount: rows.length, accepted, droppedInvalid: [], droppedDueToCap: [] };
+          return { totalCount: rows.length, accepted, droppedInvalid: [] };
         }
         throw new Error(`unmocked: ${String(ref)}`);
       },

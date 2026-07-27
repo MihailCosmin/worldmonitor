@@ -11,8 +11,8 @@
  *     (d) hidden;
  *   - on attach, install click + watchlist + entitlement listeners;
  *   - on click, call addCountry / removeCountry and branch on
- *     FollowMutationResult.reason (FREE_CAP triggers upgrade, others
- *     are defensive no-ops);
+ *     FollowMutationResult.reason (defensive no-ops for non-success
+ *     paths);
  *   - on teardown, drop all listeners (idempotent).
  */
 
@@ -108,7 +108,7 @@ const {
 } = svc;
 
 const fb = await import('../src/utils/follow-button.ts');
-const { renderFollowButton, _setUpgradeTriggerForTests } = fb;
+const { renderFollowButton } = fb;
 
 // ---------------------------------------------------------------------------
 // Mock host element
@@ -192,7 +192,7 @@ const ConvexErrorCtor = class extends Error {
   }
 };
 
-function makeFakeConvex({ tier = 1, capLimit = 3, initialRows = [] } = {}) {
+function makeFakeConvex({ initialRows = [] } = {}) {
   const rows = initialRows.map((c, i) => ({ country: c, addedAt: 1000 + i }));
   let listFollowedCb = null;
   const calls = { follow: [], unfollow: [], merge: [] };
@@ -207,16 +207,6 @@ function makeFakeConvex({ tier = 1, capLimit = 3, initialRows = [] } = {}) {
         calls.follow.push(args);
         const { country } = args;
         if (rows.find((r) => r.country === country)) return { ok: true, idempotent: true };
-        if (tier < 1 && rows.length >= capLimit) {
-          // Post-refactor: server returns discriminated union instead of
-          // throwing. Mock mirrors convex/followedCountries.ts behavior.
-          return {
-            ok: false,
-            reason: 'FREE_CAP',
-            currentCount: rows.length,
-            limit: capLimit,
-          };
-        }
         rows.push({ country, addedAt: Date.now() + rows.length });
         fireSnapshot();
         return { ok: true };
@@ -232,7 +222,7 @@ function makeFakeConvex({ tier = 1, capLimit = 3, initialRows = [] } = {}) {
       }
       if (ref === FAKE_API.followedCountries.mergeAnonymousLocal) {
         calls.merge.push(args);
-        return { totalCount: rows.length, accepted: [], droppedInvalid: [], droppedDueToCap: [] };
+        return { totalCount: rows.length, accepted: [], droppedInvalid: [] };
       }
       throw new Error(`unmocked mutation ref: ${ref}`);
     },
@@ -304,7 +294,6 @@ async function flushMicrotasks() {
 beforeEach(() => {
   _localStorage.clear();
   _resetStateForTests();
-  _setUpgradeTriggerForTests(null); // production-shape (window.open) — overridden per-test as needed
 });
 
 describe('renderFollowButton — basic visual states', () => {
@@ -430,31 +419,24 @@ describe('renderFollowButton — click behavior (anonymous mode)', () => {
     teardown();
   });
 
-  it('free user at cap → click triggers upgrade-modal, addCountry not committed', async () => {
+  it('anonymous user with three existing follows can still add a fourth country', async () => {
     setupAnonymousFree();
     _localStorage.setItem(
       FOLLOWED_COUNTRIES_STORAGE_KEY,
       JSON.stringify({ countries: ['US', 'FR', 'DE'] }),
     );
-    const upgradeCalls = [];
-    _setUpgradeTriggerForTests((source) => upgradeCalls.push(source));
 
     const handle = renderFollowButton({ countryCode: 'GB' });
     const host = makeHost();
     const teardown = handle.attach(host);
-    // Tooltip should already reflect at-cap state.
-    assert.match(host.innerHTML, /Upgrade to follow more/);
+    assert.match(host.innerHTML, /Follow GB/);
 
     host.clickButton();
     await flushMicrotasks();
 
-    assert.equal(upgradeCalls.length, 1);
-    assert.equal(upgradeCalls[0], 'follow-cap');
-    // GB was NOT added.
     const stored = JSON.parse(_localStorage.getItem(FOLLOWED_COUNTRIES_STORAGE_KEY)).countries;
-    assert.deepEqual(stored, ['US', 'FR', 'DE']);
-    // Visual state still unfollowed.
-    assert.match(host.innerHTML, /data-state="unfollowed"/);
+    assert.deepEqual(stored, ['US', 'FR', 'DE', 'GB']);
+    assert.match(host.innerHTML, /data-state="followed"/);
 
     teardown();
   });
@@ -538,13 +520,8 @@ describe('renderFollowButton — entitlement-loading window', () => {
     teardown();
   });
 
-  it('entitlement resolves to FREE during loading with cap-full state → click on NEW country triggers FREE_CAP', async () => {
-    // Cloud-merged grandfather: snapshot already at cap (3 rows). After
-    // entitlement resolves to FREE, clicking a NEW country should hit
-    // FREE_CAP via the server-mutation rejection path.
+  it('entitlement resolves to FREE during loading with three existing follows → click on NEW country still succeeds', async () => {
     const fakeClient = makeFakeConvex({
-      tier: 0,
-      capLimit: 3,
       initialRows: ['US', 'FR', 'DE'],
     });
 
@@ -561,9 +538,6 @@ describe('renderFollowButton — entitlement-loading window', () => {
     await _emitAuthStateForTests({ id: 'user-1' });
     await flushMicrotasks();
 
-    const upgradeCalls = [];
-    _setUpgradeTriggerForTests((source) => upgradeCalls.push(source));
-
     const handle = renderFollowButton({ countryCode: 'GB' });
     const host = makeHost();
     const teardown = handle.attach(host);
@@ -573,7 +547,6 @@ describe('renderFollowButton — entitlement-loading window', () => {
     // Click in loading → no-op.
     host.clickButton();
     await flushMicrotasks();
-    assert.equal(upgradeCalls.length, 0);
 
     // Resolve to FREE.
     _entState = { features: { tier: 0 } };
@@ -581,17 +554,16 @@ describe('renderFollowButton — entitlement-loading window', () => {
     _window.dispatchEvent(new CustomEvent(WM_FOLLOWED_COUNTRIES_CHANGED));
     await flushMicrotasks();
 
-    // Now interactive. GB is NOT followed; click should hit FREE_CAP because
-    // the Convex snapshot already has 3 entries.
     assert.match(host.innerHTML, /data-state="unfollowed"/);
-    assert.match(host.innerHTML, /Upgrade to follow more/);
+    assert.match(host.innerHTML, /Follow GB/);
 
     host.clickButton();
     await flushMicrotasks();
     await flushMicrotasks();
 
-    assert.equal(upgradeCalls.length, 1, 'upgrade trigger fired exactly once');
-    assert.equal(upgradeCalls[0], 'follow-cap');
+    assert.match(host.innerHTML, /data-state="followed"/);
+    assert.equal(fakeClient._calls.follow.length, 1);
+    assert.equal(fakeClient._calls.follow[0].country, 'GB');
 
     teardown();
   });

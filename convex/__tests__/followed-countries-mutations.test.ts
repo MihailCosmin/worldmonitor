@@ -4,7 +4,6 @@ import schema from "../schema";
 import { api, internal } from "../_generated/api";
 import {
   COUNTRY_COUNT_PRIVACY_FLOOR,
-  FREE_TIER_FOLLOW_LIMIT,
   MAX_MERGE_INPUT,
   SHARD_COUNT,
 } from "../constants";
@@ -281,12 +280,7 @@ describe("followCountry — free-tier cap", () => {
     expect(await readUserFollows(t, USER_A.subject)).toEqual(["GB", "JP", "US"]);
   });
 
-  test("free user with 3 rows → followCountry('FR') returns FREE_CAP with currentCount=3, limit=3", async () => {
-    // Refactored from throw → return-discriminated-union. Convex auto-Sentry
-    // forwards every server throw to our DSN; FREE_CAP is an expected
-    // business signal the client handles gracefully, so return instead of
-    // throw eliminates the noise source. See companion skill
-    // `convex-gotchas/reference/convex-autosentry-forwards-intentional-convexerror-throws.md`.
+  test("free user with 3 rows → followCountry('FR') succeeds and currentCount becomes 4", async () => {
     const t = await makeT();
     const asUser = t.withIdentity(USER_A);
     await asUser.mutation(api.followedCountries.followCountry, {
@@ -303,18 +297,13 @@ describe("followCountry — free-tier cap", () => {
       api.followedCountries.followCountry,
       { country: "FR" },
     );
-    expect(result).toEqual({
-      ok: false,
-      reason: "FREE_CAP",
-      currentCount: 3,
-      limit: 3,
-    });
-    // Counter for FR must NOT have been incremented (atomicity).
-    expect(await readCounter(t, "FR")).toBe(0);
+    expect(result).toEqual({ ok: true, idempotent: false });
+    expect(await readCounter(t, "FR")).toBe(1);
     expect(await readUserFollows(t, USER_A.subject)).toEqual([
       "GB",
       "JP",
       "DE",
+      "FR",
     ]);
   });
 
@@ -336,22 +325,14 @@ describe("followCountry — free-tier cap", () => {
       api.followedCountries.followCountry,
       { country: "FR" },
     );
-    expect(result).toEqual({
-      ok: false,
-      reason: "FREE_CAP",
-      currentCount: 3,
-      limit: 3,
-    });
+    expect(result).toEqual({ ok: true, idempotent: false });
   });
 });
 
-describe("followCountry — tier-first skip-collect optimization (P3 #21)", () => {
-  test("PRO user with many existing rows is never blocked by FREE_CAP — collect() not called for cap check", async () => {
+describe("followCountry — many existing rows stay addable", () => {
+  test("free user with many existing rows can still follow another country", async () => {
     const t = await makeT();
-    await seedProEntitlement(t, USER_A.subject);
     const asUser = t.withIdentity(USER_A);
-    // Hand-seed 10 rows (> FREE_TIER_FOLLOW_LIMIT) to prove the PRO path
-    // doesn't inspect the existing row count for cap enforcement.
     const seedCodes = ["GB", "JP", "DE", "FR", "IT", "ES", "PT", "NL", "BE", "CH"];
     await t.run(async (ctx) => {
       for (const country of seedCodes) {
@@ -367,6 +348,7 @@ describe("followCountry — tier-first skip-collect optimization (P3 #21)", () =
       country: "US",
     });
     expect(result).toEqual({ ok: true, idempotent: false });
+    expect(await readUserFollows(t, USER_A.subject)).toContain("US");
   });
 });
 
@@ -641,7 +623,6 @@ describe("mergeAnonymousLocal — PRO happy path", () => {
       totalCount: 3,
       accepted: ["GB", "JP"],
       droppedInvalid: [],
-      droppedDueToCap: [],
     });
     expect(await readUserFollows(t, USER_A.subject)).toEqual([
       "US",
@@ -665,15 +646,14 @@ describe("mergeAnonymousLocal — PRO happy path", () => {
       totalCount: 1,
       accepted: ["US"],
       droppedInvalid: [],
-      droppedDueToCap: [],
     });
     expect(await readUserFollows(t, USER_A.subject)).toEqual(["US"]);
     expect(await readCounter(t, "US")).toBe(1);
   });
 });
 
-describe("mergeAnonymousLocal — free-tier cap", () => {
-  test("free user with ['US'] (1), input ['GB','JP','CN'] → accept first 2; CN to droppedDueToCap", async () => {
+describe("mergeAnonymousLocal — public merge behavior", () => {
+  test("free user with ['US'] (1), input ['GB','JP','CN'] → accepts all supported countries", async () => {
     const t = await makeT();
     const asUser = t.withIdentity(USER_A);
     await asUser.mutation(api.followedCountries.followCountry, {
@@ -685,21 +665,20 @@ describe("mergeAnonymousLocal — free-tier cap", () => {
       { countries: ["GB", "JP", "CN"] },
     );
     expect(result).toEqual({
-      totalCount: 3,
-      accepted: ["GB", "JP"],
+      totalCount: 4,
+      accepted: ["GB", "JP", "CN"],
       droppedInvalid: [],
-      droppedDueToCap: ["CN"],
     });
     expect(await readUserFollows(t, USER_A.subject)).toEqual([
       "US",
       "GB",
       "JP",
+      "CN",
     ]);
-    // Counter for CN must NOT have been incremented.
-    expect(await readCounter(t, "CN")).toBe(0);
+    expect(await readCounter(t, "CN")).toBe(1);
   });
 
-  test("free user already at cap → accepted=[], all to droppedDueToCap", async () => {
+  test("free user with three existing rows can still merge additional countries", async () => {
     const t = await makeT();
     const asUser = t.withIdentity(USER_A);
     await asUser.mutation(api.followedCountries.followCountry, {
@@ -717,24 +696,24 @@ describe("mergeAnonymousLocal — free-tier cap", () => {
       { countries: ["CN", "FR"] },
     );
     expect(result).toEqual({
-      totalCount: 3,
-      accepted: [],
+      totalCount: 5,
+      accepted: ["CN", "FR"],
       droppedInvalid: [],
-      droppedDueToCap: ["CN", "FR"],
     });
     expect(await readUserFollows(t, USER_A.subject)).toEqual([
       "US",
       "GB",
       "JP",
+      "CN",
+      "FR",
     ]);
-    expect(await readCounter(t, "CN")).toBe(0);
-    expect(await readCounter(t, "FR")).toBe(0);
+    expect(await readCounter(t, "CN")).toBe(1);
+    expect(await readCounter(t, "FR")).toBe(1);
   });
 
-  test("abuse — free user posts 50-element array → cap fits only (3 - existing); final NEVER exceeds 3", async () => {
+  test("abuse — free user posts 50-element array under MAX_MERGE_INPUT → all supported countries merge through", async () => {
     const t = await makeT();
     const asUser = t.withIdentity(USER_A);
-    // Existing = 0; cap = 3 should fit.
     const big = Array.from({ length: 50 }, (_, i) => {
       // generate 50 distinct valid ISO-2 codes from the registry
       const codes = [
@@ -797,14 +776,10 @@ describe("mergeAnonymousLocal — free-tier cap", () => {
       api.followedCountries.mergeAnonymousLocal,
       { countries: big },
     );
-    expect(result.accepted).toHaveLength(FREE_TIER_FOLLOW_LIMIT);
-    expect(result.totalCount).toBe(FREE_TIER_FOLLOW_LIMIT);
-    // 47 of the remaining 50 codes should have ended up in droppedDueToCap.
-    expect(result.droppedDueToCap).toHaveLength(50 - FREE_TIER_FOLLOW_LIMIT);
+    expect(result.accepted).toHaveLength(50);
+    expect(result.totalCount).toBe(50);
     expect(result.droppedInvalid).toEqual([]);
-    expect(await readUserFollows(t, USER_A.subject)).toHaveLength(
-      FREE_TIER_FOLLOW_LIMIT,
-    );
+    expect(await readUserFollows(t, USER_A.subject)).toHaveLength(50);
   });
 });
 
@@ -858,7 +833,6 @@ describe("mergeAnonymousLocal — input validation", () => {
       totalCount: 1,
       accepted: ["US"],
       droppedInvalid: ["xx", "United States"],
-      droppedDueToCap: [],
     });
   });
 
@@ -873,13 +847,12 @@ describe("mergeAnonymousLocal — input validation", () => {
     );
     expect(result.accepted).toEqual(["US", "GB"]);
     expect(result.droppedInvalid).toEqual(["us", "XX"]);
-    expect(result.droppedDueToCap).toEqual([]);
     expect(result.totalCount).toBe(2);
   });
 });
 
-describe("mergeAnonymousLocal — duplicate inputs free-tier near-cap", () => {
-  test("free user with no rows, input ['US','US','GB','GB','JP','CN'] → cap accepts first 3 unique; CN to droppedDueToCap", async () => {
+describe("mergeAnonymousLocal — duplicate inputs", () => {
+  test("free user with no rows, input ['US','US','GB','GB','JP','CN'] → accepts first-seen unique countries", async () => {
     const t = await makeT();
     const asUser = t.withIdentity(USER_A);
 
@@ -888,20 +861,20 @@ describe("mergeAnonymousLocal — duplicate inputs free-tier near-cap", () => {
       { countries: ["US", "US", "GB", "GB", "JP", "CN"] },
     );
     expect(result).toEqual({
-      totalCount: 3,
-      accepted: ["US", "GB", "JP"],
+      totalCount: 4,
+      accepted: ["US", "GB", "JP", "CN"],
       droppedInvalid: [],
-      droppedDueToCap: ["CN"],
     });
     expect(await readUserFollows(t, USER_A.subject)).toEqual([
       "US",
       "GB",
       "JP",
+      "CN",
     ]);
     expect(await readCounter(t, "US")).toBe(1);
     expect(await readCounter(t, "GB")).toBe(1);
     expect(await readCounter(t, "JP")).toBe(1);
-    expect(await readCounter(t, "CN")).toBe(0);
+    expect(await readCounter(t, "CN")).toBe(1);
   });
 });
 
@@ -971,41 +944,20 @@ describe("per-user serialization — cap-bypass mitigation (P0)", () => {
     expect(await readUserMetaCount(t, USER_A.subject)).toBe(1);
   });
 
-  test("concurrent same-user cap-boundary: free user with 2 rows + Promise.all(follow('GB'), follow('JP')) → at most 3 rows, cap holds", async () => {
+  test("concurrent same-user follow burst: free user with 2 rows + Promise.all(follow('GB'), follow('JP')) → both follows succeed", async () => {
     const t = await makeT();
-    // Free user (no PRO). Seed 2 of 3 cap slots.
     await seedFollowedCountries(t, USER_A.subject, ["US", "DE"]);
     const asUser = t.withIdentity(USER_A);
 
-    // Both calls target NEW countries. Under our fix: post-serialization,
-    // second call sees count=3 if the first succeeded, returns FREE_CAP
-    // (refactored from throw → return; see companion skill
-    // `convex-gotchas/reference/convex-autosentry-forwards-intentional-convexerror-throws.md`).
     const [r1, r2] = await Promise.all([
       asUser.mutation(api.followedCountries.followCountry, { country: "GB" }),
       asUser.mutation(api.followedCountries.followCountry, { country: "JP" }),
     ]);
 
-    // (2 seeded + 2 attempted = 4 attempted, cap=3) → exactly one succeeds
-    // and one returns FREE_CAP. Order is implementation-defined under
-    // convex-test's serialization; we don't pin which one wins.
-    const successes = [r1, r2].filter((r) => r.ok === true);
-    const capRefusals = [r1, r2].filter(
-      (r) => r.ok === false && r.reason === "FREE_CAP",
-    );
-    expect(successes.length).toBe(1);
-    expect(capRefusals.length).toBe(1);
-    expect(capRefusals[0]).toEqual({
-      ok: false,
-      reason: "FREE_CAP",
-      currentCount: 3,
-      limit: 3,
-    });
-
-    // Final row count must NEVER exceed cap.
+    expect(r1).toEqual({ ok: true, idempotent: false });
+    expect(r2).toEqual({ ok: true, idempotent: false });
     const finalCount = (await readUserFollows(t, USER_A.subject)).length;
-    expect(finalCount).toBeLessThanOrEqual(FREE_TIER_FOLLOW_LIMIT);
-    expect(finalCount).toBe(3); // 2 seeded + 1 winner
+    expect(finalCount).toBe(4);
     expect(await readUserMetaCount(t, USER_A.subject)).toBe(finalCount);
   });
 
@@ -1042,9 +994,8 @@ describe("per-user serialization — cap-bypass mitigation (P0)", () => {
     expect([0, 1]).toContain(rows.length);
   });
 
-  test("concurrent mergeAnonymousLocal from N tabs (free user, 5-element list) → final ≤ FREE_TIER_FOLLOW_LIMIT, no duplicate (userId, country) rows", async () => {
+  test("concurrent mergeAnonymousLocal from N tabs (free user, 5-element list) → full deduped union, no duplicate rows", async () => {
     const t = await makeT();
-    // No PRO seed → free user, cap=3.
     const asUser = t.withIdentity(USER_A);
     const codes = ["US", "GB", "JP", "CN", "FR"];
 
@@ -1059,10 +1010,8 @@ describe("per-user serialization — cap-bypass mitigation (P0)", () => {
     );
     expect(results.every((r) => r.status === "fulfilled")).toBe(true);
 
-    // Final row count must never exceed cap.
     const rows = await readUserFollows(t, USER_A.subject);
-    expect(rows.length).toBeLessThanOrEqual(FREE_TIER_FOLLOW_LIMIT);
-    expect(rows.length).toBe(FREE_TIER_FOLLOW_LIMIT); // 3 of 5 fit
+    expect(rows.length).toBe(codes.length);
 
     // No duplicate (userId, country) rows. (The set of countries should
     // equal the row count.)
@@ -1151,15 +1100,8 @@ describe("per-user serialization — cap-bypass mitigation (P0)", () => {
     expect(await readUserMetaCount(t, USER_A.subject)).toBe(0);
   });
 
-  test("FREE_CAP return skips all writes — meta is unchanged (no rollback needed: the early return happens before any write)", async () => {
-    // Refactored from throw → return-discriminated-union. The cap check
-    // now `return`s BEFORE any db.insert / counter increment / meta patch,
-    // so no transaction rollback is needed — the writes simply never
-    // happen. Same observable end state as the old throw-rolls-back path.
-    // See companion skill
-    // `convex-gotchas/reference/convex-autosentry-forwards-intentional-convexerror-throws.md`.
+  test("followCountry after several existing rows updates meta and counters normally", async () => {
     const t = await makeT();
-    // Free user at cap.
     await seedFollowedCountries(t, USER_A.subject, ["US", "GB", "JP"]);
     expect(await readUserMetaCount(t, USER_A.subject)).toBe(3);
     const asUser = t.withIdentity(USER_A);
@@ -1168,17 +1110,10 @@ describe("per-user serialization — cap-bypass mitigation (P0)", () => {
       api.followedCountries.followCountry,
       { country: "FR" },
     );
-    expect(result).toEqual({
-      ok: false,
-      reason: "FREE_CAP",
-      currentCount: 3,
-      limit: 3,
-    });
-
-    // Meta count, row count, and counter for FR must all be unchanged.
-    expect(await readUserMetaCount(t, USER_A.subject)).toBe(3);
-    expect((await readUserFollows(t, USER_A.subject)).length).toBe(3);
-    expect(await readCounter(t, "FR")).toBe(0);
+    expect(result).toEqual({ ok: true, idempotent: false });
+    expect(await readUserMetaCount(t, USER_A.subject)).toBe(4);
+    expect((await readUserFollows(t, USER_A.subject)).length).toBe(4);
+    expect(await readCounter(t, "FR")).toBe(1);
   });
 });
 

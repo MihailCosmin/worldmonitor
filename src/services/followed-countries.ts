@@ -57,21 +57,11 @@ import type {
 // Public constants & types
 // ---------------------------------------------------------------------------
 
-/** Mirror of the server-side `convex/constants.ts::FREE_TIER_FOLLOW_LIMIT`. */
-export const FREE_TIER_FOLLOW_LIMIT = 3;
-
 /** localStorage key for the anonymous-mode list. Versioned for safe migration. */
 export const FOLLOWED_COUNTRIES_STORAGE_KEY = 'wm-followed-countries-v1';
 
 /** Custom event name dispatched on every successful mutation. */
 export const WM_FOLLOWED_COUNTRIES_CHANGED = 'wm-followed-countries-changed';
-
-/**
- * Custom event dispatched after a sign-in handoff completes with cap-drops.
- * `detail = { kept, dropped }` — number of localStorage entries kept vs
- * dropped due to FREE-tier cap. UI consumers can render an upgrade-CTA toast.
- */
-export const WM_FOLLOWED_COUNTRIES_CAP_DROP = 'wm-followed-countries-cap-drop';
 
 /**
  * Discriminated-union result. Service NEVER throws from
@@ -81,7 +71,6 @@ export type FollowMutationResult =
   | { ok: true }
   | { ok: false; reason: 'DISABLED' }
   | { ok: false; reason: 'INVALID_INPUT' }
-  | { ok: false; reason: 'FREE_CAP'; currentCount?: number; limit?: number }
   | { ok: false; reason: 'ENTITLEMENT_LOADING' }
   | { ok: false; reason: 'HANDOFF_PENDING' }
   | { ok: false; reason: 'STORAGE_FULL' };
@@ -526,19 +515,6 @@ function dispatchChanged(): void {
   }
 }
 
-function dispatchCapDrop(kept: number, dropped: number): void {
-  if (typeof window === 'undefined') return;
-  try {
-    window.dispatchEvent(
-      new CustomEvent(WM_FOLLOWED_COUNTRIES_CAP_DROP, {
-        detail: { kept, dropped },
-      }),
-    );
-  } catch {
-    /* swallow */
-  }
-}
-
 // ---------------------------------------------------------------------------
 // Entitlement + auth state resolution
 // ---------------------------------------------------------------------------
@@ -756,7 +732,6 @@ async function _runHandoff(
   }
 
   // Step 2: call mergeAnonymousLocal.
-  let result: ServerMergeAnonymousLocalResult;
   try {
     const client = await _convexClientGetter();
     const api = await _convexApiGetter();
@@ -777,7 +752,7 @@ async function _runHandoff(
     // any resulting UNAUTHENTICATED as transient and schedule a retry.
     await _waitForConvexAuthFn();
     if (!_authStillMatches(userIdAtStart, gen)) return;
-    result = await client.mutation(
+    await client.mutation(
       api.followedCountries.mergeAnonymousLocal,
       { countries: localList },
     );
@@ -822,15 +797,6 @@ async function _runHandoff(
   // about (mergeAnonymousLocal cleared it). The subscription's first
   // snapshot will fire a second event when it arrives.
   dispatchChanged();
-
-  // Step 5: surface cap-drop event so the UI can render an upgrade toast.
-  const droppedDueToCap = Array.isArray(result.droppedDueToCap)
-    ? result.droppedDueToCap
-    : [];
-  const accepted = Array.isArray(result.accepted) ? result.accepted : [];
-  if (droppedDueToCap.length > 0) {
-    dispatchCapDrop(accepted.length, droppedDueToCap.length);
-  }
 }
 
 /**
@@ -1080,16 +1046,6 @@ function _extractConvexErrorKind(err: unknown): string | null {
   return null;
 }
 
-function _extractConvexErrorData(
-  err: unknown,
-): Record<string, unknown> | null {
-  const e = err as { data?: unknown } | undefined;
-  if (e && e.data && typeof e.data === 'object') {
-    return e.data as Record<string, unknown>;
-  }
-  return null;
-}
-
 /**
  * Add a country to the followed list. Idempotent. Never throws —
  * returns a `FollowMutationResult` discriminated union.
@@ -1141,7 +1097,7 @@ export async function addCountry(input: string): Promise<FollowMutationResult> {
       if (!client || !api) {
         return { ok: false, reason: 'HANDOFF_PENDING' };
       }
-      const result = await client.mutation(
+      await client.mutation(
         api.followedCountries.followCountry,
         { country: code },
       );
@@ -1151,42 +1107,11 @@ export async function addCountry(input: string): Promise<FollowMutationResult> {
       if (!_authStillMatches(userIdAtStart, genAtStart)) {
         return { ok: false, reason: 'HANDOFF_PENDING' };
       }
-      // Return-instead-of-throw FREE_CAP path. The server returns the
-      // discriminated union to avoid Convex auto-Sentry forwarding the
-      // ConvexError on every free-tier-cap hit (companion skill:
-      // `convex-gotchas/reference/convex-autosentry-forwards-intentional-convexerror-throws.md`).
-      // The catch block below still handles FREE_CAP from a legacy
-      // server response (deploy-skew window) — keep both paths until the
-      // next deploy cycle, then collapse to return-only.
-      if (result && result.ok === false && result.reason === 'FREE_CAP') {
-        return {
-          ok: false,
-          reason: 'FREE_CAP',
-          currentCount: result.currentCount,
-          limit: result.limit,
-        };
-      }
       // The reactive subscription will pick up the new row and dispatch
       // WM_FOLLOWED_COUNTRIES_CHANGED; no need to manually fire here.
       return { ok: true };
     } catch (err) {
       const kind = _extractConvexErrorKind(err);
-      const data = _extractConvexErrorData(err);
-      if (kind === 'FREE_CAP') {
-        // Legacy deploy-skew path: a new client talking to an old server
-        // that still throws ConvexError({kind:'FREE_CAP'}). Safe to drop
-        // one deploy cycle after the server refactor lands. See companion
-        // skill `convex-gotchas/reference/convex-autosentry-forwards-intentional-convexerror-throws.md`.
-        const currentCount =
-          typeof data?.currentCount === 'number'
-            ? (data.currentCount as number)
-            : undefined;
-        const limit =
-          typeof data?.limit === 'number'
-            ? (data.limit as number)
-            : FREE_TIER_FOLLOW_LIMIT;
-        return { ok: false, reason: 'FREE_CAP', currentCount, limit };
-      }
       if (kind === 'INVALID_COUNTRY') {
         return { ok: false, reason: 'INVALID_INPUT' };
       }
@@ -1212,14 +1137,6 @@ export async function addCountry(input: string): Promise<FollowMutationResult> {
   const existing = getFollowed();
   if (existing.includes(code)) {
     return { ok: true };
-  }
-  if (ent === 'free' && existing.length >= FREE_TIER_FOLLOW_LIMIT) {
-    return {
-      ok: false,
-      reason: 'FREE_CAP',
-      currentCount: existing.length,
-      limit: FREE_TIER_FOLLOW_LIMIT,
-    };
   }
   return _writeLocalStorageAdd(code);
 }
