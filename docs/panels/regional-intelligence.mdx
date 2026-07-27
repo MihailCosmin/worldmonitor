@@ -55,7 +55,7 @@ Panel id is `regional-intelligence`; canonical component is `src/components/Regi
 ## How you reach it
 
 - **Cmd+K**: type *regional* or *intelligence board*.
-- **Availability by variant**: registered in the **full/geopolitical** variant only, and **disabled by default** (`enabled: false, premium: 'locked'` at `src/config/panels.ts:110`). PRO users must opt into it. Not present in the tech, finance, commodity, or happy variants.
+- **Availability by variant**: registered in the **full/geopolitical** variant only, and **disabled by default** (`enabled: false` in `src/config/panels.ts`). Free users can opt into it. Not present in the tech, finance, commodity, or happy variants.
 
 ## Data sources
 
@@ -75,7 +75,7 @@ weekly on Railway.
 
 ## Tier & gating
 
-**PRO (hard-locked) and opt-in.** `enabled: false, premium: 'locked'` in `src/config/panels.ts:110`. `isPanelEntitled` unlocks it when **either** a valid `WORLDMONITOR_API_KEY` is present **or** `isPro` is true (`regional-intelligence` is in the `apiKeyPanels` allowlist at `src/config/panels.ts:973`).
+Public web panel. It remains opt-in in the full variant, but no longer requires Pro or an API key to load the regional board or its enrichment blocks.
 
 ## API reference
 

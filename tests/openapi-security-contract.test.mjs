@@ -428,8 +428,8 @@ describe('OpenAPI security contract', () => {
     assert.ok(!ENDPOINT_ENTITLEMENTS.has('/api/trade/v1/get-tariff-trends'), 'expected tariff trends path to be ungated');
     assert.ok(PUBLIC_FORBIDDEN_GATES.has('/api/leads/v1/submit-contact'), 'expected Leads Turnstile 403 path');
     assert.ok(PUBLIC_FORBIDDEN_GATES.has('/api/leads/v1/register-interest'), 'expected Leads register-interest 403 gate');
-    assert.ok(BEARER_AUTH_PATHS.has('/api/intelligence/v1/get-regional-brief'), 'expected legacy premium path');
-    assert.ok(PREMIUM_ONLY_PATHS.has('/api/intelligence/v1/get-regional-brief'), 'expected legacy premium-only path (not entitlement-gated)');
+    assert.ok(!BEARER_AUTH_PATHS.has('/api/intelligence/v1/get-regional-brief'), 'expected regional brief path to be ungated');
+    assert.ok(!PREMIUM_ONLY_PATHS.has('/api/intelligence/v1/get-regional-brief'), 'expected regional brief path to stay out of legacy premium-only paths');
     assert.ok(!PREMIUM_ONLY_PATHS.has('/api/market/v1/analyze-stock'), 'stock analysis path must not be treated as premium-only');
     assert.ok(!PREMIUM_ONLY_PATHS.has('/api/market/v1/backtest-stock'), 'stock backtest path must not be treated as premium-only');
   });

@@ -113,7 +113,6 @@ const WEB_PREMIUM_PANELS = new Set([
   'stock-backtest',
   'daily-market-brief',
   'deduction',
-  'regional-intelligence',
 ]);
 
 const COLLIDING_NEWS_PANEL_KEYS = new Set(['markets', 'crypto', 'economic']);

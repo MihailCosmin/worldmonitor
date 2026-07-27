@@ -200,27 +200,17 @@ describe('SPA lifecycle recovery contracts', () => {
     );
   });
 
-  it('RegionalIntelligenceBoard reloads on entitlement unlock and unsubscribes on destroy', () => {
+  it('RegionalIntelligenceBoard stays public and invalidates in-flight loads on destroy', () => {
     const file = sourceFile('src/components/RegionalIntelligenceBoard.ts');
     const src = file.getFullText();
-    const ctor = findConstructor(file, 'RegionalIntelligenceBoard');
     const destroy = findMethod(file, 'RegionalIntelligenceBoard', 'destroy');
-    const handler = findMethod(file, 'RegionalIntelligenceBoard', 'handlePremiumAccessChange');
 
-    assert.match(src, /import \{ onEntitlementChange \} from '@\/services\/entitlements';/);
-    assert.ok(
-      identifierCalls(ctor, 'onEntitlementChange').length >= 1,
-      'constructor must subscribe to entitlement changes, not only auth state',
-    );
-    assert.match(destroy.getText(file), /this\.entitlementUnsubscribe\?\.\(\)/);
-    assert.ok(
-      propertyCalls(handler, 'loadCurrent').length >= 1,
-      'false-to-true premium transition must reload the current regional snapshot',
-    );
+    assert.doesNotMatch(src, /onEntitlementChange/);
+    assert.doesNotMatch(src, /handlePremiumAccessChange/);
     assert.match(
-      handler.getText(file),
-      /this\.latestSequence\s*\+=\s*1[\s\S]*this\.renderEmpty\(\)/,
-      'true-to-false premium transition must invalidate in-flight loads before blanking the panel',
+      destroy.getText(file),
+      /this\.latestSequence\s*\+=\s*1/,
+      'destroy() must invalidate in-flight regional snapshot loads before teardown',
     );
   });
 

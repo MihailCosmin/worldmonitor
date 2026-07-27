@@ -123,7 +123,7 @@ const FULL_PANELS: Record<string, PanelConfig> = {
   'national-debt': { name: 'Global Debt Clock', enabled: true, priority: 2 },
   'cross-source-signals': { name: 'Cross-Source Signals', enabled: true, priority: 2 },
   'market-implications': { name: 'AI Market Implications', enabled: true, priority: 1 },
-  'regional-intelligence': { name: 'Regional Intelligence', enabled: false, priority: 1, premium: 'locked' as const },
+  'regional-intelligence': { name: 'Regional Intelligence', enabled: false, priority: 1 },
   'deduction': { name: 'Deduct Situation', enabled: false, priority: 1, premium: 'locked' as const },
   'geo-hubs': { name: 'Geopolitical Hubs', enabled: false, priority: 2 },
   'tech-hubs': { name: 'Hot Tech Hubs', enabled: false, priority: 2 },
@@ -1236,7 +1236,7 @@ export function isPanelEntitled(key: string, config: PanelConfig, isPro = false)
   if (!config.premium) return true;
   // Dodo entitlements unlock all premium panels
   if (isEntitled()) return true;
-  const apiKeyPanels = ['regional-intelligence', 'deduction'];
+  const apiKeyPanels = ['deduction'];
   if (apiKeyPanels.includes(key)) {
     return getSecretState('WORLDMONITOR_API_KEY').present || isPro;
   }

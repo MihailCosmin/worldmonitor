@@ -303,7 +303,7 @@ These surfaces already have real feature logic, data structures, or fetch/render
 - Acceptance:
   - Free users can open and interact with implication chains.
 
-### [ ] F10. Ungate Regional Intelligence
+### [x] F10. Ungate Regional Intelligence
 
 - Files:
   - `src/components/RegionalIntelligenceBoard.ts`

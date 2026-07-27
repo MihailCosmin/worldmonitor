@@ -47,7 +47,7 @@ description: "区域情报面板为每个宏观区域提供结构化情报快照
 ## 如何访问
 
 - **Cmd+K**：输入 *regional* 或 *intelligence board*。
-- **按变体的可用性**：仅在 **full/geopolitical** 变体中注册，且**默认禁用**（`src/config/panels.ts:110` 处的 `enabled: false, premium: 'locked'`）。PRO 用户需手动启用。在 tech、finance、commodity 或 happy 变体中不存在。
+- **按变体的可用性**：仅在 **full/geopolitical** 变体中注册，且**默认禁用**（`src/config/panels.ts` 中的 `enabled: false`）。免费用户可手动启用。在 tech、finance、commodity 或 happy 变体中不存在。
 
 ## 数据来源
 
@@ -65,7 +65,7 @@ description: "区域情报面板为每个宏观区域提供结构化情报快照
 
 ## 层级与门控
 
-**PRO（硬锁定）且需手动启用。** `src/config/panels.ts:110` 中的 `enabled: false, premium: 'locked'`。当存在有效的 `WORLDMONITOR_API_KEY` **或** `isPro` 为 true 时，`isPanelEntitled` 解锁该面板（`regional-intelligence` 在 `src/config/panels.ts:973` 的 `apiKeyPanels` 允许列表中）。
+公开的 Web 面板。它在 full 变体中仍然是手动启用项，但加载区域看板及其扩充板块不再需要 Pro 或 API key。
 
 ## API 参考
 

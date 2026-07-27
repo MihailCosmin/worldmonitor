@@ -89,8 +89,8 @@ async function redisLrange(key: string, start: number, stop: number): Promise<st
  * `Cache-Control: no-store` so a transient Upstash outage is not pinned
  * as a false-empty history until the cache TTL expires (PR #2981 review).
  *
- * Premium-gated at the gateway layer via PREMIUM_RPC_PATHS and cached at
- * the 'slow' tier in RPC_CACHE_TIER, matching get-regional-snapshot.
+ * Publicly readable at the gateway layer and cached at the 'slow' tier in
+ * RPC_CACHE_TIER, matching get-regional-snapshot.
  */
 export const getRegimeHistory: IntelligenceServiceHandler['getRegimeHistory'] = async (
   _ctx: ServerContext,

@@ -13,9 +13,6 @@ export const PREMIUM_RPC_PATHS = new Set<string>([
   // Browser calls must attach Clerk auth and bypass wm-session recovery:
   // anonymous 401s here are expected Pro denials, not dead session cookies.
   '/api/intelligence/v1/get-country-intel-brief',
-  '/api/intelligence/v1/get-regional-snapshot',
-  '/api/intelligence/v1/get-regime-history',
-  '/api/intelligence/v1/get-regional-brief',
   '/api/resilience/v1/get-resilience-score',
   '/api/resilience/v1/get-resilience-ranking',
   '/api/supply-chain/v1/get-country-chokepoint-index',
