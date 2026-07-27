@@ -4,7 +4,6 @@ import type { AnalyzeStockResponse } from '@/generated/client/worldmonitor/marke
 import { getMarketWatchlistEntries } from '@/services/market-watchlist';
 import { runThrottledTargetRequests } from '@/services/throttled-target-requests';
 import { premiumFetch } from '@/services/premium-fetch';
-import { isProUser } from '@/services/widget-store';
 import {
   selectStockAnalysisTargets,
   type StockAnalysisTarget,
@@ -18,22 +17,20 @@ export type StockAnalysisResult = AnalyzeStockResponse;
 export {
   isAnalyzableSymbol,
   selectStockAnalysisTargets,
-  STOCK_ANALYSIS_FREE_LIMIT,
-  STOCK_ANALYSIS_PRO_LIMIT,
+  STOCK_ANALYSIS_MAX_TARGETS,
+  STOCK_ANALYSIS_MIN_TARGETS,
 } from '@/services/stock-analysis-targets';
 export type { StockAnalysisTarget } from '@/services/stock-analysis-targets';
 
 /**
- * Tier-aware watchlist resolution: the user's analysable picks lead, then the
- * panel is topped up with default symbols. `limitOverride` only shrinks the
- * resolved cap — callers pass it to keep dependent fetches aligned with an
- * already-resolved target list. See selectStockAnalysisTargets for the rules.
+ * Watchlist resolution is shared across tiers: the user's analysable picks
+ * lead, then the panel is topped up with default symbols. `limitOverride` only
+ * shrinks the resolved cap — callers pass it to keep dependent fetches aligned
+ * with an already-resolved target list. See selectStockAnalysisTargets for the
+ * rules.
  */
 export function getStockAnalysisTargets(limitOverride?: number): StockAnalysisTarget[] {
-  return selectStockAnalysisTargets(getMarketWatchlistEntries(), MARKET_SYMBOLS, {
-    isPro: isProUser(),
-    limitOverride,
-  });
+  return selectStockAnalysisTargets(getMarketWatchlistEntries(), MARKET_SYMBOLS, { limitOverride });
 }
 
 export async function fetchStockAnalysesForTargets(targets: StockAnalysisTarget[]): Promise<StockAnalysisResult[]> {

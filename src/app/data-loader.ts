@@ -466,9 +466,9 @@ export class DataLoaderManager implements AppModule {
   init(): void {
     this.boundMarketWatchlistHandler = () => {
       void this.loadMarkets().then(async () => {
+        await this.loadStockAnalysis();
+        await this.loadStockBacktest();
         if (hasPremiumAccess()) {
-          await this.loadStockAnalysis();
-          await this.loadStockBacktest();
           await this.loadDailyMarketBrief(true);
         }
       });

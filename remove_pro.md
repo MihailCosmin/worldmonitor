@@ -553,3 +553,351 @@ rg -n --hidden -S '\\bPro\\b|\\bPRO\\b|premium|Upgrade to Pro|Upgrade to PRO|Sig
 - Acceptance:
   - only intentional, non-upsell references remain
   - no user-facing `Upgrade to Pro` / `Premium` lock text survives on public product surfaces
+
+## Deep Final Audit Follow-Ups
+
+Audit result: the first-pass UI edits removed many badges and lock cards, but several checked tasks do not yet meet their end-to-end acceptance criteria. The unchecked tasks below were found by tracing panel registration, loader scheduling, server entitlements, localization, generated marketing output, and tests on 2026-07-27.
+
+Intentional paid boundaries that are not part of this follow-up remain allowed: billing / checkout, API and MCP access, custom widget generation, scheduled notification delivery, and partner shipping webhooks. Those surfaces must still use capability-accurate wording and must not claim that the now-public dashboard features are paid.
+
+### [x] D1. Complete Stock Analysis and Backtesting ungating
+
+- Files:
+  - `src/app/panel-layout.ts`
+  - `src/app/data-loader.ts`
+  - `src/App.ts`
+  - `src/services/stock-analysis.ts`
+  - `src/services/stock-analysis-targets.ts`
+  - `tests/stock-analysis-targets.test.mts`
+  - `tests/premium-loaders-fan-out-coverage.test.mts`
+- Remaining gates:
+  - `WEB_PREMIUM_PANELS` still contains `stock-analysis` and `stock-backtest`, so free and anonymous users still receive the shared gate CTA.
+  - Watchlist-change refresh and fast-prime loading still run only when `hasPremiumAccess()` is true.
+  - Free users are limited to four analysis targets while paid users receive up to 50.
+- Task:
+  - Remove both panels from all entitlement-gated mount, prime, refresh, and transition paths.
+  - Remove tier-aware target selection and analyze the same supported watchlist for every user, subject only to a universal operational safety limit.
+  - Replace tests that enforce the four-symbol free cap with public-access coverage.
+- Acceptance:
+  - Anonymous and signed-in free users can load, refresh, sort, filter, and backtest the same supported watchlist without a gate CTA or reduced tier-specific result set.
+
+### [ ] D2. Complete Daily Market Brief ungating
+
+- Files:
+  - `src/app/panel-layout.ts`
+  - `src/app/data-loader.ts`
+  - `src/App.ts`
+  - `src/services/daily-market-brief.ts`
+  - `tests/premium-loaders-fan-out-coverage.test.mts`
+- Remaining gates:
+  - `WEB_PREMIUM_PANELS` still contains `daily-market-brief`.
+  - `loadDailyMarketBrief()` returns immediately for non-premium users.
+  - Post-hydration, fast-prime, and watchlist refresh paths still require `hasPremiumAccess()`.
+  - The persistent cache namespace is still named `premium:daily-market-brief:v1`.
+- Task:
+  - Remove every entitlement condition from panel mounting and all brief loader entry points.
+  - Move the cache to a neutral namespace with a safe migration / fallback for existing cached briefs.
+  - Update fan-out tests to assert public loading rather than Pro-only loading.
+- Acceptance:
+  - The Daily Market Brief builds and refreshes for anonymous and signed-in free users, including watchlist and framework changes.
+
+### [ ] D3. Ungate Deduct Situation and its AI assessment path
+
+- Files:
+  - `src/config/panels.ts`
+  - `src/components/DeductionPanel.ts`
+  - `src/app/panel-layout.ts`
+  - `src/app/agent-bus-applier.ts`
+  - `src/services/correlation-engine/engine.ts`
+  - `src/shared/premium-paths.ts`
+  - `server/worldmonitor/intelligence/v1/deduct-situation.ts`
+  - `server/_shared/direct-llm-quota.ts`
+  - `tests/panel-config-guardrails.test.mjs`
+  - `tests/agent-bus-applier.test.mts`
+- Remaining gates:
+  - `deduction` is the only dashboard panel still registered with `premium: 'locked'`.
+  - Panel entitlement checks and the agent bus deny it to free users.
+  - Correlation LLM assessments are skipped unless `hasPremiumAccess()` is true.
+  - `/api/intelligence/v1/deduct-situation` remains a premium RPC with a handler-level premium check.
+- Task:
+  - Remove the panel lock, API-key-only panel exception, client gate, and handler premium check.
+  - Keep cost protection through signed-in free-user quotas / rate limits rather than a paid-plan requirement.
+  - Make framework selection and correlation assessment enrichment available on the same public path.
+- Acceptance:
+  - A signed-in free user can open Deduct Situation, submit an analysis, receive a result, and receive correlation assessments without an upgrade CTA.
+
+### [ ] D4. Remove free-plan panel and source caps
+
+- Files:
+  - `src/config/panels.ts`
+  - `src/App.ts`
+  - `src/app/panel-layout.ts`
+  - `src/app/event-handlers.ts`
+  - `src/components/UnifiedSettings.ts`
+  - `src/settings-window.ts`
+  - `src/services/source-cap.ts`
+  - `src/locales/*.json`
+  - `tests/panel-variant-config.test.mts`
+- Remaining gates:
+  - Free users are still limited to 40 panels and 80 sources.
+  - The limits are enforced during boot, settings changes, command-search adds, source toggles, and dashboard-tab save / restore.
+  - Many translated locales still explicitly say `Upgrade to PRO for unlimited`.
+- Task:
+  - Remove `FREE_MAX_PANELS`, `FREE_MAX_SOURCES`, cap enforcement, cap recovery migrations, upgrade toasts, and tier-specific tests.
+  - Preserve only universal performance safeguards that apply equally to every plan.
+- Acceptance:
+  - Free users can enable every available panel and source, and no layout or settings path silently disables items because of plan tier.
+
+### [ ] D5. Remove the paid followed-country cap and checkout path
+
+- Files:
+  - `src/App.ts`
+  - `src/utils/follow-button.ts`
+  - `src/services/followed-countries.ts`
+  - `convex/constants.ts`
+  - `convex/followedCountries.ts`
+  - `scripts/seed-digest-notifications.mjs`
+  - related followed-country tests
+- Current UI:
+  - `Upgrade to follow more`
+  - `Follow limit reached`
+  - `Upgrade`
+- Remaining gate:
+  - Free users can follow only three countries; the client opens checkout on `FREE_CAP`, Convex enforces the cap, and the brief composer clamps free-user personalization to three countries.
+- Task:
+  - Remove the client, Convex, merge, downgrade, and digest-composer tier caps.
+  - Remove the cap-drop event and checkout trigger.
+  - Retain a single universal abuse / storage bound only if operationally required.
+- Acceptance:
+  - Free users can follow the same supported number of countries as paid users and never see an upgrade action from the follow control.
+
+### [ ] D6. Make Latest Brief composition actually available to free accounts
+
+- Files:
+  - `src/components/LatestBriefPanel.ts`
+  - `api/latest-brief.ts`
+  - `scripts/seed-digest-notifications.mjs`
+  - `convex/alertRules.ts`
+  - `docs/panels/latest-brief.mdx`
+  - brief preview / composer tests
+- Remaining gap:
+  - The read endpoint accepts any signed-in user, but it only reads envelopes produced by the paid notification-rule composer.
+  - Free users cannot normally create those rules, so the public panel can remain in `composing` forever without a `brief:latest:<userId>` pointer.
+- Task:
+  - Compose a dashboard brief for signed-in free users independently of paid delivery rules, or provide a shared public brief that the panel can render.
+  - Keep scheduled email / Slack / Discord / Telegram delivery paid if desired; only decouple dashboard content production from that delivery entitlement.
+  - Remove stale premium-denial handling from the panel once the endpoint contract is public.
+- Acceptance:
+  - A newly created tier-0 account reaches a real `ready` brief without ever owning a paid alert or digest rule.
+
+### [ ] D7. Remove now-public panels from the Pro entitlement lifecycle
+
+- Files:
+  - `src/App.ts`
+  - `src/app/data-loader.ts`
+  - `src/services/global-tenders.ts`
+  - `tests/premium-loaders-fan-out-coverage.test.mts`
+- Remaining gate:
+  - The entitlement transition fan-out still treats Trade Policy, Stock Analysis, Backtesting, Daily Market Brief, Resilience, and Global Procurement as Pro loaders.
+  - A Pro-to-free transition explicitly clears Global Procurement data even though its panel and RPC are public.
+- Task:
+  - Replace the Pro transition fan-out with normal panel lifecycle / refresh scheduling.
+  - Never clear public panel data on sign-out, expiry, or subscription downgrade.
+- Acceptance:
+  - Changing auth or billing state cannot make a now-public panel disappear, empty its cache, or wait for an entitlement transition before loading.
+
+### [ ] D8. Remove residual tier-1 gates from country intelligence and sanctions data
+
+- Files:
+  - `src/shared/premium-paths.ts`
+  - `server/_shared/entitlement-check.ts`
+  - `src/app/country-intel.ts`
+  - `src/services/sanctions-pressure.ts`
+  - `server/worldmonitor/intelligence/v1/get-country-intel-brief.ts`
+  - `server/worldmonitor/sanctions/v1/list-sanctions-pressure.ts`
+  - `server/worldmonitor/supply-chain/v1/get-country-cost-shock.ts`
+  - `tests/premium-stock-gateway.test.mts`
+  - `tests/supply-chain-sprint2.test.mjs`
+- Remaining gates:
+  - Country Intel Brief, Sanctions Pressure, and Country Cost Shock remain in the premium path / tier-1 allowlists.
+  - Sanctions Pressure deliberately returns no RPC data to free users.
+  - Country Cost Shock returns an empty result for free callers.
+  - Country Intel Brief contains a shared non-premium composition path, but the gateway tier check prevents signed-in free users from reaching it.
+- Task:
+  - Remove paid-tier requirements for dashboard-supporting reads and align handler-level checks with the public contract.
+  - Keep direct-LLM cost controls as per-account free quotas rather than Pro checks.
+  - Rename `fetchProSections()` and remove dead `makeProLocked()` / premium-only comments after the data paths are public.
+- Acceptance:
+  - A free user receives real country brief, sanctions, and cost-shock data; the Sanctions Pressure panel no longer resolves to an entitlement-caused empty state.
+
+### [ ] D9. Finish desktop and map-layer ungating
+
+- Files:
+  - `src/app/panel-layout.ts`
+  - `src/app/data-loader.ts`
+  - `src/components/DeckGLMap.ts`
+  - map-layer and desktop tests
+- Remaining gates:
+  - Desktop Forecast, Israel Sirens, and Telegram Intel panels are still rendered through `showLocked()` for non-premium users.
+  - Desktop Telegram and OREF loaders are skipped for non-premium users.
+  - Resilience ranking is cleared / skipped unless `hasPremiumAccess()` is true.
+  - Trade-route status colors are reduced for free users while paid users receive actual disrupted / high-risk styling.
+- Task:
+  - Remove `_lockPanels`, `_desktopLocked`, resilience entitlement guards, and tier-dependent route styling.
+  - Preserve renderer / platform capability checks such as DeckGL-only behavior; remove only plan checks.
+- Acceptance:
+  - Free desktop and web users receive the same Forecast, OREF, Telegram, Resilience, and trade-route visualization behavior when their runtime supports it.
+
+### [ ] D10. Ungate global export and playback
+
+- Files:
+  - `src/app/event-handlers.ts`
+  - `src/services/analytics.ts`
+  - export / playback tests
+- Remaining gates:
+  - The global Export control is mounted only for Clerk users with `role === 'pro'`.
+  - Playback is hidden for every non-Pro user.
+  - These are the two remaining `trackGateHit(...)` callers.
+- Task:
+  - Mount both controls for every supported user state.
+  - Remove their auth subscriptions, `trackGateHit('export')`, `trackGateHit('playback')`, and the telemetry helper if it becomes unused.
+- Acceptance:
+  - Anonymous and signed-in free users can export current dashboard data and use playback without changing plans.
+
+### [ ] D11. Ungate live flight search
+
+- Files:
+  - `src/app/search-manager.ts`
+  - `src/locales/*.json`
+  - command-search tests
+- Remaining gates:
+  - Callsign search and the live flight search source return early unless `isProUser()` is true.
+  - English and translated search copy still labels live flight search as `(PRO)`.
+- Task:
+  - Register, populate, and execute the live flight search source for all users.
+  - Remove the plan label from every locale.
+- Acceptance:
+  - Free users can search live flights by callsign and receive the same result interactions as paid users.
+
+### [ ] D12. Ungate analytical framework selection
+
+- Files:
+  - `src/services/analysis-framework-store.ts`
+  - `src/components/FrameworkSelector.ts`
+  - `src/components/InsightsPanel.ts`
+  - `src/components/DeductionPanel.ts`
+  - framework-selector tests
+- Remaining gate:
+  - Framework selection is public only for Daily Market Brief; Insights and Deduct Situation still pass premium state into `FrameworkSelector`, whose locked branch renders the shared upgrade CTA.
+- Task:
+  - Make framework selection available on every public panel that implements it.
+  - Remove the premium branch and shared-panel CTA dependency from `FrameworkSelector`.
+- Acceptance:
+  - A free user can select and apply every shipped analytical framework in Daily Market Brief, Insights, Deduction, and Market Implications.
+
+### [ ] D13. Remove the remaining shared panel gate machinery and upsell locales
+
+- Files:
+  - `src/components/Panel.ts`
+  - `src/services/panel-gating.ts`
+  - `src/app/panel-layout.ts`
+  - `src/config/panels.ts`
+  - `src/components/LatestBriefPanel.ts`
+  - `src/locales/en.shell.json`
+  - `src/locales/en.json`
+  - `src/locales/*.json`
+  - `src/styles/main.css`
+- Remaining copy / code:
+  - `Panel.showLocked()`, `Panel.showGatedCta()`, `WEB_PREMIUM_PANELS`, `getProPanelKeys()`, and locked-panel CSS still exist.
+  - The full English locale still contains the removed Pro banner.
+  - Most non-English locales retain literal `Sign In to Unlock`, `Upgrade to Pro`, premium analytics, panel-cap, and source-cap copy.
+- Task:
+  - After D1-D12, remove the generic dashboard panel-gating API, stale lock styles, dead banner locale keys, premium feature descriptions, and translated upsell strings.
+  - Keep billing-state recovery UI only where it manages an actual paid capability; do not route it through public panel chrome.
+- Acceptance:
+  - No base panel can render a plan badge, plan lock, or upgrade CTA, and locale fallback cannot reintroduce one in another language.
+
+### [ ] D14. Replace tests that still enforce the old premium dashboard contract
+
+- Files:
+  - `e2e/auth-ui.spec.ts`
+  - `tests/panel-config-guardrails.test.mjs`
+  - `tests/panel-variant-config.test.mts`
+  - `tests/mobile-panel-nav-categories.test.mts`
+  - `tests/premium-loaders-fan-out-coverage.test.mts`
+  - `tests/agent-bus-applier.test.mts`
+  - `tests/a11y-axe-regression.test.mts`
+  - `tests/stock-analysis-targets.test.mts`
+  - relevant gateway / sanctions / supply-chain / followed-country tests
+- Remaining gap:
+  - The suite still requires locked anonymous panels, premium panel sets, Pro loader fan-out, free caps, and tier-1 denial responses.
+- Task:
+  - Delete obsolete gate assertions and add anonymous plus signed-in tier-0 acceptance coverage for every formerly gated feature.
+  - Include data-bearing assertions, not only absence of `PRO` text.
+- Acceptance:
+  - Tests fail if a public feature regains a client lock, server 403, empty entitlement fallback, reduced tier-specific dataset, or upgrade copy.
+
+### [ ] D15. Correct Pro marketing source and rebuild static output
+
+- Files:
+  - `pro-test/src/locales/*.json`
+  - `pro-test/index.html`
+  - `pro-test/welcome.html`
+  - other `pro-test/src` pricing / welcome components
+  - `blog-site/src/content/blog/*.md`
+  - `server/worldmonitor/leads/v1/register-interest.ts`
+  - generated `public/pro/index.html`
+  - generated `public/pro/welcome.html`
+- Stale claims:
+  - Pro pricing and metadata still sell WM Analyst, Stock Analysis, Backtesting, Scenario Engine, Route Explorer, AI Market Implications, Regional Intelligence, map layers, and market watchlists as paid features.
+  - Source and generated HTML have drifted: some generated SEO text was edited, while the source and rendered root still contain old claims.
+- Task:
+  - Rewrite all languages, structured metadata, blog product claims, and lifecycle emails so paid plans list only capabilities that remain intentionally paid.
+  - Rebuild `public/pro` from `pro-test`; do not hand-edit `public/pro/assets/`.
+- Acceptance:
+  - Pricing, welcome, SEO, JSON-LD, `noscript`, and hydrated content never advertise a public dashboard feature as Pro-only.
+
+### [ ] D16. Update documentation and generated API descriptions
+
+- Files:
+  - `docs/features.mdx`
+  - `docs/pricing.mdx`
+  - `docs/authentication.mdx`
+  - `docs/DEPLOYMENT-PLAN.md`
+  - `docs/premium-finance.mdx`
+  - `docs/panels/*.mdx`
+  - `docs/methodology/*.mdx`
+  - `proto/worldmonitor/market/v1/*.proto`
+  - `proto/worldmonitor/supply_chain/v1/*.proto`
+  - `server/gateway.ts`
+  - `server/worldmonitor/intelligence/v1/get-regional-snapshot.ts`
+  - generated `src/generated/**`
+  - generated `docs/api/**`
+- Stale claims:
+  - Panel docs still mark Daily Market Brief, Chat Analyst, Deduction, Supply Chain enhancements, Sanctions Pressure, Stock Analysis, Backtesting, and other unlocked surfaces as Pro.
+  - Proto comments and generated OpenAPI descriptions still call several now-public market, procurement, regional, route, and supply-chain operations premium-gated.
+  - Gateway / handler comments incorrectly say regional RPCs are premium-gated.
+- Task:
+  - Fix source docs and proto comments, then run `make generate` so generated clients and OpenAPI stay authoritative.
+  - Preserve paid wording only for intentional API/MCP, notification-delivery, widget-builder, and partner-webhook capabilities.
+- Acceptance:
+  - Product docs, API docs, and runtime behavior agree on which capabilities are public.
+
+### [ ] D17. Perform a source-aware final `Pro` / `Premium` allowlist sweep
+
+- Commands:
+
+```bash
+rg -n --hidden -S '\bPro\b|\bPRO\b|premium|Upgrade to Pro|Upgrade to PRO|Sign In to Unlock' \
+  src public blog-site pro-test docs proto server api convex scripts tests \
+  --glob '!public/pro/assets/**' \
+  --glob '!src/generated/**' \
+  --glob '!docs/api/**'
+```
+
+- Task:
+  - Classify every remaining match as intentional product-plan naming, an economic term such as insurance / price premium, a proper noun such as Premium Times / Premium Economy, or stale dashboard gating.
+  - Remove stale helpers, comments, telemetry, locale keys, docs, and test names rather than suppressing them.
+  - Record a small explicit allowlist for the intentional paid capabilities so future audits can detect new dashboard upsells.
+- Acceptance:
+  - No public product surface or supporting contract contains a stale upgrade prompt, premium lock, tier-reduced dashboard result, or claim that a public feature requires Pro.

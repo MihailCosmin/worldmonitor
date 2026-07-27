@@ -595,17 +595,14 @@ export class App {
       primeTask('crossSourceSignals', () => this.dataLoader.loadCrossSourceSignals());
     }
 
-    const _wmAccess = hasPremiumAccess();
-    if (_wmAccess) {
-      if (shouldPrime('stock-analysis')) {
-        primeTask('stockAnalysis', () => this.dataLoader.loadStockAnalysis());
-      }
-      if (shouldPrime('stock-backtest')) {
-        primeTask('stockBacktest', () => this.dataLoader.loadStockBacktest());
-      }
-      if (shouldPrime('daily-market-brief')) {
-        primeTask('dailyMarketBrief', () => this.dataLoader.loadDailyMarketBrief());
-      }
+    if (shouldPrime('stock-analysis')) {
+      primeTask('stockAnalysis', () => this.dataLoader.loadStockAnalysis());
+    }
+    if (shouldPrime('stock-backtest')) {
+      primeTask('stockBacktest', () => this.dataLoader.loadStockBacktest());
+    }
+    if (hasPremiumAccess() && shouldPrime('daily-market-brief')) {
+      primeTask('dailyMarketBrief', () => this.dataLoader.loadDailyMarketBrief());
     }
 
     if (tasks.length > 0) {
@@ -1395,10 +1392,11 @@ export class App {
     this.enforceFreeTierLimits();
 
     let _prevUserId: string | null = null;
-    // Track the last-seen PRO entitlement so we can re-fire PRO-gated loaders
-    // ONCE on a false→true transition (user signs in / purchase lands mid-session).
+    // Track the last-seen PRO entitlement so we can re-fire the loaders that
+    // still genuinely require entitlement on a false→true transition (user
+    // signs in / purchase lands mid-session).
     let _prevHadPremium = hasPremiumAccess();
-    // Pro-loader fan-out runs on EITHER Clerk auth changes OR Convex
+    // Entitlement-loader fan-out runs on EITHER Clerk auth changes OR Convex
     // entitlement changes — Pro can come from either signal (Clerk
     // user.role === 'pro' OR Convex tier >= 1 via Dodo).
     const firePremiumLoaders = (): void => {
@@ -1406,19 +1404,14 @@ export class App {
       const hadPremium = _prevHadPremium;
       const nowPremium = hasPremiumAccess();
       if (nowPremium && !hadPremium) {
-        // Entitlement just resolved → fire PRO-gated initial loads that were
+        // Entitlement just resolved → fire still-gated initial loads that were
         // skipped at boot. Each loader early-returns if the panel isn't
         // mounted and re-checks hasPremiumAccess() internally, so these
-        // calls are safe and idempotent. Without this, panels would sit empty
-        // until the next scheduled refresh (FOREVER on the full variant for
-        // stock-analysis / stock-backtest / daily-market-brief because their schedulers are
-        // gated to SITE_VARIANT === 'finance'). The audit-locking regression
-        // test in tests/premium-loaders-fan-out-coverage.test.mts asserts
-        // every `hasPremiumAccess() && shouldLoad('X')` gate in data-loader.ts
-        // has a matching call here.
+        // calls are safe and idempotent. The regression test in
+        // tests/premium-loaders-fan-out-coverage.test.mts asserts every
+        // `hasPremiumAccess() && shouldLoad('X')` gate in data-loader.ts has a
+        // matching call here.
         void this.dataLoader.loadTradePolicy();
-        void this.dataLoader.loadStockAnalysis();
-        void this.dataLoader.loadStockBacktest();
         void this.dataLoader.loadDailyMarketBrief();
         void this.dataLoader.loadResilienceRanking();
         void this.dataLoader.loadGlobalTenders();

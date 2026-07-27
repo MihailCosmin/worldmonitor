@@ -5,14 +5,12 @@ import { resolve } from 'node:path';
 
 // REGRESSION GUARD for PR #3828 (Free→Pro hydration race).
 //
-// `App.ts:firePremiumLoaders` fans out PRO-gated loaders on the Free→Pro
+// `App.ts:firePremiumLoaders` fans out still-gated loaders on the Free→Pro
 // entitlement transition. If a NEW loader is gated behind
 // `hasPremiumAccess() && shouldLoad('X')` in `data-loader.ts` but a
 // corresponding `this.dataLoader.loadX()` line is missing from
 // `firePremiumLoaders`, the panel sits empty for the WHOLE SESSION on any
-// variant where the scheduled refresh isn't registered (the stock-analysis /
-// stock-backtest / market-implications schedulers are
-// gated to SITE_VARIANT === 'finance').
+// variant where the scheduled refresh isn't registered.
 //
 // This test extracts the gated loader names from data-loader.ts and asserts
 // each appears in firePremiumLoaders. It's deliberately static-grep based so
@@ -122,19 +120,19 @@ describe('firePremiumLoaders fan-out coverage', () => {
     assert.ok(extracted.has('loadDdd'), 'missed shape (c) single-line gate — fan-out coverage would have a blind spot');
   });
 
-  it('extracts at least one PRO-gated loader from data-loader.ts (sanity)', () => {
+  it('extracts at least one entitlement-gated loader from data-loader.ts (sanity)', () => {
     // If this fails, the regex stopped matching — likely because data-loader.ts
     // changed the gate shape (e.g. `hasPremiumAccess()` got replaced or moved).
     // Update extractGatedLoaders before bumping this test or you risk silently
     // turning off the coverage check.
-    assert.ok(gatedLoaders.size > 0, `no PRO-gated loaders found via regex — gate-shape changed?`);
+    assert.ok(gatedLoaders.size > 0, `no entitlement-gated loaders found via regex — gate-shape changed?`);
   });
 
   it('extracts at least one fan-out loader from App.ts (sanity)', () => {
     assert.ok(fanOutLoaders.size > 0, 'firePremiumLoaders has no `void this.dataLoader.loadX()` calls — has the function been renamed?');
   });
 
-  it('every PRO-gated loader is fanned out on Free→Pro transition', () => {
+  it('every entitlement-gated loader is fanned out on Free→Pro transition', () => {
     const missing: string[] = [];
     for (const loader of gatedLoaders) {
       if (fanOutLoaders.has(loader)) continue;
@@ -144,7 +142,7 @@ describe('firePremiumLoaders fan-out coverage', () => {
     assert.deepEqual(
       missing,
       [],
-      `${missing.length} PRO-gated loader(s) in data-loader.ts are NOT re-fired by App.ts firePremiumLoaders on Free→Pro transition:\n` +
+      `${missing.length} entitlement-gated loader(s) in data-loader.ts are NOT re-fired by App.ts firePremiumLoaders on Free→Pro transition:\n` +
       missing.map((l) => `  - ${l}`).join('\n') +
       `\n\nFix: add \`void this.dataLoader.${missing[0] ?? 'loadX'}();\` to the firePremiumLoaders block in App.ts.\n` +
       `If you intentionally do NOT want this loader re-fired (e.g. it has its own entitlement subscription),\n` +

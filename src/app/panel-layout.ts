@@ -92,8 +92,8 @@ function writeSessionStorageValue(key: string, value: string): void {
 }
 
 /**
- * Panels that require premium access on web. Auth-based gating applies to
- * these — `updatePanelGating()` calls `Panel.showGatedCta()` to render
+ * Panels that still require premium access on web. Auth-based gating applies
+ * to these — `updatePanelGating()` calls `Panel.showGatedCta()` to render
  * "Sign In to Unlock" / "Upgrade to Pro" for non-premium users.
  *
  * INVARIANT: every panel listed in `apiKeyPanels` (src/config/panels.ts
@@ -109,8 +109,6 @@ function writeSessionStorageValue(key: string, value: string): void {
  * `apiKeyPanels ⊆ WEB_PREMIUM_PANELS` so this drift can't recur silently.
  */
 const WEB_PREMIUM_PANELS = new Set([
-  'stock-analysis',
-  'stock-backtest',
   'daily-market-brief',
   'deduction',
 ]);
@@ -1759,8 +1757,6 @@ export class PanelLayoutManager implements AppModule {
     this.lazyDefaultPanel('markets', () => import('@/components/MarketPanel'), 'MarketPanel');
     this.lazyDefaultPanel('stock-analysis', () => import('@/components/StockAnalysisPanel'), 'StockAnalysisPanel');
     this.lazyDefaultPanel('stock-backtest', () => import('@/components/StockBacktestPanel'), 'StockBacktestPanel');
-    // Web premium gating for stock-analysis and stock-backtest is handled
-    // reactively by updatePanelGating() via auth state subscription.
 
     this.lazyImportedPanel('monitors', () => import('@/components/MonitorPanel'), 'MonitorPanel', (MonitorPanel) => {
       const monitorPanel = new MonitorPanel(this.ctx.monitors);

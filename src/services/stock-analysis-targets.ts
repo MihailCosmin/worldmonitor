@@ -13,13 +13,12 @@ export interface StockAnalysisTarget {
 }
 
 /**
- * Free tier (and the empty-watchlist baseline for every tier) analyses this
- * many tickers. PRO users get their full watchlist analysed, up to
- * STOCK_ANALYSIS_PRO_LIMIT — which mirrors the 50-entry storage cap enforced
- * in market-watchlist.ts.
+ * Every user gets at least the default four analysable names so the panels do
+ * not collapse when the watchlist is empty or tiny. The universal cap mirrors
+ * the 50-entry watchlist storage limit enforced in market-watchlist.ts.
  */
-export const STOCK_ANALYSIS_FREE_LIMIT = 4;
-export const STOCK_ANALYSIS_PRO_LIMIT = 50;
+export const STOCK_ANALYSIS_MIN_TARGETS = 4;
+export const STOCK_ANALYSIS_MAX_TARGETS = 50;
 
 /** Indices (^GSPC) and FX/futures (EURUSD=X, GC=F) have no equity report. */
 export function isAnalyzableSymbol(symbol: string): boolean {
@@ -34,19 +33,18 @@ export function isAnalyzableSymbol(symbol: string): boolean {
  * never collapses the panel to one card (the original "tracking only one
  * ticker" bug).
  *
- * - Free tier: capped at STOCK_ANALYSIS_FREE_LIMIT.
- * - PRO tier: sized to the user's own analysable picks, floored at the free
- *   limit (an empty/tiny watchlist is never emptier than free) and capped at
- *   STOCK_ANALYSIS_PRO_LIMIT.
+ * The resolved set is the same for every user: their own analysable picks
+ * first, topped up to the default floor if needed, and capped only by the
+ * universal operational limit.
  *
  * `limitOverride`, when provided, can only *shrink* the resolved cap — callers
  * pass it to keep dependent fetches (history, backtests) aligned with an
- * already-resolved target list, never to grant more than the tier allows.
+ * already-resolved target list, never to grant more than the shared cap.
  */
 export function selectStockAnalysisTargets(
   watchlistEntries: readonly MarketWatchlistEntry[],
   defaultSymbols: readonly { symbol: string; name: string; display: string }[],
-  opts: { isPro: boolean; limitOverride?: number },
+  opts: { limitOverride?: number } = {},
 ): StockAnalysisTarget[] {
   const userPicks: StockAnalysisTarget[] = watchlistEntries
     .filter((entry) => isAnalyzableSymbol(entry.symbol))
@@ -56,9 +54,10 @@ export function selectStockAnalysisTargets(
       display: entry.display || entry.symbol,
     }));
 
-  const cap = opts.isPro
-    ? Math.max(STOCK_ANALYSIS_FREE_LIMIT, Math.min(STOCK_ANALYSIS_PRO_LIMIT, userPicks.length))
-    : STOCK_ANALYSIS_FREE_LIMIT;
+  const cap = Math.max(
+    STOCK_ANALYSIS_MIN_TARGETS,
+    Math.min(STOCK_ANALYSIS_MAX_TARGETS, userPicks.length),
+  );
   const limit = opts.limitOverride != null
     ? Math.max(0, Math.min(opts.limitOverride, cap))
     : cap;
