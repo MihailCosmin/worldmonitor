@@ -725,9 +725,7 @@
       "shellTitle": "Ustawienia World Monitor",
       "shellSearchPlaceholder": "Przeszukaj ustawienia…",
       "shellCancel": "Anuluj",
-      "shellSaveClose": "Zapisz i zamknij",
-      "freePanelLimit": "Plan bezpłatny: maks. {{max}} paneli. Uaktualnij do PRO, aby uzyskać nieograniczoną liczbę.",
-      "freeSourceLimit": "Plan bezpłatny: maks. {{max}} źródeł. Uaktualnij do PRO, aby uzyskać nieograniczoną liczbę."
+      "shellSaveClose": "Zapisz i zamknij"
     }
   },
   "components": {

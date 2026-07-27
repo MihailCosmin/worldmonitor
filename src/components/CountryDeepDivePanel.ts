@@ -16,7 +16,7 @@ import { sanitizeUrl, escapeHtml } from '@/utils/sanitize';
 import { computeAlternativeSuppliers, type ChokepointScoreMap, type EnrichedExporter } from '@/utils/supplier-route-risk';
 import { formatIntelBrief } from '@/utils/format-intel-brief';
 import { collectBriefSources, renderBriefSourcesFooter, type BriefSource } from '@/utils/brief-sources';
-import { getCSSColor, showToast } from '@/utils';
+import { getCSSColor } from '@/utils';
 import { toFlagEmoji } from '@/utils/country-flag';
 import { PORTS } from '@/config/ports';
 import { getChokepointRoutes } from '@/config/trade-routes';
@@ -892,15 +892,6 @@ export class CountryDeepDivePanel implements CountryBriefPanel {
     } catch {
       // Ignore — either aborted or transient network; leave prior values visible.
     }
-  }
-
-  private makeProLocked(text: string): HTMLElement {
-    const wrap = this.el('div', 'cdp-pro-locked');
-    wrap.append(
-      this.el('span', 'cdp-pro-lock-icon', '\uD83D\uDD12'),
-      this.el('span', 'cdp-pro-lock-text', text),
-    );
-    return wrap;
   }
 
   private proMetricBox(label: string, value: string): HTMLElement {

@@ -34,7 +34,6 @@ import {
   isPanelInVariantDefaults,
   getEffectivePanelConfig,
   isPanelEntitled,
-  enforceFreePanelLimit,
 } from '@/config';
 import { resolveNewsCategories, enabledNewsCategoryKeys } from '@/config/feed-resolution';
 import { BETA_MODE } from '@/config/beta';
@@ -42,7 +41,7 @@ import { t } from '@/services/i18n';
 import { getCurrentTheme } from '@/utils';
 import { trackCriticalBannerAction, trackCheckoutSuccess, trackCheckoutFailed, replayPendingCheckoutSuccess, replayPendingProFunnelEvents } from '@/services/analytics';
 import { getStoredMapModePreference } from '@/services/map-mode-preference';
-import { loadWidgets, saveWidget, isProUser } from '@/services/widget-store';
+import { loadWidgets, saveWidget } from '@/services/widget-store';
 import type { CustomWidgetSpec } from '@/services/widget-store';
 import { initEntitlementSubscription, destroyEntitlementSubscription, isEntitled, onEntitlementChange, shouldReloadOnEntitlementChange } from '@/services/entitlements';
 import { initSubscriptionWatch, destroySubscriptionWatch, onSubscriptionChange, openBillingPortal, prereserveBillingPortalTab } from '@/services/billing';
@@ -1036,21 +1035,6 @@ export class PanelLayoutManager implements AppModule {
       };
       state = { activeTabId: initial.id, tabs: [initial] };
       saveTabsState(state);
-    } else {
-      // Clamp stored snapshots to the current free-tier cap so a workspace
-      // saved while Pro (or persisted before the cap existed) can't re-enable
-      // an over-cap layout when the user later switches to it. applyTabPanelState
-      // re-clamps on apply too; this keeps the persisted store self-healing.
-      const pro = isProUser();
-      let healedSnapshots = false;
-      for (const tab of state.tabs) {
-        const clamped = enforceFreePanelLimit(tab.panelSettings, pro);
-        if (this.panelSettingsEnabledStateChanged(tab.panelSettings, clamped)) {
-          healedSnapshots = true;
-        }
-        tab.panelSettings = clamped;
-      }
-      if (healedSnapshots) saveTabsState(state);
     }
     this.tabsState = state;
 
@@ -1061,17 +1045,6 @@ export class PanelLayoutManager implements AppModule {
       onDelete: (id) => this.deleteTab(id),
     });
     mount.appendChild(this.panelTabBar.getElement());
-  }
-
-  private panelSettingsEnabledStateChanged(
-    before: Record<string, PanelConfig>,
-    after: Record<string, PanelConfig>,
-  ): boolean {
-    const keys = new Set([...Object.keys(before), ...Object.keys(after)]);
-    for (const key of keys) {
-      if (before[key]?.enabled !== after[key]?.enabled) return true;
-    }
-    return false;
   }
 
   /** Capture the live panel state (settings + order) for a tab snapshot. */
@@ -1111,13 +1084,10 @@ export class PanelLayoutManager implements AppModule {
     this.snapshotActiveTab();
 
     const defaults = buildDefaultTabPanels(this.ctx.panelSettings);
-    // The variant default set can exceed FREE_MAX_PANELS (e.g. 81 panels in the
-    // full variant); clamp it to the free-tier cap so a new tab can't bypass
-    // the limit that settings/search/boot all enforce.
     const tab: PanelTab = {
       id: generateTabId(),
       name: t('dashboardTabs.newTabName'),
-      panelSettings: enforceFreePanelLimit(defaults.panelSettings, isProUser()),
+      panelSettings: defaults.panelSettings,
       panelOrder: defaults.panelOrder,
       bottomSet: [],
     };
@@ -1190,14 +1160,8 @@ export class PanelLayoutManager implements AppModule {
       }
     }
 
-    // Final free-tier guarantee: this is the only path that writes a tab's
-    // panel selection into STORAGE_KEYS.panels, so clamping here means no tab
-    // operation (add / switch / delete-fallback) can ever persist an over-cap
-    // workspace, regardless of how the snapshot was produced.
-    const capped = enforceFreePanelLimit(next, isProUser());
-
-    this.ctx.panelSettings = capped;
-    saveToStorage(STORAGE_KEYS.panels, capped);
+    this.ctx.panelSettings = next;
+    saveToStorage(STORAGE_KEYS.panels, next);
     saveToStorage(this.ctx.PANEL_ORDER_KEY, panelOrder);
     saveToStorage(this.ctx.PANEL_ORDER_KEY + '-bottom-set', bottomSet);
 

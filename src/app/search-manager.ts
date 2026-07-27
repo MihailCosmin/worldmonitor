@@ -36,7 +36,7 @@ import { getAuthState } from '@/services/auth-state';
 
 export interface SearchManagerCallbacks {
   openCountryBriefByCode: (code: string, country: string) => void;
-  /** Enables a currently-disabled panel (CMD+K "Add"). Returns false if blocked (unknown / free-tier cap). */
+  /** Enables a currently-disabled panel (CMD+K "Add"). Returns false if blocked (unknown panel). */
   enablePanel: (panelId: string) => boolean;
 }
 

@@ -659,9 +659,7 @@
       "shellTitle": "إعدادات مراقب العالم",
       "shellSearchPlaceholder": "ابحث في الإعدادات...",
       "shellCancel": "إلغاء",
-      "shellSaveClose": "حفظ وإغلاق",
-      "freePanelLimit": "الخطة المجانية: أقصى {{max}} لوحات. ترقِّ إلى PRO للحصول على عدد غير محدود.",
-      "freeSourceLimit": "الخطة المجانية: أقصى {{max}} مصادر. ترقِّ إلى PRO للحصول على عدد غير محدود."
+      "shellSaveClose": "حفظ وإغلاق"
     },
     "countryIntel": {
       "identifying": "جارٍ تحديد الدولة...",

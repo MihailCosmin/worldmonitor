@@ -2,7 +2,7 @@ import { escapeHtml, sanitizeUrl } from '@/utils/sanitize';
 import { formatIntelBrief } from '@/utils/format-intel-brief';
 import { collectBriefSources, renderBriefSourcesFooter, type BriefSource } from '@/utils/brief-sources';
 import { t } from '@/services/i18n';
-import { getCSSColor, showToast } from '@/utils';
+import { getCSSColor } from '@/utils';
 import type { CountryScore } from '@/services/country-instability';
 import type { NewsItem } from '@/types';
 import type { PredictionMarket } from '@/services/prediction';

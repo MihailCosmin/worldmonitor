@@ -61,12 +61,6 @@ export {
   getEffectivePanelConfig,
   isPanelInVariantDefaults,
   isPanelEntitled,
-  enforceFreePanelLimit,
-  countFreePanelCapUsage,
-  isFreePanelCapCounted,
-  restoreFreeMapPanelAccess,
-  FREE_MAX_PANELS,
-  FREE_MAX_SOURCES,
 } from './panels';
 
 // ============================================

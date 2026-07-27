@@ -723,9 +723,7 @@
       "shellTitle": "Impostazioni World Monitor",
       "shellSearchPlaceholder": "Cerca impostazioni...",
       "shellCancel": "Annulla",
-      "shellSaveClose": "Salva e chiudi",
-      "freePanelLimit": "Piano gratuito: max {{max}} pannelli. Passa a PRO per illimitati.",
-      "freeSourceLimit": "Piano gratuito: max {{max}} fonti. Passa a PRO per illimitate."
+      "shellSaveClose": "Salva e chiudi"
     }
   },
   "components": {

@@ -651,9 +651,7 @@
       "shellTitle": "World Monitor Ayarları",
       "shellSearchPlaceholder": "Ayarları ara...",
       "shellCancel": "İptal",
-      "shellSaveClose": "Kaydet ve Kapat",
-      "freePanelLimit": "Ücretsiz plan: en fazla {{max}} panel. Sınırsız kullanım için PRO'ya yükseltin.",
-      "freeSourceLimit": "Ücretsiz plan: en fazla {{max}} kaynak. Sınırsız kullanım için PRO'ya yükseltin."
+      "shellSaveClose": "Kaydet ve Kapat"
     },
     "countryIntel": {
       "identifying": "Ulke belirleniyor...",

@@ -651,9 +651,7 @@
       "shellTitle": "World Monitor 설정",
       "shellSearchPlaceholder": "설정 검색...",
       "shellCancel": "취소",
-      "shellSaveClose": "저장 및 닫기",
-      "freePanelLimit": "무료 플랜: 최대 {{max}}개 패널. PRO로 업그레이드하면 무제한.",
-      "freeSourceLimit": "무료 플랜: 최대 {{max}}개 소스. PRO로 업그레이드하면 무제한."
+      "shellSaveClose": "저장 및 닫기"
     },
     "countryIntel": {
       "identifying": "국가 식별 중...",

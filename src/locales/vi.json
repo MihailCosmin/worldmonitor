@@ -651,9 +651,7 @@
       "shellTitle": "Cài đặt World Monitor",
       "shellSearchPlaceholder": "Tìm kiếm cài đặt...",
       "shellCancel": "Hủy",
-      "shellSaveClose": "Lưu & Đóng",
-      "freePanelLimit": "Gói miễn phí: tối đa {{max}} bảng. Nâng cấp lên PRO để không giới hạn.",
-      "freeSourceLimit": "Gói miễn phí: tối đa {{max}} nguồn. Nâng cấp lên PRO để không giới hạn."
+      "shellSaveClose": "Lưu & Đóng"
     },
     "countryIntel": {
       "identifying": "Đang xác định quốc gia...",

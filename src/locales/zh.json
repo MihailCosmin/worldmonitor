@@ -651,9 +651,7 @@
       "shellTitle": "World Monitor 设置",
       "shellSearchPlaceholder": "搜索设置...",
       "shellCancel": "取消",
-      "shellSaveClose": "保存并关闭",
-      "freePanelLimit": "免费计划：最多 {{max}} 个面板。升级至 PRO 获得无限面板。",
-      "freeSourceLimit": "免费计划：最多 {{max}} 个信息源。升级至 PRO 获得无限信息源。"
+      "shellSaveClose": "保存并关闭"
     },
     "countryIntel": {
       "identifying": "正在识别国家...",

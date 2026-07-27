@@ -129,8 +129,8 @@ async function getDefaultSummarizer(): Promise<NonNullable<BuildDailyMarketBrief
 }
 
 async function getPersistentCacheApi(): Promise<{
-  getPersistentCache: <T>(key: string) => Promise<{ data: T } | null>;
-  setPersistentCache: <T>(key: string, data: T) => Promise<void>;
+  getPersistentCache: <T>(key: string) => Promise<{ data: T; updatedAt: number } | null>;
+  setPersistentCache: <T>(key: string, data: T, updatedAt?: number) => Promise<void>;
 }> {
   const { getPersistentCache, setPersistentCache } = await import('./persistent-cache');
   return { getPersistentCache, setPersistentCache };

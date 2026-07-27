@@ -723,9 +723,7 @@
       "shellTitle": "Configuración de World Monitor",
       "shellSearchPlaceholder": "Buscar configuración...",
       "shellCancel": "Cancelar",
-      "shellSaveClose": "Guardar y cerrar",
-      "freePanelLimit": "Plan gratuito: máx {{max}} paneles. Actualiza a PRO para acceso ilimitado.",
-      "freeSourceLimit": "Plan gratuito: máx {{max}} fuentes. Actualiza a PRO para acceso ilimitado."
+      "shellSaveClose": "Guardar y cerrar"
     }
   },
   "components": {

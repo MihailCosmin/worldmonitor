@@ -651,9 +651,7 @@
       "shellTitle": "การตั้งค่า World Monitor",
       "shellSearchPlaceholder": "ค้นหาการตั้งค่า...",
       "shellCancel": "ยกเลิก",
-      "shellSaveClose": "บันทึกและปิด",
-      "freePanelLimit": "แผนฟรี: แผงสูงสุด {{max}} แผง อัปเกรดเป็น PRO เพื่อไม่จำกัด",
-      "freeSourceLimit": "แผนฟรี: แหล่งข้อมูลสูงสุด {{max}} แหล่ง อัปเกรดเป็น PRO เพื่อไม่จำกัด"
+      "shellSaveClose": "บันทึกและปิด"
     },
     "countryIntel": {
       "identifying": "กำลังระบุประเทศ...",

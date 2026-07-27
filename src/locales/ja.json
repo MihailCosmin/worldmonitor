@@ -651,9 +651,7 @@
       "shellTitle": "ワールドモニター設定",
       "shellSearchPlaceholder": "設定を検索...",
       "shellCancel": "キャンセル",
-      "shellSaveClose": "保存して閉じる",
-      "freePanelLimit": "無料プラン: 最大 {{max}} パネル。PRO にアップグレードして無制限にしましょう。",
-      "freeSourceLimit": "無料プラン: 最大 {{max}} ソース。PRO にアップグレードして無制限にしましょう。"
+      "shellSaveClose": "保存して閉じる"
     },
     "countryIntel": {
       "identifying": "国を特定中...",

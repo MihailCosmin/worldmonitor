@@ -655,9 +655,7 @@
       "shellTitle": "Параметры World Monitor",
       "shellSearchPlaceholder": "Поиск параметров…",
       "shellCancel": "Отмена",
-      "shellSaveClose": "Сохранить и закрыть",
-      "freePanelLimit": "Бесплатный план: макс. {{max}} панелей. Перейдите на PRO для неограниченного доступа.",
-      "freeSourceLimit": "Бесплатный план: макс. {{max}} источников. Перейдите на PRO для неограниченного доступа."
+      "shellSaveClose": "Сохранить и закрыть"
     },
     "countryIntel": {
       "identifying": "Определение страны...",

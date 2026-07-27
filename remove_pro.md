@@ -626,7 +626,7 @@ Intentional paid boundaries that are not part of this follow-up remain allowed: 
 - Acceptance:
   - A signed-in free user can open Deduct Situation, submit an analysis, receive a result, and receive correlation assessments without an upgrade CTA.
 
-### [ ] D4. Remove free-plan panel and source caps
+### [x] D4. Remove free-plan panel and source caps
 
 - Files:
   - `src/config/panels.ts`

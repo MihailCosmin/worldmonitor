@@ -655,9 +655,7 @@
       "shellTitle": "Nastavení World Monitor",
       "shellSearchPlaceholder": "Hledání v nastavení...",
       "shellCancel": "Zrušit",
-      "shellSaveClose": "Uložit a zavřít",
-      "freePanelLimit": "Bezplatný plán: max {{max}} panelů. Upgradujte na PRO pro neomezené množství.",
-      "freeSourceLimit": "Bezplatný plán: max {{max}} zdrojů. Upgradujte na PRO pro neomezené množství."
+      "shellSaveClose": "Uložit a zavřít"
     },
     "countryIntel": {
       "identifying": "Identifikuji zemi...",

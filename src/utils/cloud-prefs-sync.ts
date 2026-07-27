@@ -15,7 +15,6 @@
 import { CLOUD_SYNC_KEYS, type CloudSyncKey } from './sync-keys';
 import { isDesktopRuntime } from '@/services/runtime';
 import { getClerkToken } from '@/services/clerk';
-import { FEEDS } from '@/config/feeds';
 import {
   applyMigrationChain,
   buildMigrations,
@@ -61,24 +60,10 @@ const CURRENT_PREFS_SCHEMA_VERSION = 2;
 // Migrations live in cloud-prefs-migrations.ts to keep them testable —
 // cloud-prefs-sync.ts has a transitive `import.meta.env.DEV` dep via
 // `@/services/clerk` → `proxy.ts` that breaks outside a Vite build. The
-// migrations module is dependency-light and importable from node:test.
-//
-// Schema 2 (2026-05-01): one-shot recovery for the v1 free-tier source-cap
-// bug. The pre-PR-3521 alphabetical-slice cap auto-disabled every source
-// past position 80 alphabetically, leaving entire late-alphabet categories
-// (Layoffs, Semiconductors, IPO, Funding, Product Hunt, …) with 100% of
-// their feeds in `disabledFeeds`. PR #3521 added a per-origin localStorage
-// migration to recover this, but cloud-prefs sync re-poisoned origins
-// every load by overwriting localStorage with the still-bad cloud blob —
-// the recovery had to live at the cloud-data layer to be permanent.
-//
-// This migration runs ONCE per cloud row (gated by schemaVersion < 2),
-// detects categories where 100% of sources are in `disabledFeeds`, and
-// re-enables them. After the migration completes, schemaVersion bumps to
-// 2 and subsequent sync pulls skip recovery — so a user who explicitly
-// disables every source in a category POST-migration keeps that
-// preference forever.
-const MIGRATIONS = buildMigrations(FEEDS);
+// migrations module is dependency-light and importable from node:test. Schema
+// version 2 remains current for compatibility with already-synced rows, but
+// there are no active migrations after the removal of free-plan source caps.
+const MIGRATIONS = buildMigrations();
 
 type SyncState = 'synced' | 'pending' | 'syncing' | 'conflict' | 'offline' | 'signed-out' | 'error';
 

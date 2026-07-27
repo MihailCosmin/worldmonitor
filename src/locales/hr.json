@@ -707,8 +707,6 @@
       "shellSearchPlaceholder": "Pretraži postavke...",
       "shellCancel": "Odustani",
       "shellSaveClose": "Spremi i zatvori",
-      "freePanelLimit": "Besplatni plan: maks {{max}} panela. Nadogradi na PRO za neograničeno.",
-      "freeSourceLimit": "Besplatni plan: maks {{max}} izvora. Nadogradi na PRO za neograničeno.",
       "validating": "Provjera API ključeva...",
       "saved": "Postavke spremljene",
       "failed": "Spremanje neuspješno: {{error}}",

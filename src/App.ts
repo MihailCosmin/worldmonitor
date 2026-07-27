@@ -11,10 +11,6 @@ import {
   ALL_PANELS,
   VARIANT_DEFAULTS,
   getEffectivePanelConfig,
-  enforceFreePanelLimit,
-  restoreFreeMapPanelAccess,
-  FREE_MAX_PANELS,
-  FREE_MAX_SOURCES,
 } from '@/config';
 import { sanitizeLayersForVariant } from '@/config/map-layer-definitions';
 import type { MapVariant } from '@/config/map-layer-definitions';
@@ -30,7 +26,6 @@ import {
   stopFlightHistoryCleanup,
 } from '@/services';
 import { enableVesselRuntime, stopLoadedVesselHistoryCleanup } from '@/services/military-vessels-lazy';
-import { isProUser } from '@/services/widget-store';
 import { mlWorker } from '@/services/ml-worker';
 import { getAiFlowSettings, subscribeAiFlowChange, isHeadlineMemoryEnabled } from '@/services/ai-flow-settings';
 import { startLearning } from '@/services/country-instability';
@@ -82,8 +77,7 @@ import { preloadCountryGeometry, isCountryGeometryLoaded, getCountryNameByCode }
 import { initI18n, t, I18N_RESOURCES_LOADED_EVENT, type I18nResourcesLoadedDetail } from '@/services/i18n';
 import { initDeferredDashboardFonts } from '@/bootstrap/secondary-startup';
 
-import { computeDefaultDisabledSources, getLocaleBoostedSources, getTotalFeedCount, FEEDS, INTEL_SOURCES } from '@/config/feeds';
-import { selectSourcesUnderCap, findFullyDisabledCategories } from '@/services/source-cap';
+import { computeDefaultDisabledSources, getLocaleBoostedSources, getTotalFeedCount } from '@/config/feeds';
 import {
   cancelBootstrapSlowTier,
   fetchBootstrapData,
@@ -140,7 +134,6 @@ import { captureReferralFromUrl } from '@/services/referral-capture';
 import type { CorrelationPanel } from '@/components/CorrelationPanel';
 
 const CYBER_LAYER_ENABLED = import.meta.env.VITE_ENABLE_CYBER_LAYER === 'true';
-const FREE_MAP_PANEL_ACCESS_KEY = 'worldmonitor-free-map-panel-access-v1';
 type SignalModalInstance = import('@/components/SignalModal').SignalModal;
 
 export type { CountryBriefSignals } from '@/app/app-context';
@@ -1389,7 +1382,6 @@ export class App {
     // cleanup. Idempotent.
     installFollowedCountriesAuthListener();
     window.addEventListener(WM_FOLLOWED_COUNTRIES_CAP_DROP, this.handleFollowedCountriesCapDrop);
-    this.enforceFreeTierLimits();
 
     let _prevUserId: string | null = null;
     // Track the last-seen PRO entitlement so we can re-fire the loaders that
@@ -1400,7 +1392,6 @@ export class App {
     // entitlement changes — Pro can come from either signal (Clerk
     // user.role === 'pro' OR Convex tier >= 1 via Dodo).
     const firePremiumLoaders = (): void => {
-      this.enforceFreeTierLimits();
       const hadPremium = _prevHadPremium;
       const nowPremium = hasPremiumAccess();
       if (nowPremium && !hadPremium) {
@@ -1713,124 +1704,6 @@ export class App {
       panel_count: Object.keys(this.state.panels).length,
     });
     this.eventHandlers.setupPanelViewTracking();
-  }
-
-  /**
-   * Enforce free-tier panel and source limits.
-   * Reads current values from storage, trims if necessary, and saves back.
-   * Safe to call multiple times (idempotent) — e.g. on auth state changes.
-   */
-  private enforceFreeTierLimits(): void {
-    // ── One-time v1 cap-bug recovery ──────────────────────────────────
-    // Pre-2026-05-01 the source cap was enforced by Array.sort().slice(),
-    // which silently auto-disabled every source past alphabetical position
-    // FREE_MAX_SOURCES — catastrophically erasing late-alphabet categories
-    // (Layoffs, Semiconductors, IPO, Funding, Product Hunt, …). Storage
-    // didn't track auto-disabled vs user-disabled, so a heuristic that runs
-    // on every load would silently undo a user who legitimately disabled
-    // every source in a category — and re-undo it on every refresh forever.
-    //
-    // Migration approach: run findFullyDisabledCategories ONCE, gated by
-    // disabledFeedsSchema version. After the migration completes, bump
-    // schema → 1 so subsequent loads skip recovery entirely. Users who
-    // explicitly toggle off every source in a category post-migration
-    // keep that preference permanently. Trade-off: a user who BEFORE the
-    // migration legitimately disabled every source in a category will lose
-    // those preferences once. That's acceptable since v1 victims have been
-    // suffering silent breakage and the explicit-full-category-disable
-    // pattern is rare (users typically hide the whole panel instead).
-    const schemaVersion = loadFromStorage<number>(STORAGE_KEYS.disabledFeedsSchema, 0);
-    if (schemaVersion < 1) {
-      const disabled = new Set(loadFromStorage<string[]>(STORAGE_KEYS.disabledFeeds, []));
-      const recoverable = findFullyDisabledCategories(FEEDS, disabled);
-      if (recoverable.length > 0) {
-        for (const name of recoverable) disabled.delete(name);
-        saveToStorage(STORAGE_KEYS.disabledFeeds, Array.from(disabled));
-        console.log(`[App] One-time v1-cap-bug migration: re-enabled ${recoverable.length} source(s) from fully-disabled categories. This will not run again.`);
-      }
-      saveToStorage(STORAGE_KEYS.disabledFeedsSchema, 1);
-    }
-
-    if (isProUser()) return;
-
-    // --- Panel limit ---
-    // Delegate to the shared enforceFreePanelLimit helper so this boot path and
-    // the dashboard-tab add/switch/load paths stay in lockstep (same cw-* and
-    // count rules). isPro is false here — the isProUser() early-return above
-    // already short-circuited pro users.
-    let panelSettings = loadFromStorage<Record<string, PanelConfig>>(STORAGE_KEYS.panels, {});
-    let panelsChanged = false;
-    try {
-      if (!localStorage.getItem(FREE_MAP_PANEL_ACCESS_KEY)) {
-        const restoredPanels = restoreFreeMapPanelAccess(panelSettings);
-        if (panelSettings.map?.enabled !== restoredPanels.map?.enabled) {
-          panelSettings = restoredPanels;
-          panelsChanged = true;
-        }
-        localStorage.setItem(FREE_MAP_PANEL_ACCESS_KEY, 'done');
-      }
-    } catch {
-      // Persistence-only migration; blocked storage already uses defaults.
-    }
-    const clampedPanels = enforceFreePanelLimit(panelSettings, false);
-    for (const key of Object.keys(panelSettings)) {
-      if (panelSettings[key]?.enabled !== clampedPanels[key]?.enabled) {
-        panelsChanged = true;
-        break;
-      }
-    }
-    if (panelsChanged) {
-      saveToStorage(STORAGE_KEYS.panels, clampedPanels);
-      this.state.panelSettings = clampedPanels;
-      console.log(`[App] Free tier: enforced ${FREE_MAX_PANELS}-panel limit (disabled over-cap / cw-* panels)`);
-    }
-
-    // --- Source limit ---
-    // Free-tier 80-source cap. Pre-2026-05-01 this used `Array.sort().slice()`
-    // which silently auto-disabled every source past alphabetical position 80,
-    // catastrophically erasing late-alphabet categories (Layoffs, Semiconductors,
-    // IPO & SPAC, Funding & VC, Product Hunt, …) and producing the "All sources
-    // disabled" red panel state on the homepage with no user explanation.
-    // Replaced with round-robin per-category distribution from `selectSourcesUnderCap`.
-    // (v1-bug recovery for stuck localStorage state is handled once at the top
-    // of this function via the schema-version migration.)
-    const disabledSources = new Set(loadFromStorage<string[]>(STORAGE_KEYS.disabledFeeds, []));
-    const totalEligible = (() => {
-      const s = new Set<string>();
-      Object.values(FEEDS).forEach((feeds) => feeds?.forEach((f) => s.add(f.name)));
-      INTEL_SOURCES.forEach((f) => s.add(f.name));
-      let count = 0;
-      for (const name of s) if (!disabledSources.has(name)) count++;
-      return count;
-    })();
-    if (totalEligible > FREE_MAX_SOURCES) {
-      // Protect locale-boosted sources from the cap. Without this, locale-
-      // tagged feeds that sit late in their category bucket (e.g. Hungarian
-      // entries in the Europe bucket, declared AFTER the existing en/de/it/
-      // nl/sv defaults) get round-robin'd out — the locale boost re-enables
-      // them, then the cap immediately auto-disables them again. Free-tier
-      // users on the boosted locale lose their locale's defaults entirely.
-      // userLang derivation mirrors the locale-boost migration (earlier in
-      // the App constructor) and the i18n.ts:99 `wmExplicit` detector:
-      // explicit Settings choice wins, navigator is the fallback. Direct
-      // localStorage read because i18next isn't initialized yet at the
-      // constructor stage where enforceFreeTierLimits also runs.
-      let explicitLocale = '';
-      try { explicitLocale = localStorage.getItem('wm-locale-explicit') || ''; } catch { /* private mode */ }
-      const userLang = ((explicitLocale || navigator.language || 'en').split('-')[0] ?? 'en').toLowerCase();
-      const protectedNames = userLang === 'en' ? new Set<string>() : getLocaleBoostedSources(userLang);
-      const { keep, autoDisabled } = selectSourcesUnderCap(FEEDS, INTEL_SOURCES, disabledSources, FREE_MAX_SOURCES, protectedNames);
-      // Defense in depth: feeds.ts has 35+ source names that appear in
-      // multiple category buckets. The helper guarantees keep ∩ autoDisabled
-      // = ∅, but a regression there would silently re-disable a kept source
-      // here. The keep.has() guard makes the cross-set invariant explicit
-      // at the caller too — if it ever fires it's a helper-bug signal.
-      for (const name of autoDisabled) {
-        if (!keep.has(name)) disabledSources.add(name);
-      }
-      saveToStorage(STORAGE_KEYS.disabledFeeds, Array.from(disabledSources));
-      console.log(`[App] Free tier: round-robin disabled ${autoDisabled.size} source(s) to enforce ${FREE_MAX_SOURCES}-source limit (per-category fairness)`);
-    }
   }
 
   public destroy(): void {

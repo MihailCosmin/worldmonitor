@@ -653,9 +653,7 @@
       "shellTitle": "Setări World Monitor",
       "shellSearchPlaceholder": "Căutați setări...",
       "shellCancel": "Anulare",
-      "shellSaveClose": "Salvare & Închidere",
-      "freePanelLimit": "Plan gratuit: max {{max}} panouri. Upgrade la PRO pentru nelimitat.",
-      "freeSourceLimit": "Plan gratuit: max {{max}} surse. Upgrade la PRO pentru nelimitat."
+      "shellSaveClose": "Salvare & Închidere"
     },
     "countryIntel": {
       "identifying": "Se identifică țara...",

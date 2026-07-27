@@ -10,9 +10,6 @@ import {
   VARIANT_DEFAULTS,
   getEffectivePanelConfig,
   isPanelEntitled,
-  FREE_MAX_PANELS,
-  countFreePanelCapUsage,
-  isFreePanelCapCounted,
 } from '@/config';
 import { isProUser } from '@/services/widget-store';
 import { SITE_VARIANT } from '@/config/variant';
@@ -90,10 +87,6 @@ export function initSettingsWindow(): void {
             // not collapse to getEffectivePanelConfig's disabled synthetic fallback.
             const resolvedConfig = ALL_PANELS[panelKey] ? getEffectivePanelConfig(panelKey, SITE_VARIANT) : config;
             if (!config.enabled && !isPanelEntitled(panelKey, resolvedConfig, isProUser())) return;
-            if (!config.enabled && !isProUser() && isFreePanelCapCounted(panelKey)) {
-              const enabledCount = countFreePanelCapUsage(panelSettings);
-              if (enabledCount >= FREE_MAX_PANELS) return;
-            }
             config.enabled = !config.enabled;
             saveToStorage(STORAGE_KEYS.panels, panelSettings);
             render();

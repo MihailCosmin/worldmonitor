@@ -7,13 +7,7 @@ import type {
 import type { UnifiedSettingsConfig } from '@/components/UnifiedSettings';
 import type { AirlineIntelPanel } from '@/components/AirlineIntelPanel';
 import type { CustomWidgetPanel } from '@/components/CustomWidgetPanel';
-import { deleteWidget, getWidget, saveWidget, isProUser } from '@/services/widget-store';
-import {
-  FREE_MAX_PANELS,
-  FREE_MAX_SOURCES,
-  countFreePanelCapUsage,
-  isFreePanelCapCounted,
-} from '@/config/panels';
+import { deleteWidget, getWidget, saveWidget } from '@/services/widget-store';
 import type { McpDataPanel } from '@/components/McpDataPanel';
 import { deleteMcpPanel, getMcpPanel, saveMcpPanel } from '@/services/mcp-store';
 import type { PanelConfig, MapLayers, MilitaryFlight } from '@/types';
@@ -274,7 +268,7 @@ export class EventHandlerManager implements AppModule {
 
   /**
    * Enables a registered panel (undo-restore, CMD+K "Add", etc.). Returns
-   * false when the panel is unknown or the free-tier cap blocks it. Already
+   * false when the panel is unknown. Already
    * enabled → true (no-op). Single source of truth for runtime panel-enable
    * so search-add and undo-restore stay in lockstep.
    */
@@ -282,16 +276,6 @@ export class EventHandlerManager implements AppModule {
     const config = this.ctx.panelSettings[panelId];
     if (!config) return false;
     if (config.enabled) return true;
-    if (!isProUser() && isFreePanelCapCounted(panelId)) {
-      const enabledCount = countFreePanelCapUsage(this.ctx.panelSettings);
-      if (enabledCount >= FREE_MAX_PANELS) {
-        // Tell the user why nothing happened instead of failing silently.
-        // (Undo-restore can't reach this branch — closing a panel frees a
-        // slot first — so only the CMD+K "Add" path surfaces the toast.)
-        showToast(t('modals.settingsWindow.freePanelLimit', { max: String(FREE_MAX_PANELS) }));
-        return false;
-      }
-    }
     config.enabled = true;
     trackPanelToggled(panelId, true);
     saveToStorage(STORAGE_KEYS.panels, this.ctx.panelSettings);
@@ -1768,14 +1752,6 @@ export class EventHandlerManager implements AppModule {
       getDisabledSources: () => this.ctx.disabledSources,
       toggleSource: (name: string) => {
         const reenabling = this.ctx.disabledSources.has(name);
-        if (reenabling && !isProUser()) {
-          const allSources = this.getAllSourceNames();
-          const currentlyEnabled = allSources.filter(n => !this.ctx.disabledSources.has(n)).length;
-          if (currentlyEnabled + 1 > FREE_MAX_SOURCES) {
-            this.showToast(t('modals.settingsWindow.freeSourceLimit', { max: String(FREE_MAX_SOURCES) }));
-            return;
-          }
-        }
         if (reenabling) {
           this.ctx.disabledSources.delete(name);
         } else {
@@ -1784,15 +1760,6 @@ export class EventHandlerManager implements AppModule {
         saveToStorage(STORAGE_KEYS.disabledFeeds, Array.from(this.ctx.disabledSources));
       },
       setSourcesEnabled: (names: string[], enabled: boolean) => {
-        if (enabled && !isProUser()) {
-          const allSources = this.getAllSourceNames();
-          const currentlyEnabled = allSources.filter(n => !this.ctx.disabledSources.has(n)).length;
-          const wouldEnable = names.filter(n => this.ctx.disabledSources.has(n) && allSources.includes(n)).length;
-          if (currentlyEnabled + wouldEnable > FREE_MAX_SOURCES) {
-            this.showToast(t('modals.settingsWindow.freeSourceLimit', { max: String(FREE_MAX_SOURCES) }));
-            return;
-          }
-        }
         for (const name of names) {
           if (enabled) this.ctx.disabledSources.delete(name);
           else this.ctx.disabledSources.add(name);

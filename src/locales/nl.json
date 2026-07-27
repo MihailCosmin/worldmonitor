@@ -461,9 +461,7 @@
       "shellTitle": "World Monitor-instellingen",
       "shellSearchPlaceholder": "Instellingen doorzoeken...",
       "shellCancel": "Annuleren",
-      "shellSaveClose": "Opslaan & Sluiten",
-      "freePanelLimit": "Gratis plan: max {{max}} panelen. Upgrade naar PRO voor onbeperkt.",
-      "freeSourceLimit": "Gratis plan: max {{max}} bronnen. Upgrade naar PRO voor onbeperkt."
+      "shellSaveClose": "Opslaan & Sluiten"
     }
   },
   "components": {

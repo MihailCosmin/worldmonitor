@@ -5,13 +5,8 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import {
-  FREE_MAX_PANELS,
   VARIANT_DEFAULTS,
-  countFreePanelCapUsage,
-  enforceFreePanelLimit,
   getEffectivePanelConfig,
-  isFreePanelCapCounted,
-  restoreFreeMapPanelAccess,
 } from '../src/config/panels.ts';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -72,58 +67,33 @@ describe('variant panel config resolution', () => {
     assert.equal(financeMap.priority, 1);
   });
 
-  it('keeps the global map available when free-tier defaults are clamped', () => {
+  it('keeps every full-variant default panel available in a fresh layout', () => {
     const fullDefaults = Object.fromEntries(
-      VARIANT_DEFAULTS.full.map((key) => [key, { ...getEffectivePanelConfig(key, 'full') }]),
+      VARIANT_DEFAULTS.full.map((key) => [
+        key,
+        { ...getEffectivePanelConfig(key, 'full'), enabled: true },
+      ]),
     );
 
-    const clamped = enforceFreePanelLimit(fullDefaults, false);
-
-    assert.equal(clamped.map?.enabled, true);
-    assert.equal(countFreePanelCapUsage(clamped), FREE_MAX_PANELS);
+    assert.ok(
+      VARIANT_DEFAULTS.full.length > 40,
+      'fixture should exercise a wide default set',
+    );
+    assert.equal(
+      Object.values(fullDefaults).filter((panel) => panel.enabled).length,
+      VARIANT_DEFAULTS.full.length,
+      'every panel in the fresh full-variant default set should remain enabled',
+    );
   });
 
-  it('restores stale over-cap free layouts where the cap disabled the map', () => {
-    const fullDefaults = Object.fromEntries(
-      VARIANT_DEFAULTS.full.map((key) => [key, { ...getEffectivePanelConfig(key, 'full') }]),
-    );
-    const stale = enforceFreePanelLimit(fullDefaults, false);
-    stale.map = { ...stale.map!, enabled: false };
-    const disabledCapPanel = Object.entries(fullDefaults).find(([key, panel]) =>
-      isFreePanelCapCounted(key) && panel.enabled && !stale[key]?.enabled
-    );
-    assert.ok(disabledCapPanel, 'fixture should include a disabled over-cap panel');
-    stale[disabledCapPanel[0]] = { ...disabledCapPanel[1], enabled: true };
+  it('does not keep stale free-plan panel-cap helpers in panel config', () => {
+    const text = src('src/config/panels.ts');
 
-    const restored = restoreFreeMapPanelAccess(stale);
-
-    assert.equal(stale.map.enabled, false);
-    assert.equal(restored.map?.enabled, true);
-    assert.equal(countFreePanelCapUsage(restored), FREE_MAX_PANELS + 1);
-  });
-
-  it('does not force-enable a manually hidden map when the free layout is exactly at cap', () => {
-    const fullDefaults = Object.fromEntries(
-      VARIANT_DEFAULTS.full.map((key) => [key, { ...getEffectivePanelConfig(key, 'full') }]),
-    );
-    const atCap = enforceFreePanelLimit(fullDefaults, false);
-    atCap.map = { ...atCap.map!, enabled: false };
-
-    const restored = restoreFreeMapPanelAccess(atCap);
-
-    assert.equal(countFreePanelCapUsage(atCap), FREE_MAX_PANELS);
-    assert.equal(restored.map?.enabled, false);
-  });
-
-  it('does not force-enable a manually hidden map when the free layout is under cap', () => {
-    const underCap = {
-      map: { ...getEffectivePanelConfig('map', 'full'), enabled: false },
-      'live-news': getEffectivePanelConfig('live-news', 'full'),
-    };
-
-    const restored = restoreFreeMapPanelAccess(underCap);
-
-    assert.equal(restored.map?.enabled, false);
+    assert.doesNotMatch(text, /\bFREE_MAX_PANELS\b/);
+    assert.doesNotMatch(text, /\bcountFreePanelCapUsage\b/);
+    assert.doesNotMatch(text, /\bisFreePanelCapCounted\b/);
+    assert.doesNotMatch(text, /\brestoreFreeMapPanelAccess\b/);
+    assert.doesNotMatch(text, /\benforceFreePanelLimit\b/);
   });
 
   it('does not use the canonical registry directly for entitlement or pro badge metadata', () => {

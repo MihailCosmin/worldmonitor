@@ -688,8 +688,6 @@
       "shellSearchPlaceholder": "Beállítások keresése...",
       "shellCancel": "Mégse",
       "shellSaveClose": "Mentés és bezárás",
-      "freePanelLimit": "Ingyenes csomag: max {{max}} panel. Frissítsen PRO-ra a korlátlan verzióért.",
-      "freeSourceLimit": "Ingyenes csomag: max {{max}} forrás. Frissítsen PRO-ra a korlátlan verzióért.",
       "validating": "API-kulcsok ellenőrzése...",
       "saved": "Beállítások mentve",
       "failed": "Mentés sikertelen: {{error}}",

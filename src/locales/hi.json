@@ -688,8 +688,6 @@
       "shellSearchPlaceholder": "सेटिंग्स खोजें...",
       "shellCancel": "रद्द करें",
       "shellSaveClose": "सहेजें और बंद करें",
-      "freePanelLimit": "फ्री प्लान: अधिकतम {{max}} पैनल। असीमित के लिए PRO में अपग्रेड करें।",
-      "freeSourceLimit": "फ्री प्लान: अधिकतम {{max}} स्रोत। असीमित के लिए PRO में अपग्रेड करें।",
       "validating": "API की की जाँच हो रही है...",
       "saved": "सेटिंग्स सहेजी गईं",
       "failed": "सहेजने में विफल: {{error}}",

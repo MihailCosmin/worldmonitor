@@ -651,9 +651,7 @@
       "shellTitle": "Ρυθμίσεις World Monitor",
       "shellSearchPlaceholder": "Αναζήτηση ρυθμίσεων...",
       "shellCancel": "Ακύρωση",
-      "shellSaveClose": "Αποθήκευση & Κλείσιμο",
-      "freePanelLimit": "Δωρεάν πλάνο: έως {{max}} πάνελ. Αναβαθμίστε σε PRO για απεριόριστα.",
-      "freeSourceLimit": "Δωρεάν πλάνο: έως {{max}} πηγές. Αναβαθμίστε σε PRO για απεριόριστες."
+      "shellSaveClose": "Αποθήκευση & Κλείσιμο"
     },
     "countryIntel": {
       "identifying": "Αναγνώριση χώρας...",

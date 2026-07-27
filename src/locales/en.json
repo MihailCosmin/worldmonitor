@@ -688,8 +688,6 @@
       "shellSearchPlaceholder": "Search settings...",
       "shellCancel": "Cancel",
       "shellSaveClose": "Save & Close",
-      "freePanelLimit": "Free plan: max {{max}} panels.",
-      "freeSourceLimit": "Free plan: max {{max}} sources.",
       "validating": "Validating API keys...",
       "saved": "Settings saved",
       "failed": "Save failed: {{error}}",

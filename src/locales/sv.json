@@ -461,9 +461,7 @@
       "shellTitle": "World Monitor-inställningar",
       "shellSearchPlaceholder": "Sök inställningar...",
       "shellCancel": "Avbryt",
-      "shellSaveClose": "Spara & Stäng",
-      "freePanelLimit": "Gratisplan: max {{max}} paneler. Uppgradera till PRO för obegränsat.",
-      "freeSourceLimit": "Gratisplan: max {{max}} källor. Uppgradera till PRO för obegränsat."
+      "shellSaveClose": "Spara & Stäng"
     }
   },
   "components": {
