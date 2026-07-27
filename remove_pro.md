@@ -413,7 +413,7 @@ These surfaces already have real feature logic, data structures, or fetch/render
 - Acceptance:
   - The Evidence action exports the bundle for free users without showing a premium toast.
 
-### [ ] F16. Ungate chokepoint popup widgets
+### [x] F16. Ungate chokepoint popup widgets
 
 - Files:
   - `src/components/MapPopup.ts`

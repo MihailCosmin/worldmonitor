@@ -23,9 +23,6 @@ import { getHotspotEscalation, getEscalationChange24h } from '@/services/hotspot
 import { getCableHealthRecord } from '@/services/cable-health';
 import { nameToCountryCode } from '@/services/country-geometry';
 import { sparkline } from '@/utils/sparkline';
-import { getAuthState } from '@/services/auth-state';
-import { hasPremiumAccess } from '@/services/panel-gating';
-import { trackGateHit } from '@/services/analytics';
 import { renderPopupSourceLinks } from './map-popup-source-links';
 import { setTrustedHtml, trustedHtml } from '@/utils/dom-utils';
 
@@ -44,26 +41,6 @@ const CHOKEPOINT_HS2_SECTORS: Record<string, Array<{ label: string; share: numbe
   gibraltar:       [{ label: 'Containers', share: 30, color: '#3b82f6' }, { label: 'Energy', share: 25, color: '#f97316' }, { label: 'Bulk', share: 20, color: '#eab308' }, { label: 'Other', share: 25, color: '#64748b' }],
   bosphorus:       [{ label: 'Energy', share: 58, color: '#f97316' }, { label: 'Bulk', share: 18, color: '#eab308' }, { label: 'Containers', share: 14, color: '#3b82f6' }, { label: 'Other', share: 10, color: '#64748b' }],
 };
-
-function renderSectorRing(sectors: Array<{ label: string; share: number; color: string }>): string {
-  const R = 28;
-  const cx = 36;
-  const cy = 36;
-  const circumference = 2 * Math.PI * R;
-  let cumulativeOffset = 0;
-  const segments = sectors.map(s => {
-    const dash = (s.share / 100) * circumference;
-    const segment = `<circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="${s.color}" stroke-width="10" stroke-dasharray="${dash.toFixed(2)} ${(circumference - dash).toFixed(2)}" stroke-dashoffset="${(-cumulativeOffset).toFixed(2)}" />`;
-    cumulativeOffset += dash;
-    return segment;
-  });
-  const legend = sectors.map(s => `<span class="sector-legend-item"><span class="sector-dot" style="background:${s.color}"></span>${escapeHtml(s.label)}&nbsp;${s.share}%</span>`).join(' \u00B7 ');
-  return `
-    <div class="sector-ring-wrap">
-      <svg width="72" height="72" viewBox="0 0 72 72" style="transform:rotate(-90deg)">${segments.join('')}</svg>
-      <div class="sector-legend">${legend}</div>
-    </div>`;
-}
 
 function formatPositionSource(source: string): string {
   if (source === 'POSITION_SOURCE_WINGBITS') {
@@ -281,9 +258,8 @@ export class MapPopup {
       );
       const chartEl = this.popup.querySelector<HTMLElement>('[data-transit-chart]');
       const cpId = cp?.id ?? '';
-      const isPro = hasPremiumAccess(getAuthState());
 
-      if (chartEl && cpId && isPro) {
+      if (chartEl && cpId) {
         const cached = MapPopup.historyCache.get(cpId);
         if (cached && cached.length) {
           this.transitChart = new TransitChart();
@@ -320,21 +296,12 @@ export class MapPopup {
           });
         }
       }
-      // Track PRO gate impression for transit chart — we always render the gate
-      // for non-PRO users on chokepoints (history is a PRO feature); this
-      // doesn't depend on whether history has resolved.
-      if (cpId && !isPro) {
-        trackGateHit('chokepoint-transit-chart');
-      }
 
-      // Mount HS2 sector ring chart for PRO users
       const sectors = CHOKEPOINT_HS2_SECTORS[waterway.chokepointId];
       if (sectors?.length) {
         const ringEl = this.popup.querySelector<HTMLElement>(`[data-hs2-ring="${waterway.chokepointId}"]`);
         if (ringEl) {
           new HS2RingChart().mount(ringEl, sectors);
-        } else if (!hasPremiumAccess(getAuthState())) {
-          trackGateHit('chokepoint-sector-ring');
         }
       }
     }
@@ -1406,50 +1373,16 @@ export class MapPopup {
     // available — a zero-state fill (partial portwatch) means the per-id
     // history key is also empty, so there's nothing to fetch.
     const hasChart = !!cp && cp.transitSummary?.dataAvailable !== false;
-    const isPro = hasPremiumAccess(getAuthState());
     const sectors = CHOKEPOINT_HS2_SECTORS[waterway.chokepointId];
-
-    // Sector mix: only show the compact SVG ring for free users (PRO users get the full HS2RingChart below)
-    const sectorSection = (sectors && !isPro)
-      ? `<div class="popup-section-title" style="margin-top:10px;font-size:10px;text-transform:uppercase;opacity:.6;letter-spacing:.06em">Trade Sector Mix</div>
-         ${renderSectorRing(sectors)}`
+    const chartSection = hasChart
+      ? `<div data-transit-chart="${escapeHtml(waterway.name)}" data-transit-chart-id="${escapeHtml(cp?.id ?? '')}" style="margin-top:10px;min-height:200px;display:flex;align-items:center;justify-content:center;color:var(--text-dim,#888);font-size:12px">${t('components.supplyChain.loadingHistory') || 'Loading transit history\u2026'}</div>`
       : '';
 
-    // Transit chart is PRO-gated (real-time PortWatch data)
-    let chartSection = '';
-    if (hasChart) {
-      if (isPro) {
-        chartSection = `<div data-transit-chart="${escapeHtml(waterway.name)}" data-transit-chart-id="${escapeHtml(cp?.id ?? '')}" style="margin-top:10px;min-height:200px;display:flex;align-items:center;justify-content:center;color:var(--text-dim,#888);font-size:12px">${t('components.supplyChain.loadingHistory') || 'Loading transit history\u2026'}</div>`;
-      } else {
-        chartSection = `
-          <div class="sector-pro-gate" data-gate="chokepoint-transit-chart" style="position:relative;overflow:hidden;border-radius:6px;margin-top:10px;min-height:120px;background:var(--surface-elevated, #111)">
-            <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px">
-              <span style="font-size:16px">🔒</span>
-              <span style="font-size:10px;font-weight:600;opacity:.8">PRO</span>
-              <span style="font-size:9px;opacity:.5">Transit History</span>
-            </div>
-          </div>`;
-      }
-    }
-
-    // Sector exposure ring is PRO-gated (canvas donut with legend)
-    let ringSection = '';
-    if (sectors) {
-      if (isPro) {
-        ringSection = `
+    const ringSection = sectors
+      ? `
           <div class="popup-section-title" style="margin-top:10px;font-size:10px;text-transform:uppercase;opacity:.6;letter-spacing:.06em">Sector Exposure</div>
-          <div data-hs2-ring="${escapeHtml(waterway.chokepointId)}" class="popup-hs2-ring-container"></div>`;
-      } else {
-        ringSection = `
-          <div class="sector-pro-gate" data-gate="chokepoint-sector-ring" style="position:relative;overflow:hidden;border-radius:6px;margin-top:10px;min-height:80px;background:var(--surface-elevated, #111)">
-            <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px">
-              <span style="font-size:16px">🔒</span>
-              <span style="font-size:10px;font-weight:600;opacity:.8">PRO</span>
-              <span style="font-size:9px;opacity:.5">Sector Breakdown</span>
-            </div>
-          </div>`;
-      }
-    }
+          <div data-hs2-ring="${escapeHtml(waterway.chokepointId)}" class="popup-hs2-ring-container"></div>`
+      : '';
 
     return `
       <div class="popup-header waterway">
@@ -1465,7 +1398,6 @@ export class MapPopup {
             <span class="stat-value">${waterway.lat.toFixed(2)}°, ${waterway.lon.toFixed(2)}°</span>
           </div>
         </div>
-        ${sectorSection}
         ${ringSection}
         ${chartSection}
       </div>
