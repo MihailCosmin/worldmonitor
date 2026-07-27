@@ -96,18 +96,13 @@ export interface EntitlementCheckOptions {
  * Adding a new gated endpoint = adding one line to this map.
  * Endpoints NOT in this map are unrestricted.
  *
- * Stock-analysis endpoints sit at tier 1 (Pro) — the productCatalog markets
- * "AI stock analysis & backtesting" as a Pro feature, and these paths are
- * also in PREMIUM_RPC_PATHS where the legacy bearer gate accepts tier >= 1.
- * Tier-2 here would have made the new gate stricter than the legacy one and
- * 403'd real Pro subscribers calling via Clerk session (no tester key).
+ * Backtesting and the remaining intelligence/supply-chain surfaces stay tier 1.
+ * Endpoints not listed here are unrestricted.
  */
 const ENDPOINT_ENTITLEMENTS: Record<string, number> = {
   '/api/forecast/v1/trigger-simulation': 1,
   '/api/intelligence/v1/classify-event': 1,
   '/api/intelligence/v1/get-country-intel-brief': 1,
-  '/api/market/v1/analyze-stock': 1,
-  '/api/market/v1/get-stock-analysis-history': 1,
   '/api/market/v1/backtest-stock': 1,
   '/api/market/v1/list-stored-stock-backtests': 1,
   '/api/economic/v1/list-global-tenders': 1,

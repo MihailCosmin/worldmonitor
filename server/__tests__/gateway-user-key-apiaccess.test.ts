@@ -119,7 +119,7 @@ import { createDomainGateway } from "../gateway";
 
 const REGULAR_PATH = "/api/news/v1/list-feed-digest";
 const PUBLIC_NO_AUTH_PATH = "/api/conflict/v1/list-acled-events"; // in PUBLIC_NO_AUTH_RPC_PATHS
-const PREMIUM_PATH = "/api/market/v1/analyze-stock"; // in PREMIUM_RPC_PATHS
+const PREMIUM_PATH = "/api/intelligence/v1/classify-event"; // in PREMIUM_RPC_PATHS
 
 function ok() {
   return new Response(JSON.stringify({ ok: true }), {

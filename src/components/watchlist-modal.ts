@@ -2,9 +2,8 @@
  * Shared market-watchlist editor modal.
  *
  * The watchlist drives the Markets panel (additive to the defaults) and the
- * PRO panels — Premium Stock Analysis, Backtesting, and the Daily Market Brief
- * — so the editor is reachable from every panel that consumes it rather than
- * living only on the Markets header.
+ * stock-analysis workflows that build on it, so the editor is reachable from
+ * every panel that consumes it rather than living only on the Markets header.
  */
 
 import {
@@ -50,8 +49,9 @@ export function openWatchlistModal(): void {
       <div style="color:var(--text-dim);font-size:12px;line-height:1.5;margin-bottom:12px">
         Search a ticker or company name and pick from the list — every entry is a
         real, tracked symbol. Your picks are <strong>added</strong> to the Markets
-        panel and lead the Premium Stock Analysis, Backtesting and Daily Market
-        Brief panels. PRO members get every ticker in the list reported (up to 50).
+        panel and lead the Stock Analysis, Backtesting and Daily Market Brief
+        panels. Up to 4 tickers are analyzed by default, with room for a larger
+        saved watchlist when other market tools need it.
       </div>
       <div id="wmWatchlistEditorMount"></div>
       <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">

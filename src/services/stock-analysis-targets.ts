@@ -1,5 +1,5 @@
 /**
- * Pure target-selection for the Premium Stock Analysis / Backtesting / Daily
+ * Pure target-selection for the Stock Analysis / Backtesting / Daily
  * Market Brief panels. No runtime imports — kept side-effect free so it can be
  * unit-tested without a DOM, localStorage, or RPC client.
  */

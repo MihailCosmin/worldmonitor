@@ -57,8 +57,6 @@ const ISSUE_4609_GATED_ROUTES = [
   { method: 'GET', path: '/api/supply-chain/v1/get-sector-dependency' },
   { method: 'GET', path: '/api/trade/v1/list-comtrade-flows' },
   { method: 'GET', path: '/api/trade/v1/get-tariff-trends' },
-  { method: 'GET', path: '/api/market/v1/analyze-stock' },
-  { method: 'GET', path: '/api/market/v1/get-stock-analysis-history' },
   { method: 'GET', path: '/api/market/v1/backtest-stock' },
   { method: 'GET', path: '/api/market/v1/list-stored-stock-backtests' },
 ] as const;
@@ -96,7 +94,7 @@ describe('premium gateway API key enforcement', () => {
     const handler = createDomainGateway([
       {
         method: 'GET',
-        path: '/api/market/v1/analyze-stock',
+        path: '/api/market/v1/backtest-stock',
         handler: async () => new Response(JSON.stringify({ ok: true }), { status: 200 }),
       },
       {
@@ -124,7 +122,7 @@ describe('premium gateway API key enforcement', () => {
     process.env.WORLDMONITOR_VALID_KEYS = 'real-key-123';
 
     // Trusted browser origin without credentials — 401 (no API key, no bearer token)
-    const browserNoKey = await handler(new Request('https://worldmonitor.app/api/market/v1/analyze-stock?symbol=AAPL', {
+    const browserNoKey = await handler(new Request('https://worldmonitor.app/api/market/v1/backtest-stock?symbol=AAPL', {
       headers: { Origin: 'https://worldmonitor.app' },
     }));
     assert.equal(browserNoKey.status, 401);
@@ -141,7 +139,7 @@ describe('premium gateway API key enforcement', () => {
     assert.equal(resilienceRankingNoKey.status, 401);
 
     // Trusted browser origin with valid API key — 200 (API-key holders bypass entitlement check)
-    const browserWithKey = await handler(new Request('https://worldmonitor.app/api/market/v1/analyze-stock?symbol=AAPL', {
+    const browserWithKey = await handler(new Request('https://worldmonitor.app/api/market/v1/backtest-stock?symbol=AAPL', {
       headers: {
         Origin: 'https://worldmonitor.app',
         'X-WorldMonitor-Key': 'real-key-123',
@@ -166,7 +164,7 @@ describe('premium gateway API key enforcement', () => {
     assert.equal(resilienceRankingWithKey.status, 200);
 
     // Unknown origin — blocked (403 from isDisallowedOrigin before key check)
-    const unknownNoKey = await handler(new Request('https://external.example.com/api/market/v1/analyze-stock?symbol=AAPL', {
+    const unknownNoKey = await handler(new Request('https://external.example.com/api/market/v1/backtest-stock?symbol=AAPL', {
       headers: { Origin: 'https://external.example.com' },
     }));
     assert.equal(unknownNoKey.status, 403);
@@ -329,7 +327,7 @@ describe('premium gateway API key enforcement', () => {
     const handler = createDomainGateway([
       {
         method: 'GET',
-        path: '/api/market/v1/analyze-stock',
+        path: '/api/market/v1/backtest-stock',
         handler: async () => new Response(JSON.stringify({ ok: true }), { status: 200 }),
       },
       {
@@ -339,7 +337,7 @@ describe('premium gateway API key enforcement', () => {
       },
     ]);
 
-    for (const path of ['/api/market/v1/analyze-stock?symbol=AAPL', '/api/resilience/v1/get-resilience-score?countryCode=US']) {
+    for (const path of ['/api/market/v1/backtest-stock?symbol=AAPL', '/api/resilience/v1/get-resilience-score?countryCode=US']) {
       const res = await handler(new Request(`https://worldmonitor.app${path}`, {
         headers: { Origin: 'https://worldmonitor.app', 'X-WorldMonitor-Key': SESSION_TOKEN },
       }));
@@ -379,7 +377,7 @@ describe('premium gateway API key enforcement', () => {
     const handler = createDomainGateway([
       {
         method: 'GET',
-        path: '/api/market/v1/analyze-stock',
+        path: '/api/market/v1/backtest-stock',
         handler: async (req) =>
           new Response(JSON.stringify({ userId: req.headers.get('x-user-id') }), { status: 200 }),
       },
@@ -431,7 +429,7 @@ describe('premium gateway API key enforcement', () => {
 
     try {
       const res = await handler(
-        new Request('https://worldmonitor.app/api/market/v1/analyze-stock?symbol=AAPL', {
+        new Request('https://worldmonitor.app/api/market/v1/backtest-stock?symbol=AAPL', {
           headers: {
             Origin: 'https://worldmonitor.app',
             'X-WorldMonitor-Key': OWNER_PRO_USER_KEY,
@@ -589,7 +587,7 @@ describe('premium gateway bearer token auth', () => {
     handler = createDomainGateway([
       {
         method: 'GET',
-        path: '/api/market/v1/analyze-stock',
+        path: '/api/market/v1/backtest-stock',
         handler: async () => new Response(JSON.stringify({ ok: true }), { status: 200 }),
       },
       {
@@ -630,7 +628,7 @@ describe('premium gateway bearer token auth', () => {
     // Clerk role='pro' remains a supported Pro signal for complimentary,
     // tester, and legacy grants that do not have a Convex entitlement row.
     const token = await signToken({ sub: 'user_pro', plan: 'pro' });
-    const res = await handler(new Request('https://worldmonitor.app/api/market/v1/analyze-stock?symbol=AAPL', {
+    const res = await handler(new Request('https://worldmonitor.app/api/market/v1/backtest-stock?symbol=AAPL', {
       headers: {
         Origin: 'https://worldmonitor.app',
         Authorization: `Bearer ${token}`,
@@ -682,7 +680,7 @@ describe('premium gateway bearer token auth', () => {
     }) as typeof fetch;
 
     try {
-      const res = await handler(new Request('https://worldmonitor.app/api/market/v1/analyze-stock?symbol=AAPL', {
+      const res = await handler(new Request('https://worldmonitor.app/api/market/v1/backtest-stock?symbol=AAPL', {
         headers: {
           Origin: 'https://worldmonitor.app',
           Authorization: `Bearer ${token}`,
@@ -704,7 +702,7 @@ describe('premium gateway bearer token auth', () => {
 
   it('free bearer token on premium endpoint → 403', async () => {
     const token = await signToken({ sub: 'user_free', plan: 'free' });
-    const res = await handler(new Request('https://worldmonitor.app/api/market/v1/analyze-stock?symbol=AAPL', {
+    const res = await handler(new Request('https://worldmonitor.app/api/market/v1/backtest-stock?symbol=AAPL', {
       headers: {
         Origin: 'https://worldmonitor.app',
         Authorization: `Bearer ${token}`,
@@ -715,7 +713,7 @@ describe('premium gateway bearer token auth', () => {
 
   it('rejects invalid/expired bearer token on premium endpoint → 401', async () => {
     const token = await signToken({ sub: 'user_bad', plan: 'pro' }, { key: wrongPrivateKey });
-    const res = await handler(new Request('https://worldmonitor.app/api/market/v1/analyze-stock?symbol=AAPL', {
+    const res = await handler(new Request('https://worldmonitor.app/api/market/v1/backtest-stock?symbol=AAPL', {
       headers: {
         Origin: 'https://worldmonitor.app',
         Authorization: `Bearer ${token}`,

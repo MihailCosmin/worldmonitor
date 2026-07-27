@@ -759,7 +759,7 @@ export class DataLoaderManager implements AppModule {
       if (shouldLoadAny(['markets', 'heatmap', 'commodities', 'crypto', 'energy-complex', 'crypto-heatmap', 'defi-tokens', 'ai-tokens', 'other-tokens'])) {
         tasks.push({ name: 'markets', task: () => runGuarded('markets', () => this.loadMarkets()) });
       }
-      if (hasPremiumAccess() && shouldLoad('stock-analysis')) {
+      if (shouldLoad('stock-analysis')) {
         tasks.push({ name: 'stockAnalysis', task: () => runGuarded('stockAnalysis', () => this.loadStockAnalysis()) });
       }
       if (hasPremiumAccess() && shouldLoad('stock-backtest')) {
@@ -1696,7 +1696,7 @@ export class DataLoaderManager implements AppModule {
         panel.renderAnalyses(cachedSnapshots, cachedHistory, 'cached');
         return;
       }
-      panel.showError('Premium stock analysis is temporarily unavailable.');
+      panel.showError('Stock analysis is temporarily unavailable.');
     }
   }
 

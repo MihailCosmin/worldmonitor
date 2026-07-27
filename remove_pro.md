@@ -144,7 +144,7 @@ These are pure upsell or navigation surfaces. They should lose `Pro` / `Premium`
 
 These surfaces already have real feature logic, data structures, or fetch/render code. The job here is to ship the feature publicly and remove the lock copy.
 
-### [ ] F1. Ungate stock analysis
+### [x] F1. Ungate stock analysis
 
 - Files:
   - `src/components/StockAnalysisPanel.ts`

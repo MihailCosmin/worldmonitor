@@ -461,7 +461,7 @@ describe('gateway telemetry payload — bearer identity propagation', () => {
   });
 
   it("records tier=2 for an entitlement-gated success (the path the round-1 P2 fix targets)", async () => {
-    // /api/market/v1/analyze-stock requires tier 2 in ENDPOINT_ENTITLEMENTS.
+    // /api/market/v1/backtest-stock stays entitlement-gated.
     // Pre-fix: usage.tier stayed null → emitted as 0. Post-fix: gateway re-reads
     // entitlements after checkEntitlement allows the request, so tier=2 lands on
     // the wire. We exercise this by stubbing the Convex entitlements fallback —
@@ -489,7 +489,7 @@ describe('gateway telemetry payload — bearer identity propagation', () => {
     const handler = createDomainGateway([
       {
         method: 'GET',
-        path: '/api/market/v1/analyze-stock',
+        path: '/api/market/v1/backtest-stock',
         handler: async () => new Response('{"ok":true}', { status: 200 }),
       },
     ]);
@@ -499,7 +499,7 @@ describe('gateway telemetry payload — bearer identity propagation', () => {
     const token = await signToken({ sub: 'user_api', plan: 'api' });
     const recorder = makeRecordingCtx();
     const res = await handler(
-      new Request('https://worldmonitor.app/api/market/v1/analyze-stock?symbol=AAPL', {
+      new Request('https://worldmonitor.app/api/market/v1/backtest-stock?symbol=AAPL', {
         headers: {
           Origin: 'https://worldmonitor.app',
           Authorization: `Bearer ${token}`,
@@ -520,7 +520,7 @@ describe('gateway telemetry payload — bearer identity propagation', () => {
     assert.equal(ev.customer_id, 'user_api');
     assert.equal(ev.auth_kind, 'clerk_jwt');
     assert.equal(ev.domain, 'market');
-    assert.equal(ev.route, '/api/market/v1/analyze-stock');
+    assert.equal(ev.route, '/api/market/v1/backtest-stock');
   });
 
   it('records plan_key for user API-key requests rejected by entitlement gate', async () => {
@@ -550,14 +550,14 @@ describe('gateway telemetry payload — bearer identity propagation', () => {
     const handler = createDomainGateway([
       {
         method: 'GET',
-        path: '/api/market/v1/analyze-stock',
+        path: '/api/market/v1/backtest-stock',
         handler: async () => new Response('{"ok":true}', { status: 200 }),
       },
     ]);
 
     const recorder = makeRecordingCtx();
     const res = await handler(
-      new Request('https://worldmonitor.app/api/market/v1/analyze-stock?symbol=AAPL', {
+      new Request('https://worldmonitor.app/api/market/v1/backtest-stock?symbol=AAPL', {
         headers: {
           Origin: 'https://worldmonitor.app',
           'X-Api-Key': TELEMETRY_FREE_USER_KEY,
