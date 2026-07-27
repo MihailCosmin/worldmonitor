@@ -134,7 +134,7 @@ describe('classifyPremiumDenial — 403 entitlement denials', () => {
 
   /**
    * Every entitlement 403 our own handlers emit carries a JSON `error` string
-   * (api/latest-brief.ts:199-207, api/chat-analyst.ts:126, and every branch of
+   * (api/latest-brief.ts:199-207, api/widget-agent.ts:179, and every branch of
    * entitlement-check.ts). So a 403 with no parseable code did NOT come from
    * our entitlement logic — it is an intermediary (WAF, CDN, proxy). Calling
    * that "Pro required" is the exact conflation this change exists to remove.
@@ -153,7 +153,7 @@ describe('classifyPremiumDenial — 403 entitlement denials', () => {
    * Every string a 403 actually carries today. Drift here silently turns an
    * upsell into a retry loop (or back again), so they are pinned explicitly:
    *   api/latest-brief.ts:201                  → 'pro_required'
-   *   api/chat-analyst.ts:126                  → 'Pro subscription required'
+   *   api/widget-agent.ts:179                  → 'Pro subscription required'
    *   server/_shared/entitlement-check.ts:556  → 'Upgrade required'
    *   server/_shared/entitlement-check.ts:446  → 'Subscription lapsed'
    *   api/internal/mcp-grant-*.ts              → 'INSUFFICIENT_TIER'
@@ -417,16 +417,11 @@ describe('premium panels route their denials through the classifier', () => {
     );
   });
 
-  it("ChatAnalystPanel no longer hardcodes the upsell as its only 403 copy", () => {
+  it('ChatAnalystPanel keeps denial copy neutral after the unlock', () => {
     const source = readSource('src/components/ChatAnalystPanel.ts');
-    const upsells = [...source.matchAll(/'Pro subscription required\.'/g)];
-    assert.equal(upsells.length, 1, 'exactly one upsell string, in the verdict switch');
-    const preceding = source.slice(Math.max(0, upsells[0].index - 200), upsells[0].index);
-    assert.match(
-      preceding,
-      /case 'upgrade_required':/,
-      'the upsell string must sit under the upgrade_required case',
-    );
+    assert.doesNotMatch(source, /'Pro subscription required\.'/);
+    assert.match(source, /case 'sign_in_required':\s*\n\s*return 'Sign in to use the analyst\.'/);
+    assert.match(source, /case 'upgrade_required':\s*\n\s*return 'Analyst access unavailable — sign in and try again\.'/);
   });
 });
 
@@ -448,7 +443,7 @@ describe('premium panels route their denials through the classifier', () => {
  */
 const DENIAL_SOURCES = [
   'api/latest-brief.ts',
-  'api/chat-analyst.ts',
+  'api/widget-agent.ts',
   'server/_shared/entitlement-check.ts',
 ];
 
@@ -463,6 +458,8 @@ const KNOWN_NON_ENTITLEMENT_CODES = new Set([
   'Unable to verify API access',   // entitlement-check.ts — 503 verification path
   'UNAUTHENTICATED',               // api/latest-brief.ts — 401
   'Authentication required',       // entitlement-check.ts — 403-shaped 401
+  'Invalid or expired session',    // api/widget-agent.ts — stale/missing auth
+  'Forbidden',                     // api/widget-agent.ts — invalid widget/pro key
 ]);
 
 /**
@@ -518,8 +515,8 @@ describe('classifier vocabulary matches what the servers actually emit', () => {
   }
 
   it('pro_required and Pro subscription required are the live blast radius', () => {
-    // The two panels wired today only call /api/latest-brief and
-    // /api/chat-analyst; the gateway strings are forward-looking coverage.
+    // The live handlers still emit both spellings, and the gateway strings are
+    // forward-looking coverage.
     assert.equal(
       classifyPremiumDenial({ status: 403, errorCode: 'pro_required', belief: PRO }),
       'entitlement_desync',
@@ -657,7 +654,7 @@ describe('classifyDenialResponse', () => {
     assert.equal(await classifyDenialResponse(res, FREE), 'upgrade_required');
   });
 
-  it("api/chat-analyst's 403 body classifies the same way", async () => {
+  it("the legacy 'Pro subscription required' body still classifies the same way", async () => {
     assert.equal(
       await classifyDenialResponse(denial({ error: 'Pro subscription required' }, 403), PRO),
       'entitlement_desync',

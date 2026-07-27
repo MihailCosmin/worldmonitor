@@ -58,12 +58,9 @@ type DashboardControlStatus = 'applied' | 'denied' | 'invalid' | 'skipped';
 /**
  * Turn a failed /api/chat-analyst response into user-facing copy.
  *
- * A 403 has several causes and only one of them is "you need to buy Pro":
- * the route 403s on a missing plan (api/chat-analyst.ts:126), and the shared
- * gateway also 403s an unidentified caller and a failed entitlement lookup.
- * Telling a customer who paid minutes ago to buy a subscription — which is
- * what the old blanket `status === 403` branch did during the #5600 poison
- * window — is worse than saying nothing (#5608).
+ * This route now accepts signed-in free users, so denials should stay neutral:
+ * missing auth is a sign-in problem, not an upsell, and transient 403s still
+ * need retry-oriented copy instead of merchandising.
  *
  * Consumes the response body, so it is only called on the !ok path where the
  * stream is never read.
@@ -74,9 +71,9 @@ async function describeDenial(res: Response): Promise<string> {
     case 'sign_in_required':
       return 'Sign in to use the analyst.';
     case 'upgrade_required':
-      return 'Pro subscription required.';
+      return 'Analyst access unavailable — sign in and try again.';
     case 'entitlement_desync':
-      return 'Verifying your Pro access — try again in a moment.';
+      return 'Verifying your analyst access — try again in a moment.';
     case 'access_denied':
       return 'Analyst temporarily unavailable — try again in a moment.';
     default:
@@ -148,7 +145,6 @@ export class ChatAnalystPanel extends Panel {
     super({
       id: 'chat-analyst',
       title: 'WM Analyst',
-      premium: 'locked',
       defaultRowSpan: 2,
       infoTooltip: t('components.chatAnalyst.infoTooltip'),
     });
@@ -523,6 +519,7 @@ export class ChatAnalystPanel extends Panel {
 
     try {
       const res = await premiumFetch(API_URL, {
+        forcePremium: true,
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

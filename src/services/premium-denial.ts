@@ -67,7 +67,7 @@ function normalizeCode(code: string): string {
  * as opposed to a 403 raised before entitlement was ever consulted.
  *
  *   api/latest-brief.ts:201                 → pro_required
- *   api/chat-analyst.ts:126                 → Pro subscription required
+ *   api/widget-agent.ts:179                 → Pro subscription required
  *   server/_shared/entitlement-check.ts:556 → Upgrade required
  *   api/internal/mcp-grant-*.ts             → INSUFFICIENT_TIER
  *
@@ -110,6 +110,7 @@ const AUTHENTICATION_CODES = new Set([
   'authentication required',
   'unauthenticated',
   'sign in required',
+  'invalid or expired session',
 ]);
 
 /**

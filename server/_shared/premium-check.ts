@@ -17,6 +17,37 @@ export type PremiumCallerIdentity =
   | { isPremium: true; userId: null; kind: 'enterprise'; quotaExempt: true }
   | { isPremium: false; userId: null; kind: null; quotaExempt: false };
 
+export type AuthenticatedCallerIdentity =
+  | {
+      authenticated: true;
+      isPremium: true;
+      userId: string;
+      kind: 'internal-mcp';
+      quotaExempt: true;
+    }
+  | {
+      authenticated: true;
+      isPremium: true;
+      userId: string;
+      kind: 'user-api-key';
+      quotaExempt: false;
+    }
+  | {
+      authenticated: true;
+      isPremium: boolean;
+      userId: string;
+      kind: 'bearer';
+      quotaExempt: false;
+    }
+  | {
+      authenticated: true;
+      isPremium: true;
+      userId: null;
+      kind: 'enterprise';
+      quotaExempt: true;
+    }
+  | { authenticated: false; isPremium: false; userId: null; kind: null; quotaExempt: false };
+
 /**
  * Resolves premium status and the user-bound identity for spend controls.
  */
@@ -120,6 +151,38 @@ export async function resolvePremiumCallerIdentity(request: Request): Promise<Pr
     }
   }
   return { isPremium: false, userId: null, kind: null, quotaExempt: false };
+}
+
+/**
+ * Resolves any authenticated caller identity we can safely meter spend
+ * against. Free signed-in bearer sessions are accepted here so direct-LLM
+ * surfaces can be opened to free accounts while still enforcing per-user
+ * quotas. API-key and internal trusted callers preserve their existing
+ * premium-only semantics.
+ */
+export async function resolveAuthenticatedCallerIdentity(request: Request): Promise<AuthenticatedCallerIdentity> {
+  const premiumIdentity = await resolvePremiumCallerIdentity(request);
+  if (premiumIdentity.isPremium) {
+    return { authenticated: true, ...premiumIdentity };
+  }
+
+  const authHeader = request.headers.get('Authorization');
+  if (!authHeader?.startsWith('Bearer ')) {
+    return { authenticated: false, isPremium: false, userId: null, kind: null, quotaExempt: false };
+  }
+
+  const session = await validateBearerToken(authHeader.slice(7));
+  if (!session.valid || !session.userId) {
+    return { authenticated: false, isPremium: false, userId: null, kind: null, quotaExempt: false };
+  }
+
+  return {
+    authenticated: true,
+    isPremium: session.role === 'pro',
+    userId: session.userId,
+    kind: 'bearer',
+    quotaExempt: false,
+  };
 }
 
 /**

@@ -398,7 +398,7 @@ describe('rate-limit fail-closed call-site policy (#3531)', () => {
   // so a future caller reverting to bare `checkRateLimit(req, cors)` is caught
   // in CI rather than during a Redis incident.
   const FAIL_CLOSED_REQUIRED = [
-    'api/chat-analyst.ts', // streaming LLM analyst, Pro-only
+    'api/chat-analyst.ts', // streaming LLM analyst, authenticated + self-metered
   ];
 
   for (const path of FAIL_CLOSED_REQUIRED) {

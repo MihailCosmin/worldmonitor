@@ -103,11 +103,11 @@ describe('getProPanelKeys (mobile nav PRO chip)', () => {
   // assertions cover the web gating shape.
   it('includes enabled premium panels, excludes free and disabled ones', () => {
     const result = getProPanelKeys(settings({
-      'chat-analyst': true,     // premium: 'locked' on all surfaces
+      'market-implications': true, // premium: 'locked' on the web surface
       'daily-market-brief': false, // free panel
       intel: true,              // free panel
     }), 'full');
-    assert.deepEqual(result.sort(), ['chat-analyst']);
+    assert.deepEqual(result.sort(), ['market-implications']);
   });
 
   it('drops unknown keys (custom widgets / MCP panels)', () => {
@@ -120,7 +120,7 @@ describe('getProPanelKeys (mobile nav PRO chip)', () => {
       Object.fromEntries((VARIANT_DEFAULTS['full'] ?? []).map((k: string) => [k, true])),
     );
     const result = getProPanelKeys(enabledDefaults, 'full');
-    assert.ok(result.includes('chat-analyst'));
+    assert.ok(result.includes('market-implications'));
     assert.ok(result.length >= 5, `expected a meaningful premium suite, got ${result.join(', ')}`);
   });
 });

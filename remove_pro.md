@@ -200,7 +200,7 @@ These surfaces already have real feature logic, data structures, or fetch/render
 - Acceptance:
   - The panel renders a real brief instead of a lock screen.
 
-### [ ] F4. Ungate WM Analyst chat
+### [x] F4. Ungate WM Analyst chat
 
 - Files:
   - `src/components/ChatAnalystPanel.ts`

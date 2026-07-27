@@ -652,7 +652,7 @@ describe('issue #3724 — prompt injection via headline context', () => {
 // it.
 // ---------------------------------------------------------------------------
 
-describe('api/chat-analyst handler — edge wiring + pre-auth gates', () => {
+describe('api/chat-analyst handler — edge wiring + auth gates', () => {
   it('declares the edge runtime', async () => {
     const mod = await import('../api/chat-analyst.ts');
     assert.equal(typeof mod.default, 'function', 'handler must be a function');
@@ -679,6 +679,21 @@ describe('api/chat-analyst handler — edge wiring + pre-auth gates', () => {
     });
     const res = await handler(req);
     assert.equal(res.status, 405);
+  });
+
+  it('returns 401 for an anonymous POST before any streaming work starts', async () => {
+    const { default: handler } = await import('../api/chat-analyst.ts');
+    const req = new Request('https://api.worldmonitor.app/api/chat-analyst', {
+      method: 'POST',
+      headers: {
+        origin: 'https://worldmonitor.app',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ query: 'What matters today?' }),
+    });
+    const res = await handler(req);
+    assert.equal(res.status, 401);
+    assert.deepEqual(await res.json(), { error: 'Authentication required' });
   });
 
   it('has a top-level error boundary that fails to a CORS-correct 503 (not an opaque platform 500)', () => {

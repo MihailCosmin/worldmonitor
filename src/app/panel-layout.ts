@@ -114,7 +114,6 @@ const WEB_PREMIUM_PANELS = new Set([
   'daily-market-brief',
   'market-implications',
   'deduction',
-  'chat-analyst',
   'wsb-ticker-scanner',
   'latest-brief',
   'regional-intelligence',
@@ -1824,8 +1823,7 @@ export class PanelLayoutManager implements AppModule {
     });
 
     // Latest Brief — reads /api/latest-brief and opens the hosted
-    // magazine on click. Self-fetching (no data-loader integration);
-    // PRO gating handled by the base Panel class via premium: 'locked'.
+    // magazine on click. Self-fetching (no data-loader integration).
     this.lazyDefaultPanel('latest-brief', () => import('@/components/LatestBriefPanel'), 'LatestBriefPanel');
 
     this.lazyDefaultPanel('commodities', () => import('@/components/MarketPanel'), 'CommoditiesPanel');
@@ -2068,8 +2066,8 @@ export class PanelLayoutManager implements AppModule {
     this.lazyDefaultPanel('daily-market-brief', () => import('@/components/DailyMarketBriefPanel'), 'DailyMarketBriefPanel');
 
     this.lazyDefaultPanel('market-implications', () => import('@/components/MarketImplicationsPanel'), 'MarketImplicationsPanel');
-    // Gating for daily-market-brief, market-implications, and chat-analyst is handled
-    // reactively by updatePanelGating() via auth state subscription (all in WEB_PREMIUM_PANELS).
+    // Gating for market-implications is handled reactively by
+    // updatePanelGating() via auth state subscription.
 
     this.lazyImportedPanel('chat-analyst', () => import('@/components/ChatAnalystPanel'), 'ChatAnalystPanel', (ChatAnalystPanel) => {
       // agent-bus-applier (and its zod-backed shared/agent-bus-actions schemas, ~69KB)
