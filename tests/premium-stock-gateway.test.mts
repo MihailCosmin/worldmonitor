@@ -55,8 +55,6 @@ const ISSUE_4609_GATED_ROUTES = [
   { method: 'GET', path: '/api/supply-chain/v1/get-country-products' },
   { method: 'GET', path: '/api/supply-chain/v1/get-multi-sector-cost-shock' },
   { method: 'GET', path: '/api/supply-chain/v1/get-sector-dependency' },
-  { method: 'GET', path: '/api/trade/v1/list-comtrade-flows' },
-  { method: 'GET', path: '/api/trade/v1/get-tariff-trends' },
 ] as const;
 
 // Public routes now require a wms_ session token (issue #3541) — header-only

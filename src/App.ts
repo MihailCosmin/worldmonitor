@@ -573,12 +573,12 @@ export class App {
     if (shouldPrime('global-procurement')) {
       primeTask('global-tenders', () => this.dataLoader.loadGlobalTenders());
     }
+    if (shouldPrime('trade-policy')) {
+      primeTask('tradePolicy', () => this.dataLoader.loadTradePolicy());
+    }
     if (shouldPrime('energy-complex')) {
       primeTask('oil', () => this.dataLoader.loadOilAnalytics());
     }
-    // trade-policy moved into the _wmAccess block below — see fix for
-    // anonymous 401 bug where loadTradePolicy fired 6 PRO-gated RPCs
-    // unconditionally on every page load.
     if (shouldPrime('supply-chain')) {
       primeTask('supplyChain', () => this.dataLoader.loadSupplyChain());
     }
@@ -594,9 +594,6 @@ export class App {
 
     const _wmAccess = hasPremiumAccess();
     if (_wmAccess) {
-      if (shouldPrime('trade-policy')) {
-        primeTask('tradePolicy', () => this.dataLoader.loadTradePolicy());
-      }
       if (shouldPrime('stock-analysis')) {
         primeTask('stockAnalysis', () => this.dataLoader.loadStockAnalysis());
       }
@@ -1400,17 +1397,10 @@ export class App {
     let _prevUserId: string | null = null;
     // Track the last-seen PRO entitlement so we can re-fire PRO-gated loaders
     // ONCE on a false→true transition (user signs in / purchase lands mid-session).
-    // Without this, loaders gated behind hasPremiumAccess() at init time (e.g.
-    // loadTradePolicy) would sit empty until the next scheduled refresh — for
-    // trade-policy that's a 10-minute wait post-sign-in. See PR #3295 review.
     let _prevHadPremium = hasPremiumAccess();
     // Pro-loader fan-out runs on EITHER Clerk auth changes OR Convex
     // entitlement changes — Pro can come from either signal (Clerk
-    // user.role === 'pro' OR Convex tier >= 1 via Dodo). User-reported
-    // on commodity.worldmonitor.app: Trade Policy panel stuck at "Loading…"
-    // for a Pro Monthly subscriber because the original listener only
-    // watched subscribeAuthState (Clerk-only); Convex Free→Pro transitions
-    // never re-fired loadTradePolicy. Same root cause as PR #3409 layer-unlock.
+    // user.role === 'pro' OR Convex tier >= 1 via Dodo).
     const firePremiumLoaders = (): void => {
       this.enforceFreeTierLimits();
       const hadPremium = _prevHadPremium;
@@ -1420,8 +1410,8 @@ export class App {
         // skipped at boot. Each loader early-returns if the panel isn't
         // mounted and re-checks hasPremiumAccess() internally, so these
         // calls are safe and idempotent. Without this, panels would sit empty
-        // until the next scheduled refresh (10+ min for trade-policy; FOREVER
-        // on the full variant for stock-analysis / stock-backtest / daily-
+        // until the next scheduled refresh (FOREVER on the full variant for
+        // stock-analysis / stock-backtest / daily-
         // market-brief / market-implications because their schedulers are
         // gated to SITE_VARIANT === 'finance'). The audit-locking regression
         // test in tests/premium-loaders-fan-out-coverage.test.mts asserts
@@ -2258,11 +2248,8 @@ export class App {
     }
 
     // WTO trade policy data — annual data, poll every 10 min to avoid hammering upstream.
-    // PRO-gated: the isNearViewport check is a visibility gate, not an entitlement gate,
-    // so without hasPremiumAccess() here we'd still hit the 6 WTO RPCs every poll for
-    // free users once the panel scrolled into view.
     if (SITE_VARIANT === 'full' || SITE_VARIANT === 'finance' || SITE_VARIANT === 'commodity' || SITE_VARIANT === 'energy') {
-      this.refreshScheduler.scheduleRefresh('tradePolicy', () => this.dataLoader.loadTradePolicy(), REFRESH_INTERVALS.tradePolicy, () => hasPremiumAccess() && this.isPanelNearViewport('trade-policy'));
+      this.refreshScheduler.scheduleRefresh('tradePolicy', () => this.dataLoader.loadTradePolicy(), REFRESH_INTERVALS.tradePolicy, () => this.isPanelNearViewport('trade-policy'));
       this.refreshScheduler.scheduleRefresh('supplyChain', () => this.dataLoader.loadSupplyChain(), REFRESH_INTERVALS.supplyChain, () => this.isPanelNearViewport('supply-chain'));
       this.refreshScheduler.scheduleRefresh('chinaCorridors', () => this.dataLoader.loadChinaCorridors(), REFRESH_INTERVALS.chinaCorridors, () => this.isPanelNearViewport('china-corridors'));
       this.refreshScheduler.scheduleRefresh('chinaActivityNowcast', () => this.dataLoader.loadChinaActivityNowcast(), REFRESH_INTERVALS.chinaActivityNowcast, () => this.isPanelNearViewport('china-activity-nowcast'));

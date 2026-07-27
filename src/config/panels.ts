@@ -60,7 +60,7 @@ const FULL_PANELS: Record<string, PanelConfig> = {
   'chat-analyst': { name: 'WM Analyst', enabled: true, priority: 1 },
   economic: { name: 'Macro Stress', enabled: true, priority: 1 },
   'global-procurement': { name: 'Global Procurement', enabled: true, priority: 1 },
-  'trade-policy': { name: 'Trade Policy', enabled: true, priority: 1, premium: 'locked' as const },
+  'trade-policy': { name: 'Trade Policy', enabled: true, priority: 1 },
   'supply-chain': { name: 'Supply Chain', enabled: true, priority: 1, ...(_desktop && { premium: 'enhanced' as const }) },
   'china-corridors': { name: 'China Logistics Corridors', enabled: true, priority: 1 },
   'china-activity-nowcast': { name: 'China Activity Nowcast', enabled: true, priority: 1 },
@@ -467,7 +467,7 @@ const FINANCE_PANELS: Record<string, PanelConfig> = {
   centralbanks: { name: 'Central Bank Watch', enabled: true, priority: 1 },
   economic: { name: 'Macro Stress', enabled: true, priority: 1 },
   'global-procurement': { name: 'Global Procurement', enabled: true, priority: 1 },
-  'trade-policy': { name: 'Trade Policy', enabled: true, priority: 1, premium: 'locked' as const },
+  'trade-policy': { name: 'Trade Policy', enabled: true, priority: 1 },
   'sanctions-pressure': { name: 'Sanctions Pressure', enabled: true, priority: 1 },
   'supply-chain': { name: 'Supply Chain', enabled: true, priority: 1 },
   'china-corridors': { name: 'China Logistics Corridors', enabled: false, priority: 2 },
@@ -803,7 +803,7 @@ const COMMODITY_PANELS: Record<string, PanelConfig> = {
   'gold-intelligence': { name: 'Gold Intelligence', enabled: true, priority: 60 },
   heatmap: { name: 'Sector Heatmap', enabled: true, priority: 1 },
   'macro-signals': { name: 'Market Regime', enabled: true, priority: 1 },
-  'trade-policy': { name: 'Trade Policy', enabled: true, priority: 1, premium: 'locked' as const },
+  'trade-policy': { name: 'Trade Policy', enabled: true, priority: 1 },
   'sanctions-pressure': { name: 'Sanctions Pressure', enabled: true, priority: 1 },
   economic: { name: 'Macro Stress', enabled: true, priority: 1 },
   'gulf-economies': { name: 'Gulf & OPEC Economies', enabled: true, priority: 1 },
@@ -1236,7 +1236,7 @@ export function isPanelEntitled(key: string, config: PanelConfig, isPro = false)
   if (!config.premium) return true;
   // Dodo entitlements unlock all premium panels
   if (isEntitled()) return true;
-  const apiKeyPanels = ['market-implications', 'regional-intelligence', 'deduction', 'wsb-ticker-scanner', 'trade-policy'];
+  const apiKeyPanels = ['market-implications', 'regional-intelligence', 'deduction', 'wsb-ticker-scanner'];
   if (apiKeyPanels.includes(key)) {
     return getSecretState('WORLDMONITOR_API_KEY').present || isPro;
   }

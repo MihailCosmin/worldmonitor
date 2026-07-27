@@ -420,11 +420,12 @@ describe('OpenAPI security contract', () => {
 
   it('parses the bearer-auth and entitlement path sources from gateway-adjacent code', () => {
     assert.ok(BEARER_AUTH_PATHS.size > 0, 'expected at least one bearer-auth path');
-    assert.ok(ENDPOINT_ENTITLEMENTS.size >= 16, 'expected issue-scoped entitlement-gated paths');
+    assert.ok(ENDPOINT_ENTITLEMENTS.size >= 14, 'expected issue-scoped entitlement-gated paths');
     assert.ok(!ENDPOINT_ENTITLEMENTS.has('/api/market/v1/analyze-stock'), 'expected stock analysis market path to be ungated');
     assert.ok(!ENDPOINT_ENTITLEMENTS.has('/api/market/v1/backtest-stock'), 'expected stock backtest market path to be ungated');
     assert.equal(ENDPOINT_ENTITLEMENTS.get('/api/sanctions/v1/list-sanctions-pressure'), 1, 'expected sanctions pressure path');
-    assert.equal(ENDPOINT_ENTITLEMENTS.get('/api/trade/v1/list-comtrade-flows'), 1, 'expected Comtrade path');
+    assert.ok(!ENDPOINT_ENTITLEMENTS.has('/api/trade/v1/list-comtrade-flows'), 'expected Comtrade path to be ungated');
+    assert.ok(!ENDPOINT_ENTITLEMENTS.has('/api/trade/v1/get-tariff-trends'), 'expected tariff trends path to be ungated');
     assert.ok(PUBLIC_FORBIDDEN_GATES.has('/api/leads/v1/submit-contact'), 'expected Leads Turnstile 403 path');
     assert.ok(PUBLIC_FORBIDDEN_GATES.has('/api/leads/v1/register-interest'), 'expected Leads register-interest 403 gate');
     assert.ok(BEARER_AUTH_PATHS.has('/api/intelligence/v1/get-regional-brief'), 'expected legacy premium path');

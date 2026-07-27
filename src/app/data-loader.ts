@@ -3431,10 +3431,6 @@ export class DataLoaderManager implements AppModule {
   }
 
   async loadTradePolicy(): Promise<void> {
-    // Trade-policy is PRO-gated. Short-circuit for anonymous/free users so
-    // we don't fire 6 RPCs that all 401 on every page load — fixes the
-    // console-noise + Sentry-noise bug from the 2026-04-22 trace.
-    if (!hasPremiumAccess()) return;
     const tradePanel = this.ctx.panels['trade-policy'] as TradePolicyPanel | undefined;
     if (!tradePanel) return;
 

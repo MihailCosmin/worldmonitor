@@ -235,7 +235,7 @@ These surfaces already have real feature logic, data structures, or fetch/render
 - Acceptance:
   - A free user can search and paginate procurement opportunities.
 
-### [ ] F6. Ungate Trade Policy
+### [x] F6. Ungate Trade Policy
 
 - Files:
   - `src/config/panels.ts`
