@@ -2188,13 +2188,6 @@
     "wsbTickerScanner": {
       "infoTooltip": "<strong>WSB股票代码扫描器</strong>来自r/wallstreetbets、r/stocks和r/investing的实时股票代码提及。按提及频率和参与度排名。速度指标衡量股票代码在帖子中获得动量的速度。"
     },
-    "proBanner": {
-      "badge": "PRO",
-      "headline": "Pro已上线",
-      "tagline": "更多信号，更少噪音。更多AI简报。专属于您的地缘政治和股票研究员。",
-      "cta": "升级到Pro →",
-      "dismiss": "关闭"
-    },
     "billingState": {
       "onHoldDesc": "支付失败。请更新您的支付方式以恢复高级访问权限。",
       "onHoldBannerMessage": "支付失败。请更新您的支付方式以保持订阅有效。",
@@ -3252,20 +3245,6 @@
     "offlineCached": "离线——显示来自 {{freshness}} 的缓存数据。",
     "offlineUnavailable": "离线——实时数据目前不可用。",
     "cachedFallback": "实时数据不可用——显示来自 {{freshness}} 的缓存数据。"
-  },
-  "premium": {
-    "pro": "PRO",
-    "lockedDesc": "需要 World Monitor 许可证密钥",
-    "signInToUnlock": "登录以解锁高级功能",
-    "signIn": "登录以解锁",
-    "upgradeDesc": "升级到 Pro 以获得完整的高级分析访问权限",
-    "upgradeToPro": "升级到 Pro",
-    "features": {
-      "orefSirens1": "实时以色列导弹和火箭警报",
-      "orefSirens2": "警报区域地图及威胁分类",
-      "telegramIntel1": "精选 Telegram 开源情报频道",
-      "telegramIntel2": "近实时冲突与地缘政治更新"
-    }
   },
   "auth": {
     "signIn": "登录",

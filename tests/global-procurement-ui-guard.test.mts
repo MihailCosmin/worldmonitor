@@ -58,9 +58,10 @@ test('procurement is public and free clients can fetch and retain paginated resu
   assert.match(loader, /if \(shouldLoad\('global-procurement'\)\) \{\s*tasks\.push\(\{ name: 'global-tenders'/);
   assert.doesNotMatch(loader, /requestGeneration !== this\.globalTenderGeneration \|\| !hasPremiumAccess\(\)/);
   assert.match(app, /if \(shouldPrime\('global-procurement'\)\) \{\s*primeTask\('global-tenders'/);
-  assert.match(app, /condition: \(\) => this\.isPanelNearViewport\('global-procurement'\)/);
-  assert.match(app, /void this\.dataLoader\.loadGlobalTenders\(\)/);
-  assert.match(app, /void this\.dataLoader\.clearGlobalTenders\(\)/);
+  assert.match(
+    app,
+    /\{ name: 'global-tenders', fn: \(\) => this\.dataLoader\.loadGlobalTenders\(\), intervalMs: REFRESH_INTERVALS\.spending, condition: \(\) => this\.isPanelNearViewport\('global-procurement'\) \}/,
+  );
 
   assert.match(service, /persistCache: false/);
   assert.match(service, /cacheKey:/);

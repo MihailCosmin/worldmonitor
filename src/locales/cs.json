@@ -2206,13 +2206,6 @@
     "wsbTickerScanner": {
       "infoTooltip": "<strong>WSB Ticker Scanner</strong> Zmínky tickerů v reálném čase z r/wallstreetbets, r/stocks a r/investing. Seřazeno podle frekvence zmínek a engagement. Rychlost měří, jak rychle ticker získává hybnost v celých příspěvcích."
     },
-    "proBanner": {
-      "badge": "PRO",
-      "headline": "Pro je spuštěn",
-      "tagline": "Více signálu, méně šumu. Více AI briefingů. Geopolitický a akciový analytik jen pro vás.",
-      "cta": "Upgradovat na Pro →",
-      "dismiss": "Zavřít"
-    },
     "billingState": {
       "onHoldDesc": "Platba se nezdařila. Aktualizujte svou platební metodu pro obnovení prémiového přístupu.",
       "onHoldBannerMessage": "Platba se nezdařila. Aktualizujte svou platební metodu, aby vaše předplatné zůstalo aktivní.",
@@ -3288,20 +3281,6 @@
     "offlineCached": "Offline — zobrazuji data z mezipaměti z {{freshness}}.",
     "offlineUnavailable": "Offline — živá data nejsou aktuálně dostupná.",
     "cachedFallback": "Živá data nejsou dostupná — zobrazuji data z mezipaměti z {{freshness}}."
-  },
-  "premium": {
-    "pro": "PRO",
-    "lockedDesc": "Vyžaduje licenční klíč World Monitor",
-    "signInToUnlock": "Přihlaste se a odemkněte prémiové funkce",
-    "signIn": "Přihlášení pro odemčení",
-    "upgradeDesc": "Upgradujte na Pro a získejte plný přístup k prémiové analýze",
-    "upgradeToPro": "Upgradovat na Pro",
-    "features": {
-      "orefSirens1": "Výstrahy na rakety a střely v Izraeli v reálném čase",
-      "orefSirens2": "Mapování zón sirén s klasifikací hrozby",
-      "telegramIntel1": "Kurátorované kanály Telegram OSINT",
-      "telegramIntel2": "Aktualizace konfliktů a geopolitických témat téměř v reálném čase"
-    }
   },
   "auth": {
     "signIn": "Přihlášení",

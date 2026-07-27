@@ -2434,13 +2434,6 @@
     "yieldCurve": {
       "infoTooltip": "<strong>Yield Curve &amp; Rates</strong> Krivulja prinosa američki trezora (2Y, 5Y, 10Y, 30Y) i ključni spread stopa uključujući 10Y-2Y inverziski indikator. Također prikazuje stope eurozone (EURIBOR, ESTR). Obrnuta krivulja povijesno prethodi recesijama. Izvor: FRED."
     },
-    "proBanner": {
-      "badge": "PRO",
-      "headline": "Pro je lansiran",
-      "tagline": "Više signala, manje šuma. Više AI sažetaka. Geopolitički i equity istraživač samo za vas.",
-      "cta": "Nadogradi na Pro →",
-      "dismiss": "Odbaci"
-    },
     "billingState": {
       "onHoldDesc": "Plaćanje nije uspjelo. Ažurirajte način plaćanja kako biste vratili premium pristup.",
       "onHoldBannerMessage": "Plaćanje nije uspjelo. Ažurirajte način plaćanja kako bi vaša pretplata ostala aktivna.",
@@ -3463,23 +3456,6 @@
     "fontFamilyDesc": "Monospace za tehnički izgled, zadanu vrijednost sustava za lakše čitanje.",
     "fontMono": "Monospace",
     "fontSystem": "Zadana vrijednost sustava"
-  },
-  "premium": {
-    "pro": "PRO",
-    "lockedDesc": "Zahtijeva ključ World Monitor licence",
-    "joinWaitlist": "Pridruži se Listi Čekanja",
-    "signInToUnlock": "Prijavite se da biste otključali premium značajke",
-    "signIn": "Prijavite se za Otključavanje",
-    "verifyEmailToUnlock": "Potvrdite vašu e-poštu za pristup premium značajkama",
-    "resendVerification": "Ponovno Pošalji Provjeru",
-    "upgradeDesc": "Nadogradite se na Pro za potpun pristup premium analitici",
-    "upgradeToPro": "Nadogradite se na Pro",
-    "features": {
-      "orefSirens1": "Upozorenja o raketama i raketama u izraelskom realnom vremenu",
-      "orefSirens2": "Mapiranje zone sirena s klasifikacijom prijetnje",
-      "telegramIntel1": "Kurirani Telegram OSINT kanali",
-      "telegramIntel2": "Ažuriranja o konfliktima i geopolitici u blizini realnog vremena"
-    }
   },
   "contextMenu": {
     "openCountryBrief": "Otvori Sažetak Zemlje",

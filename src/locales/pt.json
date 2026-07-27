@@ -1935,13 +1935,6 @@
     "wsbTickerScanner": {
       "infoTooltip": "<strong>WSB Ticker Scanner</strong> Menções de ticker em tempo real de r/wallstreetbets, r/stocks e r/investing. Classificadas por frequência de menção e engajamento. Velocidade mede como um ticker ganha momentum rapidamente em postagens."
     },
-    "proBanner": {
-      "badge": "PRO",
-      "headline": "Pro foi lançado",
-      "tagline": "Mais Sinal, Menos Ruído. Mais Briefings de IA. Um Pesquisador de Geopolítica e Ações exclusivamente para você.",
-      "cta": "Fazer upgrade para Pro →",
-      "dismiss": "Descartar"
-    },
     "billingState": {
       "onHoldDesc": "O pagamento falhou. Atualize seu método de pagamento para restaurar o acesso premium.",
       "onHoldBannerMessage": "O pagamento falhou. Atualize seu método de pagamento para manter sua assinatura ativa.",
@@ -3270,20 +3263,6 @@
     "offlineCached": "Offline — exibindo dados em cache de {{freshness}}.",
     "offlineUnavailable": "Offline — dados ao vivo não estão disponíveis no momento.",
     "cachedFallback": "Dados ao vivo indisponíveis — exibindo dados em cache de {{freshness}}."
-  },
-  "premium": {
-    "pro": "PRO",
-    "lockedDesc": "Requer uma chave de licença World Monitor",
-    "signInToUnlock": "Entre para desbloquear recursos premium",
-    "signIn": "Entre para Desbloquear",
-    "upgradeDesc": "Atualize para Pro para ter acesso completo à análise premium",
-    "upgradeToPro": "Atualizar para Pro",
-    "features": {
-      "orefSirens1": "Alertas em tempo real de mísseis e foguetes de Israel",
-      "orefSirens2": "Mapeamento de zona de sirene com classificação de ameaça",
-      "telegramIntel1": "Canais curados do Telegram OSINT",
-      "telegramIntel2": "Atualizações de conflito e geopolítica em tempo quase real"
-    }
   },
   "auth": {
     "signIn": "Entrar",

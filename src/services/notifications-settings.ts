@@ -98,7 +98,7 @@ export function renderNotificationsSettings(host: NotificationsSettingsHost): No
     html += `<div class="ai-flow-toggle-desc">Notification delivery setup is currently unavailable in this dashboard view.</div>`;
     html += `<div class="ai-flow-toggle-desc">Supported channels include Telegram, Slack, Discord, Email, Webhook, and Browser Push when notification settings are enabled.</div>`;
     if (!host.isSignedIn) {
-      html += `<button type="button" class="panel-locked-cta" id="usNotifSignInBtn">Sign In</button>`;
+      html += `<button type="button" class="settings-access-cta" id="usNotifSignInBtn">Sign In</button>`;
     }
     html += `</div>`;
   }

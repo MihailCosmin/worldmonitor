@@ -152,10 +152,9 @@ export type BillingGateOverride =
   | 'lapsed';
 
 /**
- * Which billing-specific gate reason (if any) should replace the generic
- * FREE_TIER "Upgrade to Pro" CTA for a locked premium panel. Values mirror
- * the PanelGateReason string enum in panel-gating.ts (kept as plain strings
- * here so this module stays a leaf).
+ * Which billing-specific paid-state recovery reason, if any, should replace a
+ * generic "no active entitlement" verdict. Kept as plain strings so this
+ * module stays a leaf.
  */
 export function getBillingGateOverride(state: BillingUxState): BillingGateOverride | null {
   switch (state) {

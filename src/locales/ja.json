@@ -2188,13 +2188,6 @@
     "wsbTickerScanner": {
       "infoTooltip": "<strong>WSBティッカースキャナー</strong>r/wallstreetbets、r/stocks、r/investingからのリアルタイムティッカーメンション。メンション頻度とエンゲージメント順でランク付け。速度は、複数の投稿全体でティッカーがどれだけ急速に勢いを獲得しているかを示します。"
     },
-    "proBanner": {
-      "badge": "PRO",
-      "headline": "Proがローンチしました",
-      "tagline": "より多くのシグナル、ノイズ削減。AI ブリーフィングの強化。あなたのための地政学&エクイティリサーチャー。",
-      "cta": "Pro にアップグレード →",
-      "dismiss": "閉じる"
-    },
     "billingState": {
       "onHoldDesc": "お支払いに失敗しました。プレミアムアクセスを復元するには、お支払い方法を更新してください。",
       "onHoldBannerMessage": "お支払いに失敗しました。サブスクリプションを有効に保つには、お支払い方法を更新してください。",
@@ -3252,20 +3245,6 @@
     "offlineCached": "オフライン — {{freshness}}からのキャッシュデータを表示しています。",
     "offlineUnavailable": "オフライン — ライブデータは現在利用できません。",
     "cachedFallback": "ライブデータが利用できません — {{freshness}}からのキャッシュデータを表示しています。"
-  },
-  "premium": {
-    "pro": "PRO",
-    "lockedDesc": "World Monitor ライセンスキーが必要です",
-    "signInToUnlock": "サインインしてプレミアム機能を利用",
-    "signIn": "サインインして利用",
-    "upgradeDesc": "Proにアップグレードしてプレミアム分析に完全アクセス",
-    "upgradeToPro": "Proにアップグレード",
-    "features": {
-      "orefSirens1": "イスラエルのミサイル・ロケット警報をリアルタイム配信",
-      "orefSirens2": "サイレンゾーンマッピングと脅威分類",
-      "telegramIntel1": "厳選されたTelegram OSINT チャネル",
-      "telegramIntel2": "ほぼリアルタイムの紛争・地政学的最新情報"
-    }
   },
   "auth": {
     "signIn": "サインイン",

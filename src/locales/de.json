@@ -2188,13 +2188,6 @@
     "wsbTickerScanner": {
       "infoTooltip": "<strong>WSB Ticker Scanner</strong> Echtzeit-Ticker-Erwähnungen von r/wallstreetbets, r/stocks und r/investing. Nach Erwähnungshäufigkeit und Engagement rangiert. Die Geschwindigkeit misst, wie schnell ein Ticker an Dynamik über Posts hinweg gewinnt."
     },
-    "proBanner": {
-      "badge": "PRO",
-      "headline": "Pro ist gestartet",
-      "tagline": "Mehr Signal, weniger Rauschen. Mehr KI-Briefings. Ein Geopolitik- und Aktienanalyst nur für Sie.",
-      "cta": "Upgrade auf Pro →",
-      "dismiss": "Verwerfen"
-    },
     "billingState": {
       "onHoldDesc": "Zahlung fehlgeschlagen. Aktualisieren Sie Ihre Zahlungsmethode, um den Premium-Zugriff wiederherzustellen.",
       "onHoldBannerMessage": "Zahlung fehlgeschlagen. Aktualisieren Sie Ihre Zahlungsmethode, damit Ihr Abonnement aktiv bleibt.",
@@ -3252,20 +3245,6 @@
     "offlineCached": "Offline – gecacherte Daten von {{freshness}} werden angezeigt.",
     "offlineUnavailable": "Offline – Live-Daten sind derzeit nicht verfügbar.",
     "cachedFallback": "Live-Daten nicht verfügbar – gecacherte Daten von {{freshness}} werden angezeigt."
-  },
-  "premium": {
-    "pro": "PRO",
-    "lockedDesc": "Erfordert einen World Monitor Lizenzschlüssel",
-    "signInToUnlock": "Melden Sie sich an, um Premium-Funktionen freizuschalten",
-    "signIn": "Anmelden zum Freischalten",
-    "upgradeDesc": "Upgrade auf Pro für vollständigen Zugriff auf Premium-Analysen",
-    "upgradeToPro": "Auf Pro upgraden",
-    "features": {
-      "orefSirens1": "Echtzeitwarnungen für israelische Raketen und Raketen",
-      "orefSirens2": "Sirenenzonenkartierung mit Bedrohungsklassifizierung",
-      "telegramIntel1": "Kuratierte Telegram OSINT-Kanäle",
-      "telegramIntel2": "Konflikts- und geopolitische Updates in Echtzeit"
-    }
   },
   "auth": {
     "signIn": "Anmelden",

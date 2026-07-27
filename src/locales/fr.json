@@ -2197,13 +2197,6 @@
     "wsbTickerScanner": {
       "infoTooltip": "<strong>WSB Ticker Scanner</strong> Mentions de tickers en temps réel depuis r/wallstreetbets, r/stocks et r/investing. Classées par fréquence de mention et engagement. La vélocité mesure la rapidité avec laquelle un ticker gagne du momentum entre les publications."
     },
-    "proBanner": {
-      "badge": "PRO",
-      "headline": "Pro est lancé",
-      "tagline": "Plus de signaux, moins de bruit. Plus de résumés IA. Un chercheur en géopolitique et équités dédié à vous.",
-      "cta": "Passer à Pro →",
-      "dismiss": "Rejeter"
-    },
     "billingState": {
       "onHoldDesc": "Le paiement a échoué. Mettez à jour votre moyen de paiement pour rétablir l'accès premium.",
       "onHoldBannerMessage": "Le paiement a échoué. Mettez à jour votre moyen de paiement pour garder votre abonnement actif.",
@@ -3270,20 +3263,6 @@
     "offlineCached": "Hors ligne — affichage des données en cache de {{freshness}}.",
     "offlineUnavailable": "Hors ligne — les données en direct ne sont pas disponibles.",
     "cachedFallback": "Données en direct indisponibles — affichage des données en cache de {{freshness}}."
-  },
-  "premium": {
-    "pro": "PRO",
-    "lockedDesc": "Nécessite une clé de licence World Monitor",
-    "signInToUnlock": "Se connecter pour déverrouiller les fonctionnalités premium",
-    "signIn": "Se connecter pour déverrouiller",
-    "upgradeDesc": "Passer à Pro pour un accès complet à l'analytique premium",
-    "upgradeToPro": "Passer à Pro",
-    "features": {
-      "orefSirens1": "Alertes missiles et roquettes Israël en temps réel",
-      "orefSirens2": "Cartographie des zones de sirène avec classification des menaces",
-      "telegramIntel1": "Canaux OSINT Telegram sélectionnés",
-      "telegramIntel2": "Mises à jour sur les conflits et la géopolitique en quasi-temps réel"
-    }
   },
   "auth": {
     "signIn": "Se connecter",

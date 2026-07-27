@@ -257,20 +257,6 @@
     "offlineUnavailable": "Offline — live data is currently unavailable.",
     "cachedFallback": "Live data unavailable — showing cached data from {{freshness}}."
   },
-  "premium": {
-    "pro": "PRO",
-    "lockedDesc": "Requires a World Monitor license key",
-    "signInToUnlock": "Sign in to access this panel.",
-    "signIn": "Sign In",
-    "upgradeDesc": "This panel is not available with your current access.",
-    "upgradeToPro": "View Access",
-    "features": {
-      "orefSirens1": "Real-time Israel missile & rocket alerts",
-      "orefSirens2": "Siren zone mapping with threat classification",
-      "telegramIntel1": "Curated Telegram OSINT channels",
-      "telegramIntel2": "Near-real-time conflict & geopolitical updates"
-    }
-  },
   "auth": {
     "signIn": "Sign In",
     "createAccount": "Create account",

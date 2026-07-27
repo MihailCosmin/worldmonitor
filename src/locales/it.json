@@ -2197,13 +2197,6 @@
     "wsbTickerScanner": {
       "infoTooltip": "<strong>WSB Ticker Scanner</strong> Menzioni di ticker in tempo reale da r/wallstreetbets, r/stocks e r/investing. Classificate per frequenza di menzione e coinvolgimento. Velocity misura la velocità con cui un ticker guadagna momentum nei post."
     },
-    "proBanner": {
-      "badge": "PRO",
-      "headline": "Pro è stato lanciato",
-      "tagline": "Più segnali, meno rumore. Più briefing IA. Un ricercatore geopolitico e azionario dedicato a te.",
-      "cta": "Passa a Pro →",
-      "dismiss": "Scarta"
-    },
     "billingState": {
       "onHoldDesc": "Pagamento non riuscito. Aggiorna il metodo di pagamento per ripristinare l'accesso premium.",
       "onHoldBannerMessage": "Pagamento non riuscito. Aggiorna il metodo di pagamento per mantenere attivo il tuo abbonamento.",
@@ -3270,20 +3263,6 @@
     "offlineCached": "Offline — visualizzazione dati in cache da {{freshness}}.",
     "offlineUnavailable": "Offline — i dati in tempo reale non sono attualmente disponibili.",
     "cachedFallback": "Dati in tempo reale non disponibili — visualizzazione dati in cache da {{freshness}}."
-  },
-  "premium": {
-    "pro": "PRO",
-    "lockedDesc": "Richiede una chiave di licenza World Monitor",
-    "signInToUnlock": "Accedi per sbloccare le funzioni premium",
-    "signIn": "Accedi per Sbloccare",
-    "upgradeDesc": "Esegui l'upgrade a Pro per accesso completo all'analitiche premium",
-    "upgradeToPro": "Esegui l'Upgrade a Pro",
-    "features": {
-      "orefSirens1": "Avvisi in tempo reale di missili e razzi israeliani",
-      "orefSirens2": "Mappatura zone sirene con classificazione delle minacce",
-      "telegramIntel1": "Canali OSINT Telegram selezionati",
-      "telegramIntel2": "Aggiornamenti su conflitti e geopolitica quasi in tempo reale"
-    }
   },
   "auth": {
     "signIn": "Accedi",

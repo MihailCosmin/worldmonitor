@@ -2260,13 +2260,6 @@
     "yieldCurve": {
       "infoTooltip": "<strong>Yield Curve &amp; Rates</strong> US Treasury yield curve (2Y, 5Y, 10Y, 30Y) and key rate spreads including the 10Y-2Y inversion indicator. Also shows Euro area rates (EURIBOR, ESTR). An inverted curve historically precedes recessions. Source: FRED."
     },
-    "proBanner": {
-      "badge": "PRO",
-      "headline": "Pro is launched",
-      "tagline": "More Signal, Less Noise. More AI Briefings. A Geopolitical & Equity Researcher just for you.",
-      "cta": "Upgrade to Pro →",
-      "dismiss": "Dismiss"
-    },
     "billingState": {
       "onHoldDesc": "Payment failed. Update your payment method to restore premium access.",
       "onHoldBannerMessage": "Payment failed. Update your payment method to keep your subscription active.",
@@ -3248,20 +3241,6 @@
     "fontFamilyDesc": "Monospace for a technical look, system default for easier reading.",
     "fontMono": "Monospace",
     "fontSystem": "System Default"
-  },
-  "premium": {
-    "pro": "PRO",
-    "lockedDesc": "Requires a World Monitor license key",
-    "signInToUnlock": "Sign in to access this panel.",
-    "signIn": "Sign In",
-    "upgradeDesc": "This panel is not available with your current access.",
-    "upgradeToPro": "View Access",
-    "features": {
-      "orefSirens1": "Real-time Israel missile & rocket alerts",
-      "orefSirens2": "Siren zone mapping with threat classification",
-      "telegramIntel1": "Curated Telegram OSINT channels",
-      "telegramIntel2": "Near-real-time conflict & geopolitical updates"
-    }
   },
   "contextMenu": {
     "openCountryBrief": "Open Country Brief",

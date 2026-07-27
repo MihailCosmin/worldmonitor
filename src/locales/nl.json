@@ -1928,13 +1928,6 @@
     "wsbTickerScanner": {
       "infoTooltip": "<strong>WSB Ticker Scanner</strong> Real-time tickervermeldingen van r/wallstreetbets, r/stocks en r/investing. Gerangschikt op vermeldingsfrequentie en engagement. Snelheid meet hoe snel een ticker momentum krijgt over posts."
     },
-    "proBanner": {
-      "badge": "PRO",
-      "headline": "Pro is gelanceerd",
-      "tagline": "Meer signaal, minder ruis. Meer AI-briefings. Een geopolitieke & aandelenonderzoeker speciaal voor jou.",
-      "cta": "Upgrade naar Pro →",
-      "dismiss": "Verwijderen"
-    },
     "billingState": {
       "onHoldDesc": "Betaling mislukt. Werk je betaalmethode bij om premium toegang te herstellen.",
       "onHoldBannerMessage": "Betaling mislukt. Werk je betaalmethode bij om je abonnement actief te houden.",
@@ -3252,20 +3245,6 @@
     "offlineCached": "Offline — gegevens uit cache van {{freshness}} worden weergegeven.",
     "offlineUnavailable": "Offline — live gegevens zijn momenteel niet beschikbaar.",
     "cachedFallback": "Live gegevens niet beschikbaar — gegevens uit cache van {{freshness}} worden weergegeven."
-  },
-  "premium": {
-    "pro": "PRO",
-    "lockedDesc": "Vereist een World Monitor-licentiesleutel",
-    "signInToUnlock": "Meld u aan om premium-functies te ontgrendelen",
-    "signIn": "Aanmelden om te ontgrendelen",
-    "upgradeDesc": "Upgrade naar Pro voor volledige toegang tot premium-analyses",
-    "upgradeToPro": "Upgrade naar Pro",
-    "features": {
-      "orefSirens1": "Waarschuwingen voor Israëlische raketaanvallen in realtime",
-      "orefSirens2": "Sirènezone-mapping met dreiging classificatie",
-      "telegramIntel1": "Gecureerde Telegram OSINT-kanalen",
-      "telegramIntel2": "Updates over conflicten en geopolitieke situaties vrijwel in realtime"
-    }
   },
   "auth": {
     "signIn": "Aanmelden",

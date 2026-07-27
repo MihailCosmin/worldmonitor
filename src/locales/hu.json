@@ -2257,13 +2257,6 @@
     "yieldCurve": {
       "infoTooltip": "<strong>Yield Curve &amp; Rates</strong> Az USA Treasury hozamgörbéje (2Y, 5Y, 10Y, 30Y) és legfontosabb kamat-spreadek, beleértve a 10Y-2Y inverzió indikátorát. Az euró-övezeti kamatokat is mutatja (EURIBOR, ESTR). Az invertált görbe történelmileg megelőzi a recessziókat. Forrás: FRED."
     },
-    "proBanner": {
-      "badge": "PRO",
-      "headline": "Pro elindult",
-      "tagline": "Több jel, kevesebb zaj. Több AI Brief. Egy Geopolitikai & Részvény Kutató, csak neked.",
-      "cta": "Frissítés Pro-ra →",
-      "dismiss": "Eltüntetés"
-    },
     "billingState": {
       "onHoldDesc": "A fizetés sikertelen. Frissítse fizetési módját a prémium hozzáférés visszaállításához.",
       "onHoldBannerMessage": "A fizetés sikertelen. Frissítse fizetési módját, hogy előfizetése aktív maradjon.",
@@ -3248,20 +3241,6 @@
     "fontFamilyDesc": "Monospace a technikai megjelenéshez, rendszer alapértelmezés az olvashatóság kedvéért.",
     "fontMono": "Monospace",
     "fontSystem": "Rendszer alapértelmezés"
-  },
-  "premium": {
-    "pro": "PRO",
-    "lockedDesc": "World Monitor licenckulcs szükséges",
-    "signInToUnlock": "Jelentkezzen be a prémium funkciók feloldásához",
-    "signIn": "Jelentkezzen be a feloldáshoz",
-    "upgradeDesc": "Frissítsen Pro verzióra a teljes hozzáféréshez a prémium elemzésekhez",
-    "upgradeToPro": "Frissítés Pro verzióra",
-    "features": {
-      "orefSirens1": "Valós idejű izraeli rakéta- és légicsapás-riasztások",
-      "orefSirens2": "Szirénazóna térképezése veszélyforrás besorolással",
-      "telegramIntel1": "Válogatott Telegram OSINT csatornák",
-      "telegramIntel2": "Közeli valós idejű konfliktus- és geopolitikai frissítések"
-    }
   },
   "contextMenu": {
     "openCountryBrief": "Országbeszámoló megnyitása",

@@ -80,28 +80,6 @@ describe('payment-failure-banner billing-state wiring (#4771)', () => {
   });
 });
 
-describe('panel-layout billing-state wiring (#4771)', () => {
-  it('refines FREE_TIER through the billing-aware resolver, hoisted once per gating pass', async () => {
-    const src = await read('src/app/panel-layout.ts');
-    assert.match(src, /const billingAwareFreeTier = resolveBillingAwareGateReason\(PanelGateReason\.FREE_TIER\);/);
-    assert.match(src, /if \(reason === PanelGateReason\.FREE_TIER\) reason = billingAwareFreeTier;/);
-  });
-
-  it('re-runs panel gating when the subscription row changes (verification verdicts arrive there)', async () => {
-    const src = await read('src/app/panel-layout.ts');
-    assert.match(
-      src,
-      /unsubscribeSubscriptionChange = onSubscriptionChange\(\(\) => \{\s*\n\s*this\.updatePanelGating\(getAuthState\(\)\);/,
-    );
-  });
-
-  it('routes billing-portal gate actions through the popup-blocker-safe pre-reserve pattern', async () => {
-    const src = await read('src/app/panel-layout.ts');
-    assert.match(src, /case PanelGateReason\.PAYMENT_ON_HOLD:\s*\n\s*case PanelGateReason\.RENEWAL_FAILED:/);
-    assert.match(src, /prereserveBillingPortalTab\(\)/);
-  });
-});
-
 describe('widget-agent structured billing denial (#4771)', () => {
   it('returns the structured billing-verification denial before the generic 403', async () => {
     const src = await read('api/widget-agent.ts');
@@ -162,47 +140,7 @@ describe('Pro-gated endpoint billing denial ordering (#5600)', () => {
   }
 });
 
-describe('Panel CTA copy coverage (#4771)', () => {
-  it('has a gated-CTA entry for every billing gate reason', async () => {
-    const src = await read('src/components/Panel.ts');
-    for (const reason of ['PAYMENT_ON_HOLD', 'RENEWAL_PENDING', 'RENEWAL_FAILED', 'LAPSED']) {
-      assert.match(
-        src,
-        new RegExp(`case PanelGateReason\\.${reason}:`),
-        `gatedCtaEntry must cover PanelGateReason.${reason} — a missing entry silently skips the lock`,
-      );
-    }
-  });
-
-  it('billing CTA keys stay OUT of the first-paint shell namespaces', async () => {
-    const src = await read('src/components/Panel.ts');
-    const billingKeys = src.match(/t\('components\.billingState\.[a-zA-Z]+'\)/g) ?? [];
-    assert.equal(billingKeys.length, 8, 'expected the 8 billing-state CTA strings');
-    assert.doesNotMatch(
-      src,
-      /t\('premium\.billing/,
-      'premium.* is shell-inlined at first paint; billing CTA copy must live under components.billingState',
-    );
-  });
-});
-
 describe('returning-subscriber surfaces (#4799)', () => {
-  it('uses the lapsed billing state and prior plan on the Pro banner', async () => {
-    const src = await read('src/components/ProBanner.ts');
-    assert.match(src, /deriveBillingUxState\(/);
-    assert.match(src, /onSubscriptionChange\(/);
-    assert.match(src, /components\.billingState\.lapsedDesc/);
-    assert.match(src, /components\.billingState\.resubscribe/);
-    assert.match(src, /getReactivationHref\(/);
-    assert.match(src, /cancelPendingBannerRemoval\(\)/);
-    assert.match(src, /pendingBannerRemoval/);
-    assert.match(
-      src,
-      /if \(dismissedThisSession\) return;\s+cancelPendingBannerRemoval\(\);\s+bannerEl\?\.classList\.remove\('pro-banner-out'\);/,
-      'reversed entitlement fades must restore visibility without cancelling explicit dismissals',
-    );
-  });
-
   it('uses the lapsed billing state and prior plan in Unified Settings', async () => {
     const src = await read('src/components/UnifiedSettings.ts');
     assert.match(src, /deriveBillingUxState\(/);

@@ -2188,13 +2188,6 @@
     "wsbTickerScanner": {
       "infoTooltip": "<strong>WSB 티커 스캐너</strong> r/wallstreetbets, r/stocks 및 r/investing의 실시간 티커 언급입니다. 언급 빈도 및 참여도로 순위를 매깁니다. 속도는 티커가 게시물 전반에서 얼마나 빠르게 모멘텀을 얻는지 측정합니다."
     },
-    "proBanner": {
-      "badge": "PRO",
-      "headline": "Pro 출시됨",
-      "tagline": "더 많은 신호, 더 적은 잡음. 더 많은 AI 브리핑. 당신만을 위한 지정학 및 주식 연구원입니다.",
-      "cta": "Pro로 업그레이드 →",
-      "dismiss": "닫기"
-    },
     "billingState": {
       "onHoldDesc": "결제에 실패했습니다. 프리미엄 이용 권한을 복원하려면 결제 수단을 업데이트하세요.",
       "onHoldBannerMessage": "결제에 실패했습니다. 구독을 유지하려면 결제 수단을 업데이트하세요.",
@@ -3252,20 +3245,6 @@
     "offlineCached": "오프라인 — {{freshness}}의 캐시된 데이터를 표시 중입니다.",
     "offlineUnavailable": "오프라인 — 실시간 데이터를 현재 사용할 수 없습니다.",
     "cachedFallback": "실시간 데이터를 사용할 수 없음 — {{freshness}}의 캐시된 데이터를 표시 중입니다."
-  },
-  "premium": {
-    "pro": "PRO",
-    "lockedDesc": "World Monitor 라이선스 키가 필요합니다",
-    "signInToUnlock": "프리미엄 기능을 잠금 해제하려면 로그인하세요",
-    "signIn": "로그인하여 잠금 해제",
-    "upgradeDesc": "Pro로 업그레이드하여 프리미엄 분석에 전체 접근권한을 얻으세요",
-    "upgradeToPro": "Pro로 업그레이드",
-    "features": {
-      "orefSirens1": "실시간 이스라엘 미사일 및 로켓 경보",
-      "orefSirens2": "경보 영역 지도 및 위협 분류",
-      "telegramIntel1": "큐레이션된 Telegram OSINT 채널",
-      "telegramIntel2": "거의 실시간 분쟁 및 지정학 업데이트"
-    }
   },
   "auth": {
     "signIn": "로그인",

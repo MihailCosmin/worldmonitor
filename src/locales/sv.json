@@ -1928,13 +1928,6 @@
     "wsbTickerScanner": {
       "infoTooltip": "<strong>WSB-tickersökare</strong> Realtidsticker-omnämnanden från r/wallstreetbets, r/stocks och r/investing. Rankade efter omnämnningsfrekvens och engagemang. Hastighet mäter hur snabbt en ticker får momentum över inlägg."
     },
-    "proBanner": {
-      "badge": "PRO",
-      "headline": "Pro är lanserad",
-      "tagline": "Mer signal, mindre brus. Fler AI-uppdateringar. En geopolitisk och aktieanalytiker bara för dig.",
-      "cta": "Uppgradera till Pro →",
-      "dismiss": "Stäng"
-    },
     "billingState": {
       "onHoldDesc": "Betalningen misslyckades. Uppdatera din betalningsmetod för att återställa premiumåtkomsten.",
       "onHoldBannerMessage": "Betalningen misslyckades. Uppdatera din betalningsmetod för att hålla din prenumeration aktiv.",
@@ -3252,20 +3245,6 @@
     "offlineCached": "Offline — visar cachad data från {{freshness}}.",
     "offlineUnavailable": "Offline — livedata är för närvarande otillgänglig.",
     "cachedFallback": "Livedata otillgänglig — visar cachad data från {{freshness}}."
-  },
-  "premium": {
-    "pro": "PRO",
-    "lockedDesc": "Kräver en World Monitor-licensnyckel",
-    "signInToUnlock": "Logga in för att låsa upp premiumfunktioner",
-    "signIn": "Logga in för att låsa upp",
-    "upgradeDesc": "Uppgradera till Pro för fullständig åtkomst till premiumanalytik",
-    "upgradeToPro": "Uppgradera till Pro",
-    "features": {
-      "orefSirens1": "Varningar om missiler och raketer från Israel i realtid",
-      "orefSirens2": "Sirenzoner med hotklassificering",
-      "telegramIntel1": "Kurerade Telegram OSINT-kanaler",
-      "telegramIntel2": "Uppdateringar om konflikter och geopolitik nästan i realtid"
-    }
   },
   "auth": {
     "signIn": "Logga in",

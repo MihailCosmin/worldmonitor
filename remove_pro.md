@@ -795,7 +795,7 @@ Intentional paid boundaries that are not part of this follow-up remain allowed: 
 - Acceptance:
   - A free user can select and apply every shipped analytical framework in Daily Market Brief, Insights, Deduction, and Market Implications.
 
-### [ ] D13. Remove the remaining shared panel gate machinery and upsell locales
+### [x] D13. Remove the remaining shared panel gate machinery and upsell locales
 
 - Files:
   - `src/components/Panel.ts`

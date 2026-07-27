@@ -1207,20 +1207,20 @@ export class UnifiedSettings {
     if (!authState.user) {
       const lockIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>`;
       return `
-        <div class="panel-locked-state">
-          <div class="panel-locked-icon">${lockIcon}</div>
-          <div class="panel-locked-desc">Sign in to unlock API Keys</div>
-          <button class="panel-locked-cta api-keys-gate-btn">Sign In</button>
+        <div class="settings-access-state">
+          <div class="settings-access-icon">${lockIcon}</div>
+          <div class="settings-access-desc">Sign in to unlock API Keys</div>
+          <button class="settings-access-cta api-keys-gate-btn">Sign In</button>
         </div>`;
     }
 
     if (!hasFeature('apiAccess')) {
       const upgradeIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="16 12 12 8 8 12"/><line x1="12" y1="16" x2="12" y2="8"/></svg>`;
       return `
-        <div class="panel-locked-state">
-          <div class="panel-locked-icon">${upgradeIcon}</div>
-          <div class="panel-locked-desc">Create and manage API keys to access WorldMonitor data programmatically.</div>
-          <button class="panel-locked-cta api-keys-gate-btn">Upgrade to API Starter</button>
+        <div class="settings-access-state">
+          <div class="settings-access-icon">${upgradeIcon}</div>
+          <div class="settings-access-desc">Create and manage API keys to access WorldMonitor data programmatically.</div>
+          <button class="settings-access-cta api-keys-gate-btn">Upgrade to API Starter</button>
         </div>`;
     }
 
@@ -1396,9 +1396,9 @@ export class UnifiedSettings {
     if (!authState.user) {
       const lockIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>`;
       return `
-        <div class="panel-locked-state">
-          <div class="panel-locked-icon">${lockIcon}</div>
-          <div class="panel-locked-desc">Sign in to manage connected MCP clients</div>
+        <div class="settings-access-state">
+          <div class="settings-access-icon">${lockIcon}</div>
+          <div class="settings-access-desc">Sign in to manage connected MCP clients</div>
         </div>`;
     }
 
@@ -1408,9 +1408,9 @@ export class UnifiedSettings {
       // tab entirely.
       const upgradeIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="16 12 12 8 8 12"/><line x1="12" y1="16" x2="12" y2="8"/></svg>`;
       return `
-        <div class="panel-locked-state">
-          <div class="panel-locked-icon">${upgradeIcon}</div>
-          <div class="panel-locked-desc">Connect Claude Desktop and other AI clients to your WorldMonitor account.</div>
+        <div class="settings-access-state">
+          <div class="settings-access-icon">${upgradeIcon}</div>
+          <div class="settings-access-desc">Connect Claude Desktop and other AI clients to your WorldMonitor account.</div>
         </div>`;
     }
 

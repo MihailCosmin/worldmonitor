@@ -2188,13 +2188,6 @@
     "wsbTickerScanner": {
       "infoTooltip": "<strong>WSB Ticker Tarayıcı</strong> r/wallstreetbets, r/stocks ve r/investing'den gerçek zamanlı ticker bahsetmeleri. Bahsetme sıklığı ve katılım oranına göre sıralanmıştır. Hız, bir ticker'ın paylaşımlar arasında ne kadar hızlı momentum kazandığını ölçer."
     },
-    "proBanner": {
-      "badge": "PRO",
-      "headline": "Pro yayında",
-      "tagline": "Daha Fazla İşaret, Daha Az Gürültü. Daha Fazla AI Özeti. Sadece Sizin için Jeopolitik & Sermaye Piyasası Araştırmacısı.",
-      "cta": "Pro'ya Yükselt →",
-      "dismiss": "Kapat"
-    },
     "billingState": {
       "onHoldDesc": "Ödeme başarısız oldu. Premium erişimi geri yüklemek için ödeme yönteminizi güncelleyin.",
       "onHoldBannerMessage": "Ödeme başarısız oldu. Aboneliğinizi aktif tutmak için ödeme yönteminizi güncelleyin.",
@@ -3252,20 +3245,6 @@
     "offlineCached": "Çevrimdışı — {{freshness}} tarihli önbelleğe alınan veriler gösteriliyor.",
     "offlineUnavailable": "Çevrimdışı — canlı veriler şu anda kullanılamıyor.",
     "cachedFallback": "Canlı veriler kullanılamıyor — {{freshness}} tarihli önbelleğe alınan veriler gösteriliyor."
-  },
-  "premium": {
-    "pro": "PRO",
-    "lockedDesc": "World Monitor lisans anahtarı gereklidir",
-    "signInToUnlock": "Premium özelliklerin kilidini açmak için oturum açın",
-    "signIn": "Kilidini Açmak İçin Oturum Aç",
-    "upgradeDesc": "Premium analitiğe tam erişim için Pro'ya yükseltin",
-    "upgradeToPro": "Pro'ya Yüksel",
-    "features": {
-      "orefSirens1": "Gerçek zamanlı İsrail füze ve roket uyarıları",
-      "orefSirens2": "Tehdit sınıflandırması ile siren bölgesi haritalaması",
-      "telegramIntel1": "Küratörlü Telegram OSINT kanalları",
-      "telegramIntel2": "Neredeyse gerçek zamanlı çatışma ve jeopolitik güncellemeleri"
-    }
   },
   "auth": {
     "signIn": "Oturum Aç",

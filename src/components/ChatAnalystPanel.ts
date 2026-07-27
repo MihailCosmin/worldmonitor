@@ -685,20 +685,6 @@ export class ChatAnalystPanel extends Panel {
     URL.revokeObjectURL(url);
   }
 
-  // Panel.unlockPanel() does `replaceChildren(this.content)` (empties it)
-  // when a previously-locked panel transitions to unlocked. The chat surface
-  // (chips, messages, quick actions, input row) lives entirely in buildUI()
-  // and is only constructed once in the ctor — without a rebuild here, the
-  // body would stay empty after the FREE→PRO unlock fired by
-  // panel-layout.ts:updatePanelGating(). Re-detect via querySelector so we
-  // only pay the cost when the wipe actually happened.
-  override unlockPanel(): void {
-    super.unlockPanel();
-    if (!this.content.querySelector('.chat-analyst-wrapper')) {
-      this.buildUI();
-    }
-  }
-
   override destroy(): void {
     this.streamAbort?.abort();
     this.streamAbort = null;

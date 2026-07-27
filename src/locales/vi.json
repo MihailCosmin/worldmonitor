@@ -2188,13 +2188,6 @@
     "wsbTickerScanner": {
       "infoTooltip": "<strong>WSB Ticker Scanner</strong> Các lượt nhắc đến ticker theo thời gian thực từ r/wallstreetbets, r/stocks và r/investing. Được xếp hạng theo tần suất và mức độ tham gia. Vận tốc đo lường tốc độ nhanh chóng mà một ticker tăng đà trên các bài đăng."
     },
-    "proBanner": {
-      "badge": "PRO",
-      "headline": "Pro đã được phát hành",
-      "tagline": "Nhiều tín hiệu, ít nhiễu. Nhiều AI Briefings. Một nhà nghiên cứu Địa chính trị & Vốn chỉ dành cho bạn.",
-      "cta": "Nâng cấp lên Pro →",
-      "dismiss": "Bỏ qua"
-    },
     "billingState": {
       "onHoldDesc": "Thanh toán không thành công. Cập nhật phương thức thanh toán của bạn để khôi phục quyền truy cập cao cấp.",
       "onHoldBannerMessage": "Thanh toán không thành công. Cập nhật phương thức thanh toán của bạn để duy trì gói đăng ký.",
@@ -3252,20 +3245,6 @@
     "offlineCached": "Ngoại tuyến — hiển thị dữ liệu đã lưu từ {{freshness}}.",
     "offlineUnavailable": "Ngoại tuyến — dữ liệu trực tiếp hiện không khả dụng.",
     "cachedFallback": "Dữ liệu trực tiếp không khả dụng — hiển thị dữ liệu đã lưu từ {{freshness}}."
-  },
-  "premium": {
-    "pro": "PRO",
-    "lockedDesc": "Yêu cầu khóa giấy phép World Monitor",
-    "signInToUnlock": "Đăng nhập để mở khóa các tính năng cao cấp",
-    "signIn": "Đăng nhập để mở khóa",
-    "upgradeDesc": "Nâng cấp lên Pro để có quyền truy cập đầy đủ vào phân tích cao cấp",
-    "upgradeToPro": "Nâng cấp lên Pro",
-    "features": {
-      "orefSirens1": "Cảnh báo tên lửa và rocket Israel theo thời gian thực",
-      "orefSirens2": "Lập bản đồ vùng còi với phân loại mối đe dọa",
-      "telegramIntel1": "Các kênh OSINT Telegram được chọn lọc",
-      "telegramIntel2": "Các cập nhật xung đột và địa chính trị gần thời gian thực"
-    }
   },
   "auth": {
     "signIn": "Đăng nhập",
