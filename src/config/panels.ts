@@ -104,7 +104,7 @@ const FULL_PANELS: Record<string, PanelConfig> = {
   'ucdp-events': { name: 'UCDP Conflict Events', enabled: true, priority: 2 },
   'disease-outbreaks': { name: 'Disease Outbreaks', enabled: true, priority: 2 },
   'social-velocity': { name: 'Social Velocity', enabled: true, priority: 2 },
-  'wsb-ticker-scanner': { name: 'WSB Ticker Scanner', enabled: true, priority: 75, premium: 'locked' as const },
+  'wsb-ticker-scanner': { name: 'WSB Ticker Scanner', enabled: true, priority: 75 },
   giving: { name: 'Global Giving', enabled: false, priority: 2 },
   displacement: { name: 'UNHCR Displacement', enabled: true, priority: 2 },
   climate: { name: 'Climate Anomalies', enabled: true, priority: 2 },
@@ -500,7 +500,7 @@ const FINANCE_PANELS: Record<string, PanelConfig> = {
   'gulf-economies': { name: 'Gulf Economies', enabled: true, priority: 1 },
   'consumer-prices': { name: 'Consumer Prices', enabled: true, priority: 1 },
   polymarket: { name: 'Predictions', enabled: true, priority: 2 },
-  'wsb-ticker-scanner': { name: 'WSB Ticker Scanner', enabled: true, priority: 75, premium: 'locked' },
+  'wsb-ticker-scanner': { name: 'WSB Ticker Scanner', enabled: true, priority: 75 },
   'airline-intel': { name: 'Airline Intelligence', enabled: true, priority: 2 },
   'world-clock': { name: 'World Clock', enabled: true, priority: 2 },
   monitors: { name: 'My Monitors', enabled: true, priority: 2 },
@@ -1236,7 +1236,7 @@ export function isPanelEntitled(key: string, config: PanelConfig, isPro = false)
   if (!config.premium) return true;
   // Dodo entitlements unlock all premium panels
   if (isEntitled()) return true;
-  const apiKeyPanels = ['market-implications', 'regional-intelligence', 'deduction', 'wsb-ticker-scanner'];
+  const apiKeyPanels = ['market-implications', 'regional-intelligence', 'deduction'];
   if (apiKeyPanels.includes(key)) {
     return getSecretState('WORLDMONITOR_API_KEY').present || isPro;
   }

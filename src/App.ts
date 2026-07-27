@@ -1422,7 +1422,6 @@ export class App {
         void this.dataLoader.loadStockBacktest();
         void this.dataLoader.loadDailyMarketBrief();
         void this.dataLoader.loadMarketImplications();
-        void this.dataLoader.loadWsbTickers();
         void this.dataLoader.loadResilienceRanking();
         void this.dataLoader.loadGlobalTenders();
       } else if (!nowPremium && hadPremium) {
@@ -2239,7 +2238,7 @@ export class App {
       'wsb-tickers',
       () => this.dataLoader.loadWsbTickers(),
       REFRESH_INTERVALS.wsbTickers,
-      () => hasPremiumAccess() && this.isPanelNearViewport('wsb-ticker-scanner'),
+      () => this.isPanelNearViewport('wsb-ticker-scanner'),
     );
 
     // Server-side temporal anomalies (news + satellite_fires)

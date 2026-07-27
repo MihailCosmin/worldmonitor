@@ -114,7 +114,6 @@ const WEB_PREMIUM_PANELS = new Set([
   'daily-market-brief',
   'market-implications',
   'deduction',
-  'wsb-ticker-scanner',
   'regional-intelligence',
 ]);
 

@@ -269,7 +269,7 @@ These surfaces already have real feature logic, data structures, or fetch/render
 - Acceptance:
   - A free user sees the latest brief content, not the Pro-required empty state.
 
-### [ ] F8. Ungate WSB Ticker Scanner
+### [x] F8. Ungate WSB Ticker Scanner
 
 - Files:
   - `src/components/WsbTickerScannerPanel.ts`
