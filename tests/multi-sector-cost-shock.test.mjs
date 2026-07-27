@@ -4,7 +4,7 @@
  * Covers:
  *   1. Pure helper math (_multi-sector-shock.ts): HS4→HS2, aggregate,
  *      pickBestBypass, clampClosureDays, computeMultiSectorShock(s).
- *   2. Vercel edge function contract: PRO-gate, params validation,
+ *   2. Vercel edge function contract: params validation,
  *      Redis reads, cache-key shape.
  *   3. Client service wrapper.
  *   4. Premium paths registration.
@@ -242,8 +242,8 @@ describe('getMultiSectorCostShock sebuf handler', () => {
     assert.match(src, /export async function getMultiSectorCostShock/);
   });
 
-  it('uses isCallerPremium for PRO-gating', () => {
-    assert.match(src, /isCallerPremium\(ctx\.request\)/);
+  it('does not short-circuit on premium access', () => {
+    assert.doesNotMatch(src, /isCallerPremium\(ctx\.request\)/);
   });
 
   it('validates iso2 with a 2-letter regex', () => {
@@ -311,14 +311,14 @@ describe('supply-chain client service: fetchMultiSectorCostShock', () => {
 });
 
 // ========================================================================
-// 4. Premium paths: get-multi-sector-cost-shock is PRO-gated at the gateway.
+// 4. Premium paths: get-multi-sector-cost-shock is public.
 // ========================================================================
 
 describe('premium-paths: get-multi-sector-cost-shock registration', () => {
   const src = readSrc('src/shared/premium-paths.ts');
 
-  it('includes /api/supply-chain/v1/get-multi-sector-cost-shock', () => {
-    assert.match(src, /\/api\/supply-chain\/v1\/get-multi-sector-cost-shock/);
+  it('does not include /api/supply-chain/v1/get-multi-sector-cost-shock', () => {
+    assert.doesNotMatch(src, /\/api\/supply-chain\/v1\/get-multi-sector-cost-shock/);
   });
 });
 
@@ -370,8 +370,8 @@ describe('CountryDeepDivePanel Cost Shock Calculator', () => {
     assert.match(src, /\.sort\(\(a, b\) => b\.totalCostShock - a\.totalCostShock\)/);
   });
 
-  it('gates the card as PRO when the user is not premium', () => {
-    assert.match(src, /makeProLocked\('Upgrade to PRO for multi-sector cost shock modelling'\)/);
+  it('mounts the card with a loading state instead of a PRO gate', () => {
+    assert.match(src, /costShockCalcBody\.append\(this\.makeLoading\('Loading cost shock calculator/);
   });
 
   it('resetPanelContent clears all cost shock calculator state', () => {

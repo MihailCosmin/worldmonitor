@@ -54,7 +54,7 @@ service SupplyChainService {
     option (sebuf.http.config) = {path: "/get-shipping-stress", method: HTTP_METHOD_GET};
   }
 
-  // GetCountryChokepointIndex returns per-chokepoint exposure scores for a country. PRO-gated.
+  // GetCountryChokepointIndex returns per-chokepoint exposure scores for a country.
   rpc GetCountryChokepointIndex(GetCountryChokepointIndexRequest) returns (GetCountryChokepointIndexResponse) {
     option (sebuf.http.config) = {path: "/get-country-chokepoint-index", method: HTTP_METHOD_GET};
   }
@@ -69,18 +69,18 @@ service SupplyChainService {
     option (sebuf.http.config) = {path: "/get-country-cost-shock", method: HTTP_METHOD_GET};
   }
 
-  // GetCountryProducts returns the seeded bilateral-HS4 import basket for a country. PRO-gated.
+  // GetCountryProducts returns the seeded bilateral-HS4 import basket for a country.
   rpc GetCountryProducts(GetCountryProductsRequest) returns (GetCountryProductsResponse) {
     option (sebuf.http.config) = {path: "/get-country-products", method: HTTP_METHOD_GET};
   }
 
   // GetMultiSectorCostShock returns per-sector cost-shock estimates for a
-  // country+chokepoint+closure-window. PRO-gated.
+  // country+chokepoint+closure-window.
   rpc GetMultiSectorCostShock(GetMultiSectorCostShockRequest) returns (GetMultiSectorCostShockResponse) {
     option (sebuf.http.config) = {path: "/get-multi-sector-cost-shock", method: HTTP_METHOD_GET};
   }
 
-  // GetSectorDependency returns dependency flags and risk profile for a country+HS2 sector. PRO-gated.
+  // GetSectorDependency returns dependency flags and risk profile for a country+HS2 sector.
   rpc GetSectorDependency(GetSectorDependencyRequest) returns (GetSectorDependencyResponse) {
     option (sebuf.http.config) = {path: "/get-sector-dependency", method: HTTP_METHOD_GET};
   }

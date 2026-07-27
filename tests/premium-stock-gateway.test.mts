@@ -45,11 +45,7 @@ function installRateLimitRedisFake(): void {
 const ISSUE_4609_GATED_ROUTES = [
   { method: 'POST', path: '/api/forecast/v1/trigger-simulation' },
   { method: 'GET', path: '/api/sanctions/v1/list-sanctions-pressure' },
-  { method: 'GET', path: '/api/supply-chain/v1/get-country-chokepoint-index' },
   { method: 'GET', path: '/api/supply-chain/v1/get-country-cost-shock' },
-  { method: 'GET', path: '/api/supply-chain/v1/get-country-products' },
-  { method: 'GET', path: '/api/supply-chain/v1/get-multi-sector-cost-shock' },
-  { method: 'GET', path: '/api/supply-chain/v1/get-sector-dependency' },
 ] as const;
 
 // Public routes now require a wms_ session token (issue #3541) — header-only

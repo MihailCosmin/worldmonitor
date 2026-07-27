@@ -374,7 +374,7 @@ These surfaces already have real feature logic, data structures, or fetch/render
 - Acceptance:
   - Free users can see bypass corridor alternatives anywhere the app already computes them.
 
-### [ ] F14. Ungate country deep-dive premium cards
+### [x] F14. Ungate country deep-dive premium cards
 
 - Files:
   - `src/components/CountryDeepDivePanel.ts`

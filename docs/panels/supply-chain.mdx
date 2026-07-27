@@ -33,12 +33,12 @@ The panel and adjacent supply-chain workflows mix generated sebuf REST RPCs, boo
 | Chokepoint cards and strip | `GET /api/supply-chain/v1/get-chokepoint-status` | Current chokepoint status, warnings, AIS disruption counts, and compact transit summaries; bootstrap-first via `chokepoints`. |
 | Expanded chokepoint card | `GET /api/supply-chain/v1/get-chokepoint-history` | Lazy transit-count history for one chokepoint. |
 | Critical minerals rows | `GET /api/supply-chain/v1/get-critical-minerals` | Mineral concentration, HHI, top producers, and risk rating; bootstrap-first via `minerals`. |
-| Country exposure | `GET /api/supply-chain/v1/get-country-chokepoint-index` | PRO country + HS2 exposure scores used by Country Brief and route-risk surfaces. |
+| Country exposure | `GET /api/supply-chain/v1/get-country-chokepoint-index` | Country + HS2 exposure scores used by Country Brief and route-risk surfaces. |
 | Bypass corridors | `GET /api/supply-chain/v1/get-bypass-options` | Ranked maritime and land bypass options for a chokepoint / cargo type. |
 | Country cost shock | `GET /api/supply-chain/v1/get-country-cost-shock` | PRO cost-shock and war-risk estimates for a country + chokepoint + HS2 slice. |
-| Country import basket | `GET /api/supply-chain/v1/get-country-products` | PRO seeded bilateral-HS4 import basket for country drill-downs. |
-| Multi-sector shock | `GET /api/supply-chain/v1/get-multi-sector-cost-shock` | PRO sector-level cost-shock estimates over a closure window. |
-| Sector dependency | `GET /api/supply-chain/v1/get-sector-dependency` | PRO dependency flags, primary exporter share, and primary chokepoint exposure. |
+| Country import basket | `GET /api/supply-chain/v1/get-country-products` | Seeded bilateral-HS4 import basket for country drill-downs. |
+| Multi-sector shock | `GET /api/supply-chain/v1/get-multi-sector-cost-shock` | Sector-level cost-shock estimates over a closure window. |
+| Sector dependency | `GET /api/supply-chain/v1/get-sector-dependency` | Dependency flags, primary exporter share, and primary chokepoint exposure. |
 | Route Explorer lane | `GET /api/supply-chain/v1/get-route-explorer-lane` | Public primary route geometry, chokepoint exposures, bypass geometry, war-risk tier, and disruption score. |
 | Route Explorer impact | `GET /api/supply-chain/v1/get-route-impact` | Public country-impact metrics for selected lane + HS2 commodity. |
 | Pipeline registry | `GET /api/supply-chain/v1/list-pipelines` | Pipeline Status panel and Energy Atlas PathLayer; bootstrap/shared-store first, RPC refresh after render. |

@@ -1,15 +1,13 @@
 /**
  * Regression tests for input-shape validation on supply-chain handlers.
- * Locks in the "400 on bad input / empty-200 on deny / empty-200 on no data"
- * three-way contract after koala73 review HIGH(new) #2 on #3242.
+ * Locks in the "400 on bad input / empty-200 on no data"
+ * contract after koala73 review HIGH(new) #2 on #3242.
  *
  * Prior state (bug): malformed iso2 / missing chokepointId / unknown
- * chokepointId all collapsed to empty-200, indistinguishable from the
- * legitimate non-pro deny path and from genuine "no data for this country".
+ * chokepointId all collapsed to empty-200, indistinguishable from
+ * genuine "no data for this country".
  *
  * Fix: input-shape errors throw ValidationError (sebuf → HTTP 400).
- * PRO-gate deny stays as empty-200 (intentional contract shift, called out
- * in the original migration commits).
  */
 
 import { strict as assert } from 'node:assert';
@@ -22,10 +20,6 @@ function makeCtx(headers = {}, path = '/api/supply-chain/v1/get-country-products
   const req = new Request(`https://worldmonitor.app${path}`, { method: 'GET', headers });
   return { request: req, pathParams: {}, headers };
 }
-function proCtx(path) {
-  return makeCtx({ 'X-WorldMonitor-Key': 'pro-test-key' }, path);
-}
-
 let getCountryProducts;
 let getMultiSectorCostShock;
 let ValidationError;
@@ -53,20 +47,19 @@ describe('supply-chain handlers: input-shape validation returns 400, not empty-2
   describe('getCountryProducts', () => {
     it('throws ValidationError on blank iso2', async () => {
       await assert.rejects(
-        () => getCountryProducts(proCtx('/api/supply-chain/v1/get-country-products'), { iso2: '' }),
+        () => getCountryProducts(makeCtx({}, '/api/supply-chain/v1/get-country-products'), { iso2: '' }),
         (err) => err instanceof ValidationError && err.violations[0].field === 'iso2',
       );
     });
 
     it('throws ValidationError on 3-letter iso codes (legacy contract required ISO-2)', async () => {
       await assert.rejects(
-        () => getCountryProducts(proCtx('/api/supply-chain/v1/get-country-products'), { iso2: 'USA' }),
+        () => getCountryProducts(makeCtx({}, '/api/supply-chain/v1/get-country-products'), { iso2: 'USA' }),
         (err) => err instanceof ValidationError,
       );
     });
 
-    it('PRO-gate deny on a well-formed iso2 still returns empty-200 (not 400) — intentional contract shift preserved', async () => {
-      // No X-WorldMonitor-Key header → isCallerPremium returns false.
+    it('returns empty data on a well-formed iso2 when nothing is cached', async () => {
       const res = await getCountryProducts(makeCtx({}, '/api/supply-chain/v1/get-country-products'), { iso2: 'SG' });
       assert.deepEqual(res, { iso2: 'SG', products: [], fetchedAt: '' });
     });
@@ -77,33 +70,33 @@ describe('supply-chain handlers: input-shape validation returns 400, not empty-2
 
     it('throws ValidationError on 3-letter iso code (legacy contract required ISO-2)', async () => {
       await assert.rejects(
-        () => getMultiSectorCostShock(proCtx('/api/supply-chain/v1/get-multi-sector-cost-shock'), { ...validReq, iso2: 'USA' }),
+        () => getMultiSectorCostShock(makeCtx({}, '/api/supply-chain/v1/get-multi-sector-cost-shock'), { ...validReq, iso2: 'USA' }),
         (err) => err instanceof ValidationError && err.violations[0].field === 'iso2',
       );
     });
 
     it('throws ValidationError on blank iso2', async () => {
       await assert.rejects(
-        () => getMultiSectorCostShock(proCtx('/api/supply-chain/v1/get-multi-sector-cost-shock'), { ...validReq, iso2: '' }),
+        () => getMultiSectorCostShock(makeCtx({}, '/api/supply-chain/v1/get-multi-sector-cost-shock'), { ...validReq, iso2: '' }),
         (err) => err instanceof ValidationError && err.violations[0].field === 'iso2',
       );
     });
 
     it('throws ValidationError on missing chokepointId', async () => {
       await assert.rejects(
-        () => getMultiSectorCostShock(proCtx('/api/supply-chain/v1/get-multi-sector-cost-shock'), { ...validReq, chokepointId: '' }),
+        () => getMultiSectorCostShock(makeCtx({}, '/api/supply-chain/v1/get-multi-sector-cost-shock'), { ...validReq, chokepointId: '' }),
         (err) => err instanceof ValidationError && err.violations[0].field === 'chokepointId' && /required/i.test(err.violations[0].description),
       );
     });
 
     it('throws ValidationError on unknown chokepointId', async () => {
       await assert.rejects(
-        () => getMultiSectorCostShock(proCtx('/api/supply-chain/v1/get-multi-sector-cost-shock'), { ...validReq, chokepointId: 'not_a_real_chokepoint' }),
+        () => getMultiSectorCostShock(makeCtx({}, '/api/supply-chain/v1/get-multi-sector-cost-shock'), { ...validReq, chokepointId: 'not_a_real_chokepoint' }),
         (err) => err instanceof ValidationError && err.violations[0].field === 'chokepointId' && /Unknown/.test(err.violations[0].description),
       );
     });
 
-    it('PRO-gate deny on valid inputs still returns empty-200 (not 400) — contract shift preserved', async () => {
+    it('returns an empty public payload on valid inputs when no data is cached', async () => {
       const res = await getMultiSectorCostShock(makeCtx({}, '/api/supply-chain/v1/get-multi-sector-cost-shock'), validReq);
       assert.equal(res.iso2, 'SG');
       assert.equal(res.chokepointId, 'hormuz_strait');

@@ -35,8 +35,6 @@ import { collectStoryData } from '@/services/story-data';
 // remaining StoryModal eager edge. The modal opens on user interaction
 // (post-paint), so the import() latency is hidden.
 
-import { hasPremiumAccess } from '@/services/panel-gating';
-import { getAuthState, subscribeAuthState } from '@/services/auth-state';
 import { showMapContextMenu } from '@/components/MapContextMenu';
 import { BETA_MODE } from '@/config/beta';
 import { mlWorker } from '@/services/ml-worker';
@@ -96,14 +94,6 @@ export class CountryIntelManager implements AppModule {
   private briefRequestToken = 0;
   private frameworkUnsubscribe: (() => void) | null = null;
   private _fwDebounce: ReturnType<typeof setTimeout> | null = null;
-  // Re-fire PRO-gated country sections on false→true entitlement transition.
-  // Without this, a user who opens a country brief before Clerk resolves
-  // keeps seeing empty national-debt / sanctions / comtrade / tariff cards
-  // until they reselect the country or reload. Tracks the last-seen
-  // entitlement so unrelated auth events (session refresh, prefs sync)
-  // don't re-hammer fetchProSections.
-  private authUnsubscribe: (() => void) | null = null;
-  private lastHadPremium = false;
   private countryBriefPageLoading: Promise<boolean> | null = null;
 
   constructor(ctx: AppContext) {
@@ -123,20 +113,6 @@ export class CountryIntelManager implements AppModule {
         void this.openCountryBriefByCode(code, name).catch((err) => this.handleCountryBriefOpenError(err));
       }, 400);
     });
-
-    this.lastHadPremium = hasPremiumAccess(getAuthState());
-    this.authUnsubscribe = subscribeAuthState(() => {
-      const nowPremium = hasPremiumAccess(getAuthState());
-      if (nowPremium && !this.lastHadPremium) {
-        // Entitlement just resolved — refetch PRO sections for whatever
-        // country the user is currently viewing. No current country =
-        // nothing to retry; the next country open will pick up the new
-        // entitlement naturally.
-        const openCode = this.ctx.countryBriefPage?.getCode();
-        if (openCode) this.fetchProSections(openCode);
-      }
-      this.lastHadPremium = nowPremium;
-    });
   }
 
   destroy(): void {
@@ -147,8 +123,6 @@ export class CountryIntelManager implements AppModule {
     this.countryBriefPageLoading = null;
     this.frameworkUnsubscribe?.();
     this.frameworkUnsubscribe = null;
-    this.authUnsubscribe?.();
-    this.authUnsubscribe = null;
   }
 
   private handleCountryBriefOpenError(err: unknown): void {
@@ -607,7 +581,7 @@ export class CountryIntelManager implements AppModule {
           if (this.ctx.countryBriefPage?.getCode() !== code) return;
           if (sectors.length === 0) {
             this.ctx.countryBriefPage.updateTradeExposure?.(null);
-            if (hasPremiumAccess(getAuthState())) this.ctx.countryBriefPage.updateMultiSectorCostShock?.(null);
+            this.ctx.countryBriefPage.updateMultiSectorCostShock?.(null);
             return;
           }
           // Build a synthetic compat response from sector data (no extra fetch needed)
@@ -629,26 +603,24 @@ export class CountryIntelManager implements AppModule {
           this.ctx.countryBriefPage.updateTradeExposure?.(syntheticResponse, sectors);
 
           // Trigger multi-sector cost shock calculator from the same primary chokepoint.
-          if (hasPremiumAccess(getAuthState()) && top.primaryChokepointId) {
+          if (top.primaryChokepointId) {
             fetchMultiSectorCostShock(code, top.primaryChokepointId, 30).then(multi => {
               if (this.ctx.countryBriefPage?.getCode() !== code) return;
               this.ctx.countryBriefPage.updateMultiSectorCostShock?.(multi);
             }).catch(() => {
               if (this.ctx.countryBriefPage?.getCode() === code) this.ctx.countryBriefPage.updateMultiSectorCostShock?.(null);
             });
-          } else if (hasPremiumAccess(getAuthState())) {
+          } else {
             this.ctx.countryBriefPage.updateMultiSectorCostShock?.(null);
           }
         })
         .catch(() => {
           if (this.ctx.countryBriefPage?.getCode() !== code) return;
           this.ctx.countryBriefPage.updateTradeExposure?.(null);
-          if (hasPremiumAccess(getAuthState())) this.ctx.countryBriefPage.updateMultiSectorCostShock?.(null);
+          this.ctx.countryBriefPage.updateMultiSectorCostShock?.(null);
         });
 
-      if (hasPremiumAccess(getAuthState())) {
-        this.fetchProSections(code);
-      }
+      this.fetchProSections(code);
 
       this.mountCountryTimeline(code, country);
 
@@ -813,17 +785,14 @@ export class CountryIntelManager implements AppModule {
   }
 
   private fetchProSections(code: string): void {
-    // /pro live-preview iframe can't carry a Clerk session, so every pro
+    // /pro live-preview iframe can't carry a Clerk session, so every
     // section call would 401. Skip the RPCs entirely so the embedded
     // preview doesn't spam the parent /pro console with expected failures.
     if (IS_EMBEDDED_PREVIEW) return;
 
     const rpcBase = getRpcBaseUrl();
-    // Pro-section endpoints (national-debt, regional briefs, comtrade flows)
-    // are premium-gated — premiumFetch injects the Clerk bearer / API key so
-    // signed-in pro users actually get data instead of 401.
     const economicClient = new EconomicServiceClient(rpcBase, { fetch: premiumFetch });
-    const intelClientPro = new IntelligenceServiceClient(rpcBase, { fetch: premiumFetch });
+    const intelClient = new IntelligenceServiceClient(rpcBase, { fetch: premiumFetch });
     const tradeClient = new TradeServiceClient(rpcBase, { fetch: premiumFetch });
     const iso3 = iso2ToIso3(code);
 
@@ -840,7 +809,7 @@ export class CountryIntelManager implements AppModule {
       if (this.ctx.countryBriefPage?.getCode() === code) this.ctx.countryBriefPage.updateNationalDebt?.(null);
     });
 
-    intelClientPro.getCountryRisk({ countryCode: code }).then(resp => {
+    intelClient.getCountryRisk({ countryCode: code }).then(resp => {
       if (this.ctx.countryBriefPage?.getCode() !== code) return;
       this.ctx.countryBriefPage.updateSanctionsPressure?.(resp.sanctionsCount > 0 ? {
         entryCount: resp.sanctionsCount,
@@ -851,12 +820,7 @@ export class CountryIntelManager implements AppModule {
     });
 
     const unCode = iso2ToComtradeReporterCode(code);
-    // Trade RPCs (listComtradeFlows + getTariffTrends) are PRO-gated and
-    // 401 for anonymous/free users. Mirror the hasPremiumAccess() guard
-    // already used above for the other premium country-brief cards so we
-    // don't spray the console with 401s on every country click.
-    const hasPremium = hasPremiumAccess(getAuthState());
-    if (unCode && hasPremium) {
+    if (unCode) {
       tradeClient.listComtradeFlows({ reporterCode: unCode, cmdCode: '', anomaliesOnly: false }).then(resp => {
         if (this.ctx.countryBriefPage?.getCode() !== code) return;
         const topFlows = (resp.flows || [])

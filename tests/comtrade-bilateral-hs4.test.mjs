@@ -32,25 +32,20 @@ describe('getCountryProducts sebuf handler (server/worldmonitor/supply-chain/v1/
     );
   });
 
-  it('uses isCallerPremium for PRO gating against ctx.request', () => {
+  it('does not short-circuit on premium access', () => {
     assert.ok(
-      src.includes('isCallerPremium'),
-      'must use isCallerPremium for PRO-gating',
-    );
-    assert.ok(
-      src.includes('isCallerPremium(ctx.request)'),
-      'must invoke isCallerPremium(ctx.request) so the sebuf gateway request is authorised',
+      !src.includes('isCallerPremium'),
+      'must not keep getCountryProducts behind a premium gate',
     );
   });
 
-  it('returns the typed empty payload for both non-PRO and invalid-iso2 paths', () => {
+  it('returns the typed empty payload for valid no-data paths', () => {
     assert.ok(
       /products: \[\], fetchedAt: ''/.test(src),
       'empty fallback must have empty products array and empty fetchedAt',
     );
-    const proIdx = src.indexOf('isPro');
     const validIdx = src.indexOf('[A-Z]{2}');
-    assert.ok(proIdx !== -1 && validIdx !== -1, 'must reference both PRO and validation gates');
+    assert.ok(validIdx !== -1, 'must keep iso2 validation');
   });
 
   it('reads from raw Upstash Redis (skip env-prefix) so seeder writes resolve', () => {
@@ -476,20 +471,10 @@ describe('CountryDeepDivePanel product imports section', () => {
     );
   });
 
-  it('PRO gate check (hasPremiumAccess) guards product imports card', () => {
+  it('initializes the product imports card with a loading state instead of a gate', () => {
     assert.ok(
-      src.includes("import { hasPremiumAccess }"),
-      'CountryDeepDivePanel: must import hasPremiumAccess for PRO gating',
-    );
-    const productImportsIdx = src.indexOf('productImportsCardBody');
-    assert.ok(
-      productImportsIdx !== -1,
-      'CountryDeepDivePanel: must have productImportsCardBody',
-    );
-    const nearbyIsPro = src.slice(Math.max(0, productImportsIdx - 200), productImportsIdx + 300);
-    assert.ok(
-      nearbyIsPro.includes('isPro'),
-      'CountryDeepDivePanel: productImportsCardBody must be gated by isPro check',
+      src.includes("productImportsCardBody.append(this.makeLoading('Loading product data"),
+      'CountryDeepDivePanel: productImportsCardBody must start with a loading state',
     );
   });
 

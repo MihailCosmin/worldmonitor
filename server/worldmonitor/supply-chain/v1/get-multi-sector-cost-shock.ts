@@ -8,7 +8,6 @@ import type {
 } from '../../../../src/generated/server/worldmonitor/supply_chain/v1/service_server';
 import { ValidationError } from '../../../../src/generated/server/worldmonitor/supply_chain/v1/service_server';
 
-import { isCallerPremium } from '../../../_shared/premium-check';
 import { getCachedJson } from '../../../_shared/redis';
 import { CHOKEPOINT_REGISTRY } from '../../../_shared/chokepoint-registry';
 import { CHOKEPOINT_STATUS_KEY } from '../../../_shared/cache-keys';
@@ -72,10 +71,7 @@ export async function getMultiSectorCostShock(
   const closureDays = clampClosureDays(req.closureDays ?? 30);
 
   // Input-shape errors return 400 — restoring the legacy /api/supply-chain/v1/
-  // multi-sector-cost-shock contract. Empty-payload-200 is reserved for the
-  // PRO-gate deny path (intentional contract shift), not for caller bugs
-  // (malformed or missing fields). Distinguishing the two matters for external
-  // API consumers, tests, and silent-failure detection in logs.
+  // multi-sector-cost-shock contract.
   if (!/^[A-Z]{2}$/.test(iso2)) {
     throw new ValidationError([{ field: 'iso2', description: 'iso2 must be a 2-letter uppercase ISO country code' }]);
   }
@@ -85,9 +81,6 @@ export async function getMultiSectorCostShock(
   if (!CHOKEPOINT_REGISTRY.some(c => c.id === chokepointId)) {
     throw new ValidationError([{ field: 'chokepointId', description: `Unknown chokepointId: ${chokepointId}` }]);
   }
-
-  const isPro = await isCallerPremium(ctx.request);
-  if (!isPro) return emptyResponse(iso2, chokepointId, closureDays);
 
   // Seeder writes the products payload via raw key (no env-prefix) — read raw.
   const productsKey = `comtrade:bilateral-hs4:${iso2}:v1`;

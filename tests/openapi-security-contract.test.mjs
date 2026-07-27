@@ -420,12 +420,17 @@ describe('OpenAPI security contract', () => {
 
   it('parses the bearer-auth and entitlement path sources from gateway-adjacent code', () => {
     assert.ok(BEARER_AUTH_PATHS.size > 0, 'expected at least one bearer-auth path');
-    assert.ok(ENDPOINT_ENTITLEMENTS.size >= 8, 'expected issue-scoped entitlement-gated paths');
+    assert.ok(ENDPOINT_ENTITLEMENTS.size >= 4, 'expected issue-scoped entitlement-gated paths');
     assert.ok(!ENDPOINT_ENTITLEMENTS.has('/api/market/v1/analyze-stock'), 'expected stock analysis market path to be ungated');
     assert.ok(!ENDPOINT_ENTITLEMENTS.has('/api/market/v1/backtest-stock'), 'expected stock backtest market path to be ungated');
     assert.ok(!ENDPOINT_ENTITLEMENTS.has('/api/scenario/v1/run-scenario'), 'expected scenario run path to be ungated');
     assert.ok(!ENDPOINT_ENTITLEMENTS.has('/api/scenario/v1/get-scenario-status'), 'expected scenario status path to be ungated');
     assert.ok(!ENDPOINT_ENTITLEMENTS.has('/api/supply-chain/v1/get-bypass-options'), 'expected bypass options path to be ungated');
+    assert.ok(!ENDPOINT_ENTITLEMENTS.has('/api/economic/v1/get-national-debt'), 'expected national debt path to be ungated');
+    assert.ok(!ENDPOINT_ENTITLEMENTS.has('/api/supply-chain/v1/get-country-chokepoint-index'), 'expected chokepoint index path to be ungated');
+    assert.ok(!ENDPOINT_ENTITLEMENTS.has('/api/supply-chain/v1/get-country-products'), 'expected country products path to be ungated');
+    assert.ok(!ENDPOINT_ENTITLEMENTS.has('/api/supply-chain/v1/get-multi-sector-cost-shock'), 'expected multi-sector cost shock path to be ungated');
+    assert.ok(!ENDPOINT_ENTITLEMENTS.has('/api/supply-chain/v1/get-sector-dependency'), 'expected sector dependency path to be ungated');
     assert.ok(!ENDPOINT_ENTITLEMENTS.has('/api/supply-chain/v1/get-route-explorer-lane'), 'expected route explorer lane path to be ungated');
     assert.ok(!ENDPOINT_ENTITLEMENTS.has('/api/supply-chain/v1/get-route-impact'), 'expected route impact path to be ungated');
     assert.equal(ENDPOINT_ENTITLEMENTS.get('/api/sanctions/v1/list-sanctions-pressure'), 1, 'expected sanctions pressure path');
@@ -438,6 +443,11 @@ describe('OpenAPI security contract', () => {
     assert.ok(!PREMIUM_ONLY_PATHS.has('/api/supply-chain/v1/get-route-explorer-lane'), 'route explorer lane must not be treated as premium-only');
     assert.ok(!PREMIUM_ONLY_PATHS.has('/api/supply-chain/v1/get-route-impact'), 'route impact must not be treated as premium-only');
     assert.ok(!PREMIUM_ONLY_PATHS.has('/api/supply-chain/v1/get-bypass-options'), 'bypass options path must not be treated as premium-only');
+    assert.ok(!PREMIUM_ONLY_PATHS.has('/api/economic/v1/get-national-debt'), 'national debt path must not be treated as premium-only');
+    assert.ok(!PREMIUM_ONLY_PATHS.has('/api/supply-chain/v1/get-country-chokepoint-index'), 'chokepoint index path must not be treated as premium-only');
+    assert.ok(!PREMIUM_ONLY_PATHS.has('/api/supply-chain/v1/get-country-products'), 'country products path must not be treated as premium-only');
+    assert.ok(!PREMIUM_ONLY_PATHS.has('/api/supply-chain/v1/get-multi-sector-cost-shock'), 'multi-sector cost shock path must not be treated as premium-only');
+    assert.ok(!PREMIUM_ONLY_PATHS.has('/api/supply-chain/v1/get-sector-dependency'), 'sector dependency path must not be treated as premium-only');
     assert.ok(!PREMIUM_ONLY_PATHS.has('/api/market/v1/analyze-stock'), 'stock analysis path must not be treated as premium-only');
     assert.ok(!PREMIUM_ONLY_PATHS.has('/api/market/v1/backtest-stock'), 'stock backtest path must not be treated as premium-only');
     assert.ok(!PREMIUM_ONLY_PATHS.has('/api/scenario/v1/run-scenario'), 'scenario run path must not be treated as premium-only');

@@ -16,18 +16,12 @@ import { isFeatureAvailable } from '../runtime-config';
 import { dataFreshness } from '../data-freshness';
 import { getHydratedData } from '@/services/bootstrap';
 import { toApiUrl } from '@/services/runtime';
-import { hasPremiumAccess } from '@/services/panel-gating';
 import { EconomicServiceClient } from '@/services/generated-rpc-clients';
 
 // ---- Client + Circuit Breakers ----
 
-// premiumFetch for the whole client: 1 of ~16 methods (getNationalDebt) targets a
-// PREMIUM_RPC_PATHS path. globalThis.fetch here would 401 signed-in browser pros
-// on getNationalDebt with no WORLDMONITOR_API_KEY (gateway runs validateApiKey
-// with forceKey=true on premium paths). premiumFetch no-ops safely when no
-// credentials are available, so the public methods (FRED, BLS, energy, BIS,
-// EU, oil) keep working unchanged. See src/services/supply-chain/index.ts for
-// the same pattern + #3242 review HIGH(new) #1 for the bug class this prevents.
+// premiumFetch remains safe to use across the unified client because it only
+// adds credentials for still-gated paths and no-ops on the public reads.
 const client = new EconomicServiceClient(getRpcBaseUrl(), { fetch: premiumFetch });
 const WB_BREAKERS_WARN_THRESHOLD = 50;
 const wbBreakers = new Map<string, ReturnType<typeof createCircuitBreaker<ListWorldBankIndicatorsResponse>>>();
@@ -724,15 +718,6 @@ async function _fetchNationalDebt(): Promise<GetNationalDebtResponse> {
       if (data.nationalDebt?.entries?.length) return data.nationalDebt;
     }
   } catch { /* fall through to RPC */ }
-
-  // Anonymous (non-premium) users: do NOT call the Pro-gated RPC.
-  // /api/economic/v1/get-national-debt is in PREMIUM_RPC_PATHS, so the
-  // call deterministically 401s for an anonymous client and the breaker
-  // returns emptyNationalDebtFallback anyway — same outcome as us, minus
-  // the Sentry/console noise on every page load.
-  if (!hasPremiumAccess()) {
-    return emptyNationalDebtFallback;
-  }
 
   try {
     return await nationalDebtBreaker.execute(async () => {

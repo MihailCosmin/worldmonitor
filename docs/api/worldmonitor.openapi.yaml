@@ -5295,10 +5295,6 @@ paths:
             summary: GetNationalDebt
             description: GetNationalDebt retrieves national debt clock data for all countries. PRO-gated. Requires an active Pro subscription.
             operationId: GetNationalDebt
-            security:
-                - WorldMonitorKey: []
-                - ApiKeyHeader: []
-                - BearerAuth: []
             parameters:
                 - name: jmespath
                   in: query
@@ -5339,7 +5335,7 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/UnauthorizedError'
                 "403":
-                    description: Pro subscription required.
+                    description: API access requires an active subscription (the API key's subscription is inactive or expired).
                     content:
                         application/json:
                             schema:
@@ -19038,10 +19034,6 @@ paths:
             summary: GetCountryChokepointIndex
             description: GetCountryChokepointIndex returns per-chokepoint exposure scores for a country. PRO-gated. Requires entitlement tier >= 1.
             operationId: GetCountryChokepointIndex
-            security:
-                - WorldMonitorKey: []
-                - ApiKeyHeader: []
-                - BearerAuth: []
             parameters:
                 - name: iso2
                   in: query
@@ -19099,7 +19091,7 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/UnauthorizedError'
                 "403":
-                    description: PRO entitlement access denied.
+                    description: API access requires an active subscription (the API key's subscription is inactive or expired).
                     content:
                         application/json:
                             schema:
@@ -19361,10 +19353,6 @@ paths:
             summary: GetCountryProducts
             description: GetCountryProducts returns the seeded bilateral-HS4 import basket for a country. PRO-gated. Requires entitlement tier >= 1.
             operationId: GetCountryProducts
-            security:
-                - WorldMonitorKey: []
-                - ApiKeyHeader: []
-                - BearerAuth: []
             parameters:
                 - name: iso2
                   in: query
@@ -19417,7 +19405,7 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/UnauthorizedError'
                 "403":
-                    description: PRO entitlement access denied.
+                    description: API access requires an active subscription (the API key's subscription is inactive or expired).
                     content:
                         application/json:
                             schema:
@@ -19464,10 +19452,6 @@ paths:
                 GetMultiSectorCostShock returns per-sector cost-shock estimates for a
                  country+chokepoint+closure-window. PRO-gated. Requires entitlement tier >= 1.
             operationId: GetMultiSectorCostShock
-            security:
-                - WorldMonitorKey: []
-                - ApiKeyHeader: []
-                - BearerAuth: []
             parameters:
                 - name: iso2
                   in: query
@@ -19533,7 +19517,7 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/UnauthorizedError'
                 "403":
-                    description: PRO entitlement access denied.
+                    description: API access requires an active subscription (the API key's subscription is inactive or expired).
                     content:
                         application/json:
                             schema:
@@ -19578,10 +19562,6 @@ paths:
             summary: GetSectorDependency
             description: GetSectorDependency returns dependency flags and risk profile for a country+HS2 sector. PRO-gated. Requires entitlement tier >= 1.
             operationId: GetSectorDependency
-            security:
-                - WorldMonitorKey: []
-                - ApiKeyHeader: []
-                - BearerAuth: []
             parameters:
                 - name: iso2
                   in: query
@@ -19635,7 +19615,7 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/UnauthorizedError'
                 "403":
-                    description: PRO entitlement access denied.
+                    description: API access requires an active subscription (the API key's subscription is inactive or expired).
                     content:
                         application/json:
                             schema:
