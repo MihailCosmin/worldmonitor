@@ -431,7 +431,7 @@ These surfaces already have real feature logic, data structures, or fetch/render
 - Acceptance:
   - Popup shows live transit history and sector breakdown without a lock placeholder.
 
-### [ ] F17. Ungate resilience scores
+### [x] F17. Ungate resilience scores
 
 - Files:
   - `src/components/ResilienceWidget.ts`

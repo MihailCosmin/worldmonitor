@@ -59,19 +59,12 @@ test('ResilienceWidget stays out of the components barrel and loads through Coun
   assert.match(deepDiveSource, /import\(['"]@\/components\/ResilienceWidget['"]\)[\s\S]*?\.then\(\(\{\s*ResilienceWidget\s*\}\)\s*=>[\s\S]*?\)\s*\.catch\(renderFallback\)/);
 });
 
-test('ResilienceWidget auth refresh guard tolerates malformed server countryCode values', async () => {
+test('ResilienceWidget no longer renders premium lock copy', async () => {
   const source = await readFile(new URL('../src/components/ResilienceWidget.ts', import.meta.url), 'utf8');
 
-  assert.match(
-    source,
-    /const loadedCountryCode = normalizeCountryCode\(this\.currentData\?\.countryCode\);/,
-    'auth refresh guard must validate the server countryCode before comparing it',
-  );
-  assert.match(
-    source,
-    /const needsRefresh = !this\.currentData \|\| \(loadedCountryCode !== null && loadedCountryCode !== this\.currentCountryCode\);/,
-    'malformed legacy countryCode values must not cause repeated auth-state refreshes',
-  );
+  assert.doesNotMatch(source, /Sign in to unlock premium resilience scores\./);
+  assert.doesNotMatch(source, /Upgrade to Pro to unlock resilience scores\./);
+  assert.doesNotMatch(source, /renderLocked\(/);
 });
 
 test('getResilienceVisualLevel maps the score thresholds from the widget spec', () => {

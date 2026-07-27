@@ -13,8 +13,6 @@ export const PREMIUM_RPC_PATHS = new Set<string>([
   // Browser calls must attach Clerk auth and bypass wm-session recovery:
   // anonymous 401s here are expected Pro denials, not dead session cookies.
   '/api/intelligence/v1/get-country-intel-brief',
-  '/api/resilience/v1/get-resilience-score',
-  '/api/resilience/v1/get-resilience-ranking',
   '/api/supply-chain/v1/get-country-cost-shock',
   '/api/sanctions/v1/list-sanctions-pressure',
   // #3734: PRO-gated mutation that enqueues a simulation task. Companion

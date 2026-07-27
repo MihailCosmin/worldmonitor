@@ -1,10 +1,7 @@
-import { type AuthSession, getAuthState, subscribeAuthState } from '@/services/auth-state';
-import { PanelGateReason, getPanelGateReason } from '@/services/panel-gating';
 import { getResilienceScore, type ResilienceDomain, type ResilienceScoreResponse } from '@/services/resilience';
 import { h, replaceChildren } from '@/utils/dom-utils';
 import {
   type DimensionConfidence,
-  LOCKED_PREVIEW,
   RESILIENCE_VISUAL_LEVEL_COLORS,
   collectDimensionConfidences,
   formatBaselineStress,
@@ -44,8 +41,6 @@ function clampScore(score: number): number {
 
 export class ResilienceWidget {
   private readonly element: HTMLElement;
-  private authState: AuthSession = getAuthState();
-  private unsubscribeAuth: (() => void) | null = null;
   private currentCountryCode: string | null = null;
   private currentData: ResilienceScoreResponse | null = null;
   private loading = false;
@@ -56,18 +51,6 @@ export class ResilienceWidget {
   constructor(countryCode?: string | null) {
     this.element = document.createElement('section');
     this.element.className = 'cdp-card resilience-widget';
-    this.unsubscribeAuth = subscribeAuthState((state) => {
-      this.authState = state;
-      const gateReason = this.getGateReason();
-      const loadedCountryCode = normalizeCountryCode(this.currentData?.countryCode);
-      const needsRefresh = !this.currentData || (loadedCountryCode !== null && loadedCountryCode !== this.currentCountryCode);
-      if (gateReason === PanelGateReason.NONE && this.currentCountryCode && !this.loading && needsRefresh) {
-        void this.refresh();
-        return;
-      }
-      this.render();
-    });
-
     this.setCountryCode(countryCode ?? null);
   }
 
@@ -100,11 +83,6 @@ export class ResilienceWidget {
       return;
     }
 
-    if (this.authState.isPending || this.getGateReason() !== PanelGateReason.NONE) {
-      this.render();
-      return;
-    }
-
     const requestVersion = ++this.requestVersion;
     this.loading = true;
     this.errorMessage = null;
@@ -133,17 +111,10 @@ export class ResilienceWidget {
 
   public destroy(): void {
     this.requestVersion += 1;
-    this.unsubscribeAuth?.();
-    this.unsubscribeAuth = null;
-  }
-
-  private getGateReason(): PanelGateReason {
-    return getPanelGateReason(this.authState, true);
   }
 
   private render(): void {
-    const gateReason = this.getGateReason();
-    const body = this.renderBody(gateReason);
+    const body = this.renderBody();
 
     replaceChildren(
       this.element,
@@ -165,17 +136,9 @@ export class ResilienceWidget {
     );
   }
 
-  private renderBody(gateReason: PanelGateReason): HTMLElement {
+  private renderBody(): HTMLElement {
     if (!this.currentCountryCode) {
       return h('div', { className: 'cdp-card-body' }, this.makeEmpty('Resilience data loads when a country is selected.'));
-    }
-
-    if (this.authState.isPending) {
-      return h('div', { className: 'cdp-card-body' }, this.makeLoading('Checking access…'));
-    }
-
-    if (gateReason !== PanelGateReason.NONE) {
-      return this.renderLocked(gateReason);
     }
 
     if (this.loading) {
@@ -191,51 +154,6 @@ export class ResilienceWidget {
     }
 
     return this.renderScoreCard(this.currentData);
-  }
-
-  private renderLocked(gateReason: PanelGateReason): HTMLElement {
-    const description = gateReason === PanelGateReason.ANONYMOUS
-      ? 'Sign in to unlock premium resilience scores.'
-      : 'Upgrade to Pro to unlock resilience scores.';
-    const cta = gateReason === PanelGateReason.ANONYMOUS ? 'Sign In' : 'Upgrade to Pro';
-
-    const preview = this.renderScoreCard(LOCKED_PREVIEW, true);
-    preview.classList.add('resilience-widget__preview');
-
-    const button = h('button', {
-      type: 'button',
-      className: 'panel-locked-cta resilience-widget__cta',
-      onclick: () => {
-        if (gateReason === PanelGateReason.ANONYMOUS) {
-          void import('@/services/clerk')
-            .then((module) => module.openSignIn())
-            .catch(() => this.showAuthUnavailable());
-          return;
-        }
-        void this.openUpgradeFlow().catch(() => {
-          window.open('https://worldmonitor.app/pro', '_blank', 'noopener,noreferrer');
-        });
-      },
-    }, cta) as HTMLButtonElement;
-
-    return h(
-      'div',
-      { className: 'cdp-card-body resilience-widget__locked' },
-      preview,
-      h('div', { className: 'panel-locked-desc resilience-widget__gate-desc' }, description),
-      button,
-    );
-  }
-
-  private async showAuthUnavailable(): Promise<void> {
-    const message = 'Sign-in is temporarily unavailable. Please try again.';
-    try {
-      const { showCheckoutErrorToast } = await import('@/services/checkout-error-toast');
-      showCheckoutErrorToast(message);
-      return;
-    } catch {
-      window.alert(message);
-    }
   }
 
   private renderError(message: string): HTMLElement {
@@ -472,25 +390,5 @@ export class ResilienceWidget {
 
   private makeEmpty(text: string): HTMLElement {
     return h('div', { className: 'cdp-empty' }, text);
-  }
-
-  private async openUpgradeFlow(): Promise<void> {
-    const [{ DEFAULT_UPGRADE_PRODUCT }, { isDesktopRuntime }] = await Promise.all([
-      import('@/config/products'),
-      import('@/services/runtime'),
-    ]);
-
-    if (isDesktopRuntime()) {
-      const { invokeTauri } = await import('@/services/tauri-bridge');
-      await invokeTauri<void>('open_url', { url: 'https://worldmonitor.app/pro' })
-        .catch(() => { window.open('https://worldmonitor.app/pro', '_blank', 'noopener,noreferrer'); });
-      return;
-    }
-
-    await import('@/services/checkout')
-      .then((module) => module.startCheckout(DEFAULT_UPGRADE_PRODUCT))
-      .catch(() => {
-        window.open('https://worldmonitor.app/pro', '_blank', 'noopener,noreferrer');
-      });
   }
 }

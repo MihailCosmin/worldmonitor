@@ -236,7 +236,7 @@ describe('resilience runtime manifest', () => {
 });
 
 describe('resilience runtime manifest gateway auth', () => {
-  it('allows no-key manifest access while score and ranking remain premium gated', async () => {
+  it('allows no-key manifest access while score and ranking use normal keyed/session auth', async () => {
     const [{ createDomainGateway, PUBLIC_NO_AUTH_RPC_PATHS, serverOptions }, generated, { resilienceHandler }, { PREMIUM_RPC_PATHS }] = await Promise.all([
       import('../server/gateway.ts'),
       import('../src/generated/server/worldmonitor/resilience/v1/service_server.ts'),
@@ -262,6 +262,8 @@ describe('resilience runtime manifest gateway auth', () => {
       ],
     );
     assert.equal(PREMIUM_RPC_PATHS.has('/api/resilience/v1/get-runtime-manifest'), false);
+    assert.equal(PREMIUM_RPC_PATHS.has('/api/resilience/v1/get-resilience-score'), false);
+    assert.equal(PREMIUM_RPC_PATHS.has('/api/resilience/v1/get-resilience-ranking'), false);
 
     const gateway = createDomainGateway(generated.createResilienceServiceRoutes(resilienceHandler, serverOptions));
 

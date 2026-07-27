@@ -15,9 +15,9 @@ import {
 } from '../src/components/resilience-choropleth-utils';
 
 describe('resilience map layer contracts', () => {
-  it('registers resilience RPCs as premium paths', () => {
-    assert.ok(PREMIUM_RPC_PATHS.has('/api/resilience/v1/get-resilience-score'));
-    assert.ok(PREMIUM_RPC_PATHS.has('/api/resilience/v1/get-resilience-ranking'));
+  it('keeps resilience RPCs off the premium path registry', () => {
+    assert.equal(PREMIUM_RPC_PATHS.has('/api/resilience/v1/get-resilience-score'), false);
+    assert.equal(PREMIUM_RPC_PATHS.has('/api/resilience/v1/get-resilience-ranking'), false);
   });
 
   it('registers resilienceScore as a locked flat layer in every variant', () => {

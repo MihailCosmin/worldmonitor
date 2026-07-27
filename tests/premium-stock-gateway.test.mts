@@ -96,6 +96,11 @@ describe('premium gateway API key enforcement', () => {
       },
       {
         method: 'GET',
+        path: '/api/sanctions/v1/list-sanctions-pressure',
+        handler: async () => new Response(JSON.stringify({ ok: true }), { status: 200 }),
+      },
+      {
+        method: 'GET',
         path: '/api/market/v1/list-market-quotes',
         handler: async () => new Response(JSON.stringify({ ok: true }), { status: 200 }),
       },
@@ -122,6 +127,22 @@ describe('premium gateway API key enforcement', () => {
       },
     }));
     assert.equal(browserWithSession.status, 200);
+
+    const resilienceScoreWithSession = await handler(new Request('https://worldmonitor.app/api/resilience/v1/get-resilience-score?countryCode=US', {
+      headers: {
+        Origin: 'https://worldmonitor.app',
+        'X-WorldMonitor-Key': SESSION_TOKEN,
+      },
+    }));
+    assert.equal(resilienceScoreWithSession.status, 200);
+
+    const resilienceRankingWithSession = await handler(new Request('https://worldmonitor.app/api/resilience/v1/get-resilience-ranking', {
+      headers: {
+        Origin: 'https://worldmonitor.app',
+        'X-WorldMonitor-Key': SESSION_TOKEN,
+      },
+    }));
+    assert.equal(resilienceRankingWithSession.status, 200);
 
     const resilienceScoreNoKey = await handler(new Request('https://worldmonitor.app/api/resilience/v1/get-resilience-score?countryCode=US', {
       headers: { Origin: 'https://worldmonitor.app' },
@@ -611,7 +632,7 @@ describe('premium gateway bearer token auth', () => {
     // Clerk role='pro' remains a supported Pro signal for complimentary,
     // tester, and legacy grants that do not have a Convex entitlement row.
     const token = await signToken({ sub: 'user_pro', plan: 'pro' });
-    const res = await handler(new Request('https://worldmonitor.app/api/resilience/v1/get-resilience-score?countryCode=US', {
+    const res = await handler(new Request('https://worldmonitor.app/api/sanctions/v1/list-sanctions-pressure?countryCode=US', {
       headers: {
         Origin: 'https://worldmonitor.app',
         Authorization: `Bearer ${token}`,
@@ -663,7 +684,7 @@ describe('premium gateway bearer token auth', () => {
     }) as typeof fetch;
 
     try {
-      const res = await handler(new Request('https://worldmonitor.app/api/resilience/v1/get-resilience-score?countryCode=US', {
+      const res = await handler(new Request('https://worldmonitor.app/api/sanctions/v1/list-sanctions-pressure?countryCode=US', {
         headers: {
           Origin: 'https://worldmonitor.app',
           Authorization: `Bearer ${token}`,
@@ -685,7 +706,7 @@ describe('premium gateway bearer token auth', () => {
 
   it('free bearer token on premium endpoint → 403', async () => {
     const token = await signToken({ sub: 'user_free', plan: 'free' });
-    const res = await handler(new Request('https://worldmonitor.app/api/resilience/v1/get-resilience-score?countryCode=US', {
+    const res = await handler(new Request('https://worldmonitor.app/api/sanctions/v1/list-sanctions-pressure?countryCode=US', {
       headers: {
         Origin: 'https://worldmonitor.app',
         Authorization: `Bearer ${token}`,
@@ -696,7 +717,7 @@ describe('premium gateway bearer token auth', () => {
 
   it('rejects invalid/expired bearer token on premium endpoint → 401', async () => {
     const token = await signToken({ sub: 'user_bad', plan: 'pro' }, { key: wrongPrivateKey });
-    const res = await handler(new Request('https://worldmonitor.app/api/resilience/v1/get-resilience-score?countryCode=US', {
+    const res = await handler(new Request('https://worldmonitor.app/api/sanctions/v1/list-sanctions-pressure?countryCode=US', {
       headers: {
         Origin: 'https://worldmonitor.app',
         Authorization: `Bearer ${token}`,
@@ -720,7 +741,7 @@ describe('premium gateway bearer token auth', () => {
     assert.equal(res.status, 401);
   });
 
-  it('rejects free bearer token on resilience premium endpoints → 403', async () => {
+  it('does not treat a free bearer token as resilience access on ungated endpoints', async () => {
     const token = await signToken({ sub: 'user_free', plan: 'free' });
 
     const scoreRes = await handler(new Request('https://worldmonitor.app/api/resilience/v1/get-resilience-score?countryCode=US', {
@@ -729,7 +750,7 @@ describe('premium gateway bearer token auth', () => {
         Authorization: `Bearer ${token}`,
       },
     }));
-    assert.equal(scoreRes.status, 403);
+    assert.equal(scoreRes.status, 401);
 
     const rankingRes = await handler(new Request('https://worldmonitor.app/api/resilience/v1/get-resilience-ranking', {
       headers: {
@@ -737,10 +758,10 @@ describe('premium gateway bearer token auth', () => {
         Authorization: `Bearer ${token}`,
       },
     }));
-    assert.equal(rankingRes.status, 403);
+    assert.equal(rankingRes.status, 401);
   });
 
-  it('rejects invalid bearer token on resilience premium endpoints → 401', async () => {
+  it('rejects invalid bearer token on resilience endpoints without a normal key/session', async () => {
     const token = await signToken({ sub: 'user_bad', plan: 'pro' }, { key: wrongPrivateKey });
 
     const scoreRes = await handler(new Request('https://worldmonitor.app/api/resilience/v1/get-resilience-score?countryCode=US', {
@@ -760,7 +781,7 @@ describe('premium gateway bearer token auth', () => {
     assert.equal(rankingRes.status, 401);
   });
 
-  it('accepts valid Pro bearer token on resilience premium endpoints → 200', async () => {
+  it('does not special-case a valid Pro bearer token on resilience endpoints', async () => {
     const token = await signToken({ sub: 'user_pro', plan: 'pro' });
 
     const scoreRes = await handler(new Request('https://worldmonitor.app/api/resilience/v1/get-resilience-score?countryCode=US', {
@@ -769,7 +790,7 @@ describe('premium gateway bearer token auth', () => {
         Authorization: `Bearer ${token}`,
       },
     }));
-    assert.equal(scoreRes.status, 200);
+    assert.equal(scoreRes.status, 401);
 
     const rankingRes = await handler(new Request('https://worldmonitor.app/api/resilience/v1/get-resilience-ranking', {
       headers: {
@@ -777,7 +798,7 @@ describe('premium gateway bearer token auth', () => {
         Authorization: `Bearer ${token}`,
       },
     }));
-    assert.equal(rankingRes.status, 200);
+    assert.equal(rankingRes.status, 401);
   });
 
   it('rewrites spoofed x-user-id from a verified legacy bearer before reaching handlers', async () => {
@@ -785,14 +806,14 @@ describe('premium gateway bearer token auth', () => {
     const headerEchoHandler = createDomainGateway([
       {
         method: 'GET',
-        path: '/api/resilience/v1/get-resilience-score',
+        path: '/api/sanctions/v1/list-sanctions-pressure',
         handler: async (request) => new Response(JSON.stringify({
           userId: request.headers.get('x-user-id'),
         }), { status: 200 }),
       },
     ]);
 
-    const res = await headerEchoHandler(new Request('https://worldmonitor.app/api/resilience/v1/get-resilience-score?countryCode=US', {
+    const res = await headerEchoHandler(new Request('https://worldmonitor.app/api/sanctions/v1/list-sanctions-pressure?countryCode=US', {
       headers: {
         Origin: 'https://worldmonitor.app',
         Authorization: `Bearer ${token}`,
