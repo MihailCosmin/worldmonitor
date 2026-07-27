@@ -41,7 +41,7 @@ describe('variant panel config resolution', () => {
     );
   });
 
-  it('does not inherit full desktop premium metadata for variant-specific supply-chain panels', () => {
+  it('keeps supply-chain variants ungated across full and variant-specific configs', () => {
     const panels = src('src/config/panels.ts');
     const definitionFor = (variant: string): string => {
       const match = panels.match(new RegExp(`const ${variant}_PANELS[\\s\\S]*?'supply-chain': \\{([^}]*)\\}`));
@@ -49,9 +49,10 @@ describe('variant panel config resolution', () => {
       return match[1] ?? '';
     };
 
-    assert.match(definitionFor('FULL'), /premium:\s*'enhanced'/);
+    assert.doesNotMatch(definitionFor('FULL'), /premium:/);
     assert.doesNotMatch(definitionFor('COMMODITY'), /premium:/);
     assert.doesNotMatch(definitionFor('ENERGY'), /premium:/);
+    assert.equal(getEffectivePanelConfig('supply-chain', 'full').premium, undefined);
     assert.equal(getEffectivePanelConfig('supply-chain', 'commodity').premium, undefined);
     assert.equal(getEffectivePanelConfig('supply-chain', 'energy').premium, undefined);
   });

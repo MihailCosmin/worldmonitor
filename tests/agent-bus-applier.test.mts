@@ -138,7 +138,7 @@ describe('agent bus applier', () => {
       result.targets.map((target) => [target.target, target.status, target.reason ?? '']),
       [
         ['conflicts', 'applied', ''],
-        ['resilienceScore', 'denied', 'layer_not_entitled'],
+        ['resilienceScore', 'denied', 'layer_not_executable'],
         ['storageFacilities', 'denied', 'layer_not_executable'],
         ['notARealLayer', 'denied', 'unknown_layer'],
       ],

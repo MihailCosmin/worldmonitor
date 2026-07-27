@@ -447,7 +447,7 @@ These surfaces already have real feature logic, data structures, or fetch/render
 - Acceptance:
   - The resilience widget renders actual scores instead of a lock card.
 
-### [ ] F18. Ungate premium/enhanced map layers
+### [x] F18. Ungate premium/enhanced map layers
 
 - Files:
   - `src/config/panels.ts`
