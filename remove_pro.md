@@ -339,7 +339,7 @@ These surfaces already have real feature logic, data structures, or fetch/render
 - Acceptance:
   - A user can run route intelligence without hitting a premium-only gate.
 
-### [ ] F12. Ungate Scenario Engine
+### [x] F12. Ungate Scenario Engine
 
 - Files:
   - `src/components/MapContainer.ts`

@@ -104,8 +104,6 @@ const ENDPOINT_ENTITLEMENTS: Record<string, number> = {
   '/api/intelligence/v1/classify-event': 1,
   '/api/intelligence/v1/get-country-intel-brief': 1,
   '/api/sanctions/v1/list-sanctions-pressure': 1,
-  '/api/scenario/v1/run-scenario': 1,
-  '/api/scenario/v1/get-scenario-status': 1,
   '/api/supply-chain/v1/get-country-chokepoint-index': 1,
   '/api/supply-chain/v1/get-bypass-options': 1,
   '/api/supply-chain/v1/get-country-cost-shock': 1,

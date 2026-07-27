@@ -54,9 +54,6 @@ import type { GetChokepointStatusResponse } from '@/services/supply-chain';
 import type { ChinaCorridorControlTower } from '../../shared/china-corridor-control-towers';
 import { projectChinaCorridorOverlay } from './map/china-corridor-overlay';
 import type { ScenarioVisualState, ScenarioResult } from '@/config/scenario-templates';
-import { getAuthState } from '@/services/auth-state';
-import { hasPremiumAccess } from '@/services/panel-gating';
-import { trackGateHit } from '@/services/analytics';
 
 export type { ScenarioVisualState, ScenarioResult };
 
@@ -1468,7 +1465,6 @@ export class MapContainer {
 
   /**
    * Activate a scenario across all active renderers.
-   * PRO-gated — free users trigger `trackGateHit('scenario-engine')` only.
    *
    * @param scenarioId  Template ID from scenario-templates.ts
    * @param result      Computed result from the scenario worker
@@ -1480,10 +1476,6 @@ export class MapContainer {
   }
 
   public activateScenario(scenarioId: string, result: ScenarioResult): void {
-    if (!hasPremiumAccess(getAuthState())) {
-      trackGateHit('scenario-engine');
-      return;
-    }
     const state: ScenarioVisualState = {
       scenarioId,
       disruptedChokepointIds: result.affectedChokepointIds,

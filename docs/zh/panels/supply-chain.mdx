@@ -3,7 +3,7 @@ title: "供应链"
 description: "供应链面板是 WorldMonitor 仪表盘的供应链指挥中心，整合航运压力综合指标、主要承运人与航运 ETF 追踪、锂钴稀土等关键矿物价格走势、全球咽喉要道通行卡片以及 Scenario Engine 情景触发面，为分析师提供一站式的物流风险、原材料波动与地缘中断预警工作区。"
 ---
 
-**Supply Chain** 面板（内部 id `supply-chain`）是一切供应链相关内容的主要入口：综合航运压力分数、带价格变动的承运人和 ETF 行、矿物集中度视图，以及最重要的是 **[Scenario Engine](/zh/scenario-engine)** 触发按钮，允许 PRO 用户在地图和面板状态上激活预构建的中断场景。
+**Supply Chain** 面板（内部 id `supply-chain`）是一切供应链相关内容的主要入口：综合航运压力分数、带价格变动的承运人和 ETF 行、矿物集中度视图，以及最重要的是 **[Scenario Engine](/zh/scenario-engine)** 触发按钮，允许用户在地图和面板状态上激活预构建的中断场景。
 
 ## 面板显示内容
 
@@ -12,7 +12,7 @@ description: "供应链面板是 WorldMonitor 仪表盘的供应链指挥中心�
 - **航运压力标题** — 一个综合压力分数（0-100），带着色仪表，按级别分桶（`critical` / `elevated` / `moderate` / `normal`）。
 - **承运人/ETF/指数行** — 每代码价格、百分比变化（`▲`/`▼` 箭头，带看涨/看跌色调）、紧凑迷你图和类型徽章（`ETF` / `IDX` / `CARR`）。
 - **关键矿物行** — 每矿物前 3 生产国集中度、HHI 和风险评级（`critical` / `high` / `moderate` / `low`）。
-- **Scenario Engine 触发卡片** — 每场景触发按钮（`sc-scenario-trigger` / `sc-scenario-btn`），将模板 id 分派到场景 worker。免费用户看到按钮但在激活时遇到 PRO 门控。全范围场景运行使用 v1 已种子化的报告国集合（`US`、`CN`、`RU`、`IR`、`IN`、`TW`）。请参见 [Scenario Engine](/zh/scenario-engine) 了解完整工作流。
+- **Scenario Engine 触发卡片** — 每场景触发按钮（`sc-scenario-trigger` / `sc-scenario-btn`），将模板 id 分派到场景 worker。全范围场景运行使用 v1 已种子化的报告国集合（`US`、`CN`、`RU`、`IR`、`IN`、`TW`）。请参见 [Scenario Engine](/zh/scenario-engine) 了解完整工作流。
 - **活动场景横幅**（当场景运行时）— 图标、场景名称、可选参数标签（持续时间 + 成本增加）、受影响最大的国家、关闭 ×。当模板参数被填充时，渲染额外的 "Simulating …" 标语。横幅构建位于 `src/components/SupplyChainPanel.ts` 的 `renderScenarioBanner()` 中。
 
 面板 id 为 `supply-chain`；规范组件为 `src/components/SupplyChainPanel.ts`。按变体的标题："Supply Chain"（full/finance）或 "Supply Chain & Logistics"（commodity）。
@@ -53,7 +53,7 @@ description: "供应链面板是 WorldMonitor 仪表盘的供应链指挥中心�
 
 | 面 | 方法 + 路由 | 数据源 |
 |---|---|---|
-| 场景激活 | `POST /api/scenario/v1/run-scenario` | PRO Scenario Engine 触发按钮分派模板 id 和参数。 |
+| 场景激活 | `POST /api/scenario/v1/run-scenario` | Scenario Engine 触发按钮分派模板 id 和参数。 |
 | 场景状态 | `GET /api/scenario/v1/get-scenario-status` | Scenario Engine 轮询在 worker 完成后绘制活动场景横幅。 |
 
 请参见 [Scenarios API](/zh/api-scenarios) 了解完整异步作业合约。
@@ -64,7 +64,7 @@ description: "供应链面板是 WorldMonitor 仪表盘的供应链指挥中心�
 
 ## 层级与门控
 
-Supply Chain 面板本身在 Web 端**免费**（full / finance / commodity 变体）。桌面端 full 变体注册叠加 `premium: 'enhanced'`。**Scenario Engine 激活是 PRO**，无论 Web 还是桌面 — 免费用户看到触发按钮但在激活时遇到 `scenario-engine` 门控。
+Supply Chain 面板本身在 Web 端**免费**（full / finance / commodity 变体）。桌面端 full 变体注册叠加 `premium: 'enhanced'`。Scenario Engine 激活在 Web 和桌面端都对免费用户开放。
 
 ## 相关
 

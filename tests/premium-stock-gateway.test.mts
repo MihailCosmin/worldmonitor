@@ -45,8 +45,6 @@ function installRateLimitRedisFake(): void {
 const ISSUE_4609_GATED_ROUTES = [
   { method: 'POST', path: '/api/forecast/v1/trigger-simulation' },
   { method: 'GET', path: '/api/sanctions/v1/list-sanctions-pressure' },
-  { method: 'POST', path: '/api/scenario/v1/run-scenario' },
-  { method: 'GET', path: '/api/scenario/v1/get-scenario-status' },
   { method: 'GET', path: '/api/supply-chain/v1/get-country-chokepoint-index' },
   { method: 'GET', path: '/api/supply-chain/v1/get-bypass-options' },
   { method: 'GET', path: '/api/supply-chain/v1/get-country-cost-shock' },

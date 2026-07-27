@@ -391,7 +391,6 @@ export class SupplyChainPanel extends Panel {
             tmpl.affectedChokepointIds.includes(cp.id) && tmpl.type !== 'tariff_shock'
           );
           if (!template) return '';
-          const isPro = hasPremiumAccess(getAuthState());
           // Derive button state from activeScenarioState so it stays correct
           // across re-renders. Previously runScenario() imperatively set
           // btn.disabled = true + btn.textContent = 'Active' AFTER the
@@ -402,14 +401,10 @@ export class SupplyChainPanel extends Panel {
           const isActiveScenario = this.activeScenarioState?.scenarioId === template.id;
           const btnClass = [
             'sc-scenario-btn',
-            !isPro ? 'sc-scenario-btn--gated' : '',
             isActiveScenario ? 'sc-scenario-btn--active' : '',
           ].filter(Boolean).join(' ');
           const btnLabel = isActiveScenario ? 'Active' : 'Simulate Closure';
-          const btnAttrs = [
-            !isPro ? 'data-gated="1"' : '',
-            isActiveScenario ? 'disabled' : '',
-          ].filter(Boolean).join(' ');
+          const btnAttrs = [isActiveScenario ? 'disabled' : ''].filter(Boolean).join(' ');
           return `<div class="sc-scenario-trigger" data-scenario-id="${escapeHtml(template.id)}" data-chokepoint-id="${escapeHtml(cp.id)}">
             <button class="${btnClass}" ${btnAttrs} aria-label="Simulate ${escapeHtml(template.name)}">
               ${btnLabel}
@@ -818,10 +813,6 @@ export class SupplyChainPanel extends Panel {
   }
 
   private async runScenario(trigger: HTMLElement, btn: HTMLButtonElement): Promise<void> {
-    if (btn.dataset.gated === '1') {
-      trackGateHit('scenario-engine');
-      return;
-    }
     this.scenarioPollController?.abort();
     this.scenarioPollController = new AbortController();
     const { signal } = this.scenarioPollController;

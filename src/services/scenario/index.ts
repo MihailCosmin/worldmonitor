@@ -14,9 +14,8 @@ export type {
   ScenarioTemplate,
 };
 
-// RunScenario + GetScenarioStatus are PRO-gated — premiumFetch injects the
-// Clerk Bearer token / API key. ListScenarioTemplates is public but harmless
-// to route through the same fetch wrapper.
+// Scenario routes are public, but keeping the shared fetch wrapper preserves
+// the browser/session behavior used by other RPC clients.
 const client = new ScenarioServiceClient(getRpcBaseUrl(), { fetch: premiumFetch });
 
 /**

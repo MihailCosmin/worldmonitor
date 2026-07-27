@@ -41,11 +41,7 @@ Scenario Engine 位于主仪表盘的 **Supply Chain** 面板内。每个预构�
 - **模板回显** — worker 推导的模板键（`affectedChokepointIds.join('+')`，或无物理咽喉要道时的 `tariff_shock`）、持续时间、中断百分比和成本冲击乘数，使客户端无需重新查询目录即可渲染运行。状态结果不重复 `affectedHs2`；从 `/list-scenario-templates` 读取板块范围。
 - **摘要卡片** 注入 Supply Chain 面板，在停用场景前一直可见。
 
-UI 是状态驱动而非模态 — 激活场景在每个地图渲染器（deck.gl、globe、SVG 回退）上设置 `scenarioState`，使咽喉要道颜色和国家分级统计图反映中断，直到你停用。这由 `src/components/MapContainer.ts:1010` 的 `MapContainer.activateScenario` 协调，该函数显式 PRO 门控。
-
-## 层级与门控
-
-Scenario Engine 是 **PRO**。免费用户看到触发按钮但在激活时被阻止：记录 `scenario-engine` 门控命中事件，地图不重绘。`ScenarioService.RunScenario` 处理器也在边缘强制执行 PRO（`server/worldmonitor/scenario/v1/run-scenario.ts`）。
+UI 是状态驱动而非模态 — 激活场景在每个地图渲染器（deck.gl、globe、SVG 回退）上设置 `scenarioState`，使咽喉要道颜色和国家分级统计图反映中断，直到你停用。这由 `src/components/MapContainer.ts` 中的 `MapContainer.activateScenario` 协调。
 
 API 侧的速率限制 — 10 个作业/分钟/IP，一旦待处理队列已超过 100 个作业即施加队列背压 — 记录在 [Scenarios API](/zh/api-scenarios#run-a-scenario) 中。
 

@@ -12,7 +12,7 @@ import "worldmonitor/scenario/v1/list_scenario_templates.proto";
 service ScenarioService {
   option (sebuf.http.service_config) = {base_path: "/api/scenario/v1"};
 
-  // RunScenario enqueues a scenario job on scenario-queue:pending. PRO-gated.
+  // RunScenario enqueues a scenario job on scenario-queue:pending.
   // Async job pattern: a successful enqueue returns HTTP 202 Accepted with a
   // Location header pointing at GetScenarioStatus; poll it (or the statusUrl
   // body field) with the returned jobId until status is "done" or "failed".
@@ -22,7 +22,7 @@ service ScenarioService {
     option (sebuf.http.config) = {path: "/run-scenario", method: HTTP_METHOD_POST};
   }
 
-  // GetScenarioStatus polls a single job's result. PRO-gated.
+  // GetScenarioStatus polls a single job's result.
   // Returns status="pending" when no result key exists, mirroring the
   // worker's lifecycle state once the key is written.
   rpc GetScenarioStatus(GetScenarioStatusRequest) returns (GetScenarioStatusResponse) {
@@ -30,7 +30,7 @@ service ScenarioService {
   }
 
   // ListScenarioTemplates returns the catalog of pre-defined scenarios.
-  // Not PRO-gated — used by documented public API consumers.
+  // Publicly documented for direct API consumers.
   rpc ListScenarioTemplates(ListScenarioTemplatesRequest) returns (ListScenarioTemplatesResponse) {
     option (sebuf.http.config) = {path: "/list-scenario-templates", method: HTTP_METHOD_GET};
   }

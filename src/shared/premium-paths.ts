@@ -23,8 +23,6 @@ export const PREMIUM_RPC_PATHS = new Set<string>([
   '/api/supply-chain/v1/get-sector-dependency',
   '/api/economic/v1/get-national-debt',
   '/api/sanctions/v1/list-sanctions-pressure',
-  '/api/scenario/v1/run-scenario',
-  '/api/scenario/v1/get-scenario-status',
   // #3734: PRO-gated mutation that enqueues a simulation task. Companion
   // /get-simulation-outcome remains public (existing convention).
   '/api/forecast/v1/trigger-simulation',

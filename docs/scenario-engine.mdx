@@ -41,11 +41,7 @@ A completed scenario returns:
 - **Template echo** — the worker-derived template key (`affectedChokepointIds.join('+')`, or `tariff_shock` when there are no physical chokepoints), duration, disruption percent, and cost-shock multiplier so clients can render the run without re-looking up the catalog. The status result does not repeat `affectedHs2`; read sector scope from `/list-scenario-templates`.
 - **A summary card** injected into the Supply Chain panel that stays visible until you deactivate the scenario.
 
-The UI is state-driven, not modal — activating a scenario sets a `scenarioState` on every map renderer (deck.gl, globe, SVG fallback) so chokepoint colors and country choropleths reflect the disruption until you deactivate. This is coordinated by `MapContainer.activateScenario` at `src/components/MapContainer.ts:1010`, which is explicitly PRO-gated.
-
-## Tier & gating
-
-Scenario Engine is **PRO**. Free users see the trigger buttons but are blocked at activation: a `scenario-engine` gate-hit event is logged and the map is not repainted. The `ScenarioService.RunScenario` handler also enforces PRO at the edge (`server/worldmonitor/scenario/v1/run-scenario.ts`).
+The UI is state-driven, not modal — activating a scenario sets a `scenarioState` on every map renderer (deck.gl, globe, SVG fallback) so chokepoint colors and country choropleths reflect the disruption until you deactivate. This is coordinated by `MapContainer.activateScenario` in `src/components/MapContainer.ts`.
 
 Rate limits on the API side — 10 jobs / minute / IP, with queue backpressure once the pending queue is already above 100 jobs — are documented in [Scenarios API](/api-scenarios#run-a-scenario).
 

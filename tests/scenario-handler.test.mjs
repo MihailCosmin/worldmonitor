@@ -4,8 +4,8 @@
  * edge functions enforced:
  *   - run-scenario: 405 (via sebuf service-config method=POST), scenarioId
  *     validation against the template registry, iso2 regex, queue-depth
- *     backpressure, PRO gate, AbortSignal.timeout on Redis fetches.
- *   - get-scenario-status: JOB_ID_RE path-traversal guard, PRO gate.
+ *     backpressure, AbortSignal.timeout on Redis fetches.
+ *   - get-scenario-status: JOB_ID_RE path-traversal guard.
  *   - list-scenario-templates: catalog shape preservation.
  */
 
@@ -27,10 +27,6 @@ function makeCtx(headers = {}) {
     headers,
   });
   return { request: req, pathParams: {}, headers };
-}
-
-function proCtx() {
-  return makeCtx({ 'X-WorldMonitor-Key': 'pro-test-key' });
 }
 
 let runScenario;
@@ -65,35 +61,23 @@ describe('ScenarioService handlers', () => {
   });
 
   describe('runScenario', () => {
-    it('rejects non-PRO callers with 403', async () => {
-      const ctx = makeCtx();
-      await assert.rejects(
-        () => runScenario(ctx, { scenarioId: 'taiwan-strait-full-closure', iso2: '' }),
-        (err) => err instanceof ApiError && err.statusCode === 403,
-      );
-      // Error paths must never mark the request for the 202 upgrade.
-      const sideChannel = await import('../server/_shared/response-headers.ts');
-      assert.equal(sideChannel.drainSuccessStatusOverride(ctx.request), undefined);
-      assert.equal(sideChannel.drainResponseHeaders(ctx.request), undefined);
-    });
-
     it('rejects missing scenarioId with ValidationError', async () => {
       await assert.rejects(
-        () => runScenario(proCtx(), { scenarioId: '', iso2: '' }),
+        () => runScenario(makeCtx(), { scenarioId: '', iso2: '' }),
         (err) => err instanceof ValidationError && err.violations[0].field === 'scenarioId',
       );
     });
 
     it('rejects unknown scenarioId with ValidationError', async () => {
       await assert.rejects(
-        () => runScenario(proCtx(), { scenarioId: 'not-a-real-scenario', iso2: '' }),
+        () => runScenario(makeCtx(), { scenarioId: 'not-a-real-scenario', iso2: '' }),
         (err) => err instanceof ValidationError && /Unknown scenario/.test(err.violations[0].description),
       );
     });
 
     it('rejects malformed iso2 with ValidationError', async () => {
       await assert.rejects(
-        () => runScenario(proCtx(), { scenarioId: 'taiwan-strait-full-closure', iso2: 'usa' }),
+        () => runScenario(makeCtx(), { scenarioId: 'taiwan-strait-full-closure', iso2: 'usa' }),
         (err) => err instanceof ValidationError && err.violations[0].field === 'iso2',
       );
     });
@@ -107,7 +91,7 @@ describe('ScenarioService handlers', () => {
         const results = body.map((cmd) => cmd[0] === 'LLEN' ? { result: 0 } : { result: 1 });
         return new Response(JSON.stringify(results), { status: 200 });
       };
-      const ctx = proCtx();
+      const ctx = makeCtx();
       const res = await runScenario(ctx, { scenarioId: 'taiwan-strait-full-closure', iso2: '' });
       assert.match(res.jobId, /^scenario:\d{13}:[a-z0-9]{8}$/);
       assert.equal(res.status, 'pending');
@@ -140,7 +124,7 @@ describe('ScenarioService handlers', () => {
       globalThis.fetch = async () =>
         new Response(JSON.stringify([{ result: 101 }]), { status: 200 });
       await assert.rejects(
-        () => runScenario(proCtx(), { scenarioId: 'taiwan-strait-full-closure', iso2: '' }),
+        () => runScenario(makeCtx(), { scenarioId: 'taiwan-strait-full-closure', iso2: '' }),
         (err) => err instanceof ApiError && err.statusCode === 429 && /capacity/i.test(err.message),
       );
     });
@@ -155,7 +139,7 @@ describe('ScenarioService handlers', () => {
         return new Response('upstream error', { status: 500 });
       };
       await assert.rejects(
-        () => runScenario(proCtx(), { scenarioId: 'taiwan-strait-full-closure', iso2: '' }),
+        () => runScenario(makeCtx(), { scenarioId: 'taiwan-strait-full-closure', iso2: '' }),
         (err) => err instanceof ApiError && err.statusCode === 502,
       );
     });
@@ -171,30 +155,23 @@ describe('ScenarioService handlers', () => {
   });
 
   describe('getScenarioStatus', () => {
-    it('rejects non-PRO callers with 403', async () => {
-      await assert.rejects(
-        () => getScenarioStatus(makeCtx(), { jobId: 'scenario:1712345678901:abcdefgh' }),
-        (err) => err instanceof ApiError && err.statusCode === 403,
-      );
-    });
-
     it('rejects missing jobId with ValidationError', async () => {
       await assert.rejects(
-        () => getScenarioStatus(proCtx(), { jobId: '' }),
+        () => getScenarioStatus(makeCtx(), { jobId: '' }),
         (err) => err instanceof ValidationError,
       );
     });
 
     it('rejects path-traversal jobId with ValidationError', async () => {
       await assert.rejects(
-        () => getScenarioStatus(proCtx(), { jobId: '../../etc/passwd' }),
+        () => getScenarioStatus(makeCtx(), { jobId: '../../etc/passwd' }),
         (err) => err instanceof ValidationError,
       );
     });
 
     it('rejects malformed jobId (wrong suffix charset)', async () => {
       await assert.rejects(
-        () => getScenarioStatus(proCtx(), { jobId: 'scenario:1712345678901:ABCDEFGH' }),
+        () => getScenarioStatus(makeCtx(), { jobId: 'scenario:1712345678901:ABCDEFGH' }),
         (err) => err instanceof ValidationError,
       );
     });
@@ -202,7 +179,7 @@ describe('ScenarioService handlers', () => {
     it('returns pending when Redis key is absent', async () => {
       globalThis.fetch = async () =>
         new Response(JSON.stringify({ result: null }), { status: 200 });
-      const res = await getScenarioStatus(proCtx(), { jobId: 'scenario:1712345678901:abcdefgh' });
+      const res = await getScenarioStatus(makeCtx(), { jobId: 'scenario:1712345678901:abcdefgh' });
       assert.equal(res.status, 'pending');
       assert.equal(res.result, undefined);
     });
@@ -213,7 +190,7 @@ describe('ScenarioService handlers', () => {
           JSON.stringify({ result: JSON.stringify({ status: 'processing', startedAt: 123 }) }),
           { status: 200 },
         );
-      const res = await getScenarioStatus(proCtx(), { jobId: 'scenario:1712345678901:abcdefgh' });
+      const res = await getScenarioStatus(makeCtx(), { jobId: 'scenario:1712345678901:abcdefgh' });
       assert.equal(res.status, 'processing');
     });
 
@@ -232,7 +209,7 @@ describe('ScenarioService handlers', () => {
           }),
           { status: 200 },
         );
-      const res = await getScenarioStatus(proCtx(), { jobId: 'scenario:1712345678901:abcdefgh' });
+      const res = await getScenarioStatus(makeCtx(), { jobId: 'scenario:1712345678901:abcdefgh' });
       assert.equal(res.status, 'done');
       assert.ok(res.result);
       assert.deepEqual(res.result.affectedChokepointIds, ['taiwan_strait']);
@@ -250,7 +227,7 @@ describe('ScenarioService handlers', () => {
           }),
           { status: 200 },
         );
-      const res = await getScenarioStatus(proCtx(), { jobId: 'scenario:1712345678901:abcdefgh' });
+      const res = await getScenarioStatus(makeCtx(), { jobId: 'scenario:1712345678901:abcdefgh' });
       assert.equal(res.status, 'failed');
       assert.equal(res.error, 'computation_error');
     });

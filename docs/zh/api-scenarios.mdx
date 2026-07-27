@@ -3,7 +3,7 @@ title: "场景 API"
 description: "针对指定国家或 v1 种子报告器集合运行预定义供应链中断场景，并轮询后台 worker 计算结果的 Scenarios API 完整端点参考，涵盖场景触发、参数配置、任务状态查询、中间进度事件、结果导出、历史回放与订阅通知端点，适用于风险推演、桌面演习与压力测试。"
 ---
 
-The **scenarios** API 是建立在 WorldMonitor 咽喉点 + 贸易数据集之上的 PRO 专属、作业排队接口。调用方将命名的场景模板加入队列（可选国家），然后轮询 job-id 直到 worker 完成。若未提供国家，v1 仅在种子报告集上计算：`US`、`CN`、`RU`、`IR`、`IN` 和 `TW`。
+The **scenarios** API 是建立在 WorldMonitor 咽喉点 + 贸易数据集之上的作业排队接口。调用方将命名的场景模板加入队列（可选国家），然后轮询 job-id 直到 worker 完成。若未提供国家，v1 仅在种子报告集上计算：`US`、`CN`、`RU`、`IR`、`IN` 和 `TW`。
 
 <Info>
 本服务由 proto 支持并已纳入已发布的 OpenAPI 包 — 参见 `proto/worldmonitor/scenario/v1/service.proto` 和 `/api/ScenarioService.openapi.yaml`。本页在生成的参考文档之上补充迁移说明和示例。
@@ -52,7 +52,6 @@ The **scenarios** API 是建立在 WorldMonitor 咽喉点 + 贸易数据集之�
 
 将作业加入队列。返回调用方必须轮询的 `jobId`。
 
-- **鉴权**：需要 PRO 权限。可通过以下任一方式授予：(a) 有效的 `X-WorldMonitor-Key`（来自 `WORLDMONITOR_VALID_KEYS` 的环境密钥，或所有者拥有 `apiAccess` 权限的用户专属 `wm_` 前缀密钥），**或** (b) 用户角色为 `pro` 或 Dodo 权限层级 ≥ 1 的 Clerk bearer token。仅凭受信任的浏览器 Origin **不足以**通过鉴权 — `server/_shared/premium-check.ts` 中的 `isCallerPremium()` 仅认可显式凭证。浏览器调用可用，是因为 `premiumFetch()`（`src/services/premium-fetch.ts`）代表调用方注入了上述两种凭证形式之一。
 - **速率限制**：
   - 每个 IP 每分钟 10 个作业（由网关通过 `server/_shared/rate-limit.ts` 中的 `ENDPOINT_RATE_POLICIES` 强制执行）
   - 队列背压在入队前检查 pending Redis 列表；深度 `> 100` 以 `429` 拒绝，因此深度 `100` 仍可再接受一个作业。
@@ -92,7 +91,6 @@ The **scenarios** API 是建立在 WorldMonitor 咽喉点 + 贸易数据集之�
 |--------|-----------|-------|
 | 400 | `Validation failed` (包含 `scenarioId`) | 缺失或未知的 `scenarioId` |
 | 400 | `Validation failed` (包含 `iso2`) | 格式错误的 `iso2` |
-| 403 | `PRO subscription required` | 非 PRO |
 | 405 | — | 非 `POST` 方法（由 sebuf service-config 强制） |
 | 429 | `Too many requests` | 每 IP 10 次/分钟的网关速率限制 |
 | 429 | `Scenario queue is at capacity, please try again later` | 入队前 pending 队列深度大于 100 |
@@ -104,7 +102,6 @@ The **scenarios** API 是建立在 WorldMonitor 咽喉点 + 贸易数据集之�
 
 返回 worker 写入的作业当前状态，或在作业仍在队列中时返回合成的 `pending` 桩。
 
-- **鉴权**：同 `/run-scenario`
 - **jobId 格式**：`scenario:{unix-ms}:{8-char-suffix}` — 严格校验以防路径遍历
 
 **状态生命周期**：
@@ -164,7 +161,6 @@ The **scenarios** API 是建立在 WorldMonitor 咽喉点 + 贸易数据集之�
 | 状态码 | `message` | 原因 |
 |--------|-----------|-------|
 | 400 | `Validation failed` (包含 `jobId`) | 缺失或格式错误的 `jobId` |
-| 403 | `PRO subscription required` | 非 PRO |
 | 405 | — | 非 `GET` 方法（由 sebuf service-config 强制） |
 | 502 | `Failed to fetch job status` | Redis 读取失败 |
 
