@@ -730,7 +730,7 @@ Intentional paid boundaries that are not part of this follow-up remain allowed: 
 - Acceptance:
   - A free user receives real country brief, sanctions, and cost-shock data; the Sanctions Pressure panel no longer resolves to an entitlement-caused empty state.
 
-### [ ] D9. Finish desktop and map-layer ungating
+### [x] D9. Finish desktop and map-layer ungating
 
 - Files:
   - `src/app/panel-layout.ts`

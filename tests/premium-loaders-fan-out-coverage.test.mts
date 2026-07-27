@@ -9,7 +9,9 @@ import { resolve } from 'node:path';
 
 const REPO_ROOT = resolve(import.meta.dirname, '..');
 const APP_TS = readFileSync(resolve(REPO_ROOT, 'src/App.ts'), 'utf8');
+const PANEL_LAYOUT_TS = readFileSync(resolve(REPO_ROOT, 'src/app/panel-layout.ts'), 'utf8');
 const DATA_LOADER_TS = readFileSync(resolve(REPO_ROOT, 'src/app/data-loader.ts'), 'utf8');
+const DECKGL_MAP_TS = readFileSync(resolve(REPO_ROOT, 'src/components/DeckGLMap.ts'), 'utf8');
 const GLOBAL_TENDERS_TS = readFileSync(resolve(REPO_ROOT, 'src/services/global-tenders.ts'), 'utf8');
 
 describe('now-public loaders stay on the normal panel lifecycle', () => {
@@ -100,6 +102,57 @@ describe('now-public loaders stay on the normal panel lifecycle', () => {
       DATA_LOADER_TS,
       /async loadResilienceRanking\([^)]*\): Promise<void> \{\s*if \(!hasPremiumAccess\(\)/s,
       'loadResilienceRanking() must not early-return for non-premium users',
+    );
+  });
+
+  it('does not desktop-lock public forecast and intelligence panels', () => {
+    assert.doesNotMatch(
+      PANEL_LAYOUT_TS,
+      /const\s+_lockPanels\s*=\s*this\.ctx\.isDesktopApp\s*&&\s*!hasPremiumAccess\(\);/,
+      'desktop panel mounts must not reintroduce the _lockPanels premium gate',
+    );
+    for (const panelId of ['forecast', 'oref-sirens', 'telegram-intel'] as const) {
+      assert.doesNotMatch(
+        PANEL_LAYOUT_TS,
+        new RegExp(`lazyDefaultPanel\\(\\s*'${panelId}'[\\s\\S]*?_lockPanels\\s*\\?`, 's'),
+        `${panelId} must mount without a desktop-only lockedFeatures premium gate`,
+      );
+    }
+  });
+
+  it('keeps desktop Telegram and OREF on the normal intelligence load path', () => {
+    assert.doesNotMatch(
+      DATA_LOADER_TS,
+      /const\s+_desktopLocked\s*=\s*isDesktopRuntime\(\)\s*&&\s*!hasPremiumAccess\(\);/,
+      'desktop intelligence loads must not define a premium-only _desktopLocked gate',
+    );
+    assert.match(
+      DATA_LOADER_TS,
+      /tasks\.push\(this\.loadTelegramIntel\(\)\);/,
+      'Telegram Intel should stay on the regular intelligence task list',
+    );
+    assert.match(
+      DATA_LOADER_TS,
+      /tasks\.push\(\(async \(\) => \{\s*try \{\s*const data = await fetchOrefAlerts\(\)/s,
+      'OREF should stay on the regular intelligence task list',
+    );
+    assert.doesNotMatch(
+      DATA_LOADER_TS,
+      /async\s+loadTelegramIntel\([^)]*\):\s*Promise<void>\s*\{\s*if\s*\(\s*isDesktopRuntime\(\)\s*&&\s*!hasPremiumAccess\(\)\s*\)\s*return;/s,
+      'loadTelegramIntel() must not early-return for non-premium desktop users',
+    );
+  });
+
+  it('uses live trade-route status colors for every plan tier', () => {
+    assert.doesNotMatch(
+      DECKGL_MAP_TS,
+      /private createTradeRoutesLayer\(\): ArcLayer<TradeRouteSegment> \{[\s\S]*hasPremiumAccess\(getAuthState\(\)\)/,
+      'trade-route layer colors must not branch on premium access',
+    );
+    assert.doesNotMatch(
+      DECKGL_MAP_TS,
+      /private buildTradeTrips\(\): void \{[\s\S]*hasPremiumAccess\(getAuthState\(\)\)/,
+      'animated trade-route trips must not branch on premium access',
     );
   });
 

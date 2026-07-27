@@ -121,8 +121,6 @@ import {
   type MapVariant,
 } from '@/config/map-layer-definitions';
 import { renderLayerExplanationCard } from '@/utils/layer-explanation-card';
-import { getAuthState } from '@/services/auth-state';
-import { hasPremiumAccess } from '@/services/panel-gating';
 import { MapPopup, type PopupType } from './MapPopup';
 import { renderMilitaryVesselTooltipHtml } from './deckgl-tooltip-renderers';
 import type { GetChokepointStatusResponse } from '@/services/supply-chain';
@@ -6135,13 +6133,9 @@ export class DeckGLMap {
         const waypoints = ROUTE_WAYPOINTS_MAP.get(d.routeId);
         if (waypoints && waypoints.some(wp => scenarioDisrupted.has(wp))) {
           base = scenario;
-        } else if (!hasPremiumAccess(getAuthState())) {
-          base = active;
         } else {
           base = colorFor(d.status);
         }
-      } else if (!hasPremiumAccess(getAuthState())) {
-        base = active;
       } else {
         base = colorFor(d.status);
       }
@@ -6173,8 +6167,6 @@ export class DeckGLMap {
     const highRiskColor: [number, number, number, number] = [255, 180, 50, 160];
     const scenarioColor: [number, number, number, number] = [255, 140, 50, 170];
 
-    const isPremium = hasPremiumAccess(getAuthState());
-
     const scenarioDisrupted = this.scenarioState
       ? new Set(this.scenarioState.disruptedChokepointIds)
       : null;
@@ -6188,13 +6180,9 @@ export class DeckGLMap {
         const waypoints = ROUTE_WAYPOINTS_MAP.get(routeId);
         if (waypoints && waypoints.some(wp => scenarioDisrupted.has(wp))) {
           base = scenarioColor;
-        } else if (!isPremium) {
-          base = activeColor;
         } else {
           base = status === 'disrupted' ? disruptedColor : status === 'high_risk' ? highRiskColor : activeColor;
         }
-      } else if (!isPremium) {
-        base = activeColor;
       } else {
         base = status === 'disrupted' ? disruptedColor : status === 'high_risk' ? highRiskColor : activeColor;
       }

@@ -102,7 +102,6 @@ import { buildResilienceChoroplethMap } from '@/components/resilience-choropleth
 import { enrichEventsWithExposure } from '@/services/population-exposure';
 import { debounce, getCircuitBreakerCooldownInfo } from '@/utils';
 import { isFeatureAvailable, isFeatureEnabled } from '@/services/runtime-config';
-import { hasPremiumAccess } from '@/services/panel-gating';
 import { isDesktopRuntime, toApiUrl } from '@/services/runtime';
 import { getAiFlowSettings } from '@/services/ai-flow-settings';
 import { t, getCurrentLanguage } from '@/services/i18n';
@@ -2474,7 +2473,6 @@ export class DataLoaderManager implements AppModule {
 
   async loadIntelligenceSignals(): Promise<void> {
     resetHotspotActivity();
-    const _desktopLocked = isDesktopRuntime() && !hasPremiumAccess();
     const tasks: Promise<void>[] = [];
 
     tasks.push((async () => {
@@ -2714,37 +2712,31 @@ export class DataLoaderManager implements AppModule {
     // Security advisories
     tasks.push(this.loadSecurityAdvisories());
 
-    // Telegram Intel (premium-locked on desktop without API key)
-    if (!_desktopLocked) {
-      tasks.push(this.loadTelegramIntel());
-    }
+    tasks.push(this.loadTelegramIntel());
 
-    // OREF sirens (premium-locked on desktop without API key)
-    if (!_desktopLocked) {
-      tasks.push((async () => {
-        try {
-          const data = await fetchOrefAlerts();
-          this.callPanel('oref-sirens', 'setData', data);
-          const alertCount = data.alerts?.length ?? 0;
-          const historyCount24h = data.historyCount24h ?? 0;
-          ingestOrefForCII(alertCount, historyCount24h);
-          this.ctx.intelligenceCache.orefAlerts = { alertCount, historyCount24h };
-          if (data.alerts?.length) dispatchOrefBreakingAlert(data.alerts);
-          onOrefAlertsUpdate((update) => {
-            this.callPanel('oref-sirens', 'setData', update);
-            const updAlerts = update.alerts?.length ?? 0;
-            const updHistory = update.historyCount24h ?? 0;
-            ingestOrefForCII(updAlerts, updHistory);
-            this.ctx.intelligenceCache.orefAlerts = { alertCount: updAlerts, historyCount24h: updHistory };
-            if (update.alerts?.length) dispatchOrefBreakingAlert(update.alerts);
-          });
-          startOrefPolling();
-        } catch (error) {
-          console.error('[Intelligence] OREF alerts fetch failed:', error);
-          this.callPanel('oref-sirens', 'showError');
-        }
-      })());
-    }
+    tasks.push((async () => {
+      try {
+        const data = await fetchOrefAlerts();
+        this.callPanel('oref-sirens', 'setData', data);
+        const alertCount = data.alerts?.length ?? 0;
+        const historyCount24h = data.historyCount24h ?? 0;
+        ingestOrefForCII(alertCount, historyCount24h);
+        this.ctx.intelligenceCache.orefAlerts = { alertCount, historyCount24h };
+        if (data.alerts?.length) dispatchOrefBreakingAlert(data.alerts);
+        onOrefAlertsUpdate((update) => {
+          this.callPanel('oref-sirens', 'setData', update);
+          const updAlerts = update.alerts?.length ?? 0;
+          const updHistory = update.historyCount24h ?? 0;
+          ingestOrefForCII(updAlerts, updHistory);
+          this.ctx.intelligenceCache.orefAlerts = { alertCount: updAlerts, historyCount24h: updHistory };
+          if (update.alerts?.length) dispatchOrefBreakingAlert(update.alerts);
+        });
+        startOrefPolling();
+      } catch (error) {
+        console.error('[Intelligence] OREF alerts fetch failed:', error);
+        this.callPanel('oref-sirens', 'showError');
+      }
+    })());
 
     // GPS/GNSS jamming (cloud-only — seeded by Wingbits API via fetch-gpsjam.mjs)
     if (!isDesktopRuntime()) {
@@ -3974,7 +3966,6 @@ export class DataLoaderManager implements AppModule {
   }
 
   async loadTelegramIntel(): Promise<void> {
-    if (isDesktopRuntime() && !hasPremiumAccess()) return;
     try {
       const result = await fetchTelegramFeed();
       this.callPanel('telegram-intel', 'setData', result);

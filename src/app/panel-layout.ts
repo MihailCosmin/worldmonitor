@@ -1968,8 +1968,6 @@ export class PanelLayoutManager implements AppModule {
       return p;
     });
 
-    const _lockPanels = this.ctx.isDesktopApp && !hasPremiumAccess();
-
     this.lazyDefaultPanel('daily-market-brief', () => import('@/components/DailyMarketBriefPanel'), 'DailyMarketBriefPanel');
 
     this.lazyDefaultPanel('market-implications', () => import('@/components/MarketImplicationsPanel'), 'MarketImplicationsPanel');
@@ -1995,29 +1993,11 @@ export class PanelLayoutManager implements AppModule {
       return panel;
     });
 
-    this.lazyDefaultPanel(
-      'forecast',
-      () => import('@/components/ForecastPanel'),
-      'ForecastPanel',
-      undefined,
-      _lockPanels ? ['AI-powered geopolitical forecasts', 'Cross-domain cascade predictions', 'Prediction market calibration'] : undefined,
-    );
+    this.lazyDefaultPanel('forecast', () => import('@/components/ForecastPanel'), 'ForecastPanel');
 
-    this.lazyDefaultPanel(
-      'oref-sirens',
-      () => import('@/components/OrefSirensPanel'),
-      'OrefSirensPanel',
-      undefined,
-      _lockPanels ? [t('premium.features.orefSirens1'), t('premium.features.orefSirens2')] : undefined,
-    );
+    this.lazyDefaultPanel('oref-sirens', () => import('@/components/OrefSirensPanel'), 'OrefSirensPanel');
 
-    this.lazyDefaultPanel(
-      'telegram-intel',
-      () => import('@/components/TelegramIntelPanel'),
-      'TelegramIntelPanel',
-      undefined,
-      _lockPanels ? [t('premium.features.telegramIntel1'), t('premium.features.telegramIntel2')] : undefined,
-    );
+    this.lazyDefaultPanel('telegram-intel', () => import('@/components/TelegramIntelPanel'), 'TelegramIntelPanel');
 
     this.lazyPanel('gcc-investments', async () => {
       const { focusInvestmentOnMap } = await import('@/services/investments-focus');
