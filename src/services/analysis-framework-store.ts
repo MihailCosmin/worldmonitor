@@ -144,8 +144,14 @@ export function renameImportedFramework(id: string, name: string): void {
   _activeCache.clear();
 }
 
+const FREE_FRAMEWORK_PANELS = new Set<AnalysisPanelId>(['daily-market-brief']);
+
+export function isFrameworkSelectionEnabledForPanel(panelId: AnalysisPanelId): boolean {
+  return hasPremiumAccess() || FREE_FRAMEWORK_PANELS.has(panelId);
+}
+
 export function getActiveFrameworkForPanel(panelId: AnalysisPanelId): AnalysisFramework | null {
-  if (!hasPremiumAccess()) return null;
+  if (!isFrameworkSelectionEnabledForPanel(panelId)) return null;
   if (_activeCache.has(panelId)) return _activeCache.get(panelId)!;
   const selections = loadFromStorage<Record<string, string | null>>(PANEL_KEY, {});
   const frameworkId = selections[panelId] ?? null;

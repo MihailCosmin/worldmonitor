@@ -762,10 +762,10 @@ export class DataLoaderManager implements AppModule {
       if (shouldLoad('stock-analysis')) {
         tasks.push({ name: 'stockAnalysis', task: () => runGuarded('stockAnalysis', () => this.loadStockAnalysis()) });
       }
-      if (hasPremiumAccess() && shouldLoad('stock-backtest')) {
+      if (shouldLoad('stock-backtest')) {
         tasks.push({ name: 'stockBacktest', task: () => runGuarded('stockBacktest', () => this.loadStockBacktest()) });
       }
-      if (hasPremiumAccess() && shouldLoad('daily-market-brief')) {
+      if (shouldLoad('daily-market-brief')) {
         tasks.push({ name: 'dailyMarketBrief', task: () => runGuarded('dailyMarketBrief', () => this.loadDailyMarketBrief()) });
       }
       if (shouldLoad('polymarket')) {
@@ -1775,7 +1775,7 @@ export class DataLoaderManager implements AppModule {
         panel.renderBacktests(stored, 'cached');
         return;
       }
-      panel.showError('Premium stock backtesting is temporarily unavailable.');
+      panel.showError('Stock backtesting is temporarily unavailable.');
     }
   }
 

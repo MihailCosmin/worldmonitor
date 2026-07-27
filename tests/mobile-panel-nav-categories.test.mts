@@ -104,7 +104,7 @@ describe('getProPanelKeys (mobile nav PRO chip)', () => {
   it('includes enabled premium panels, excludes free and disabled ones', () => {
     const result = getProPanelKeys(settings({
       'chat-analyst': true,     // premium: 'locked' on all surfaces
-      'daily-market-brief': false, // premium but disabled
+      'daily-market-brief': false, // free panel
       intel: true,              // free panel
     }), 'full');
     assert.deepEqual(result.sort(), ['chat-analyst']);

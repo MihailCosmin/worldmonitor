@@ -5,8 +5,6 @@
  * and the web client runtime (token injection).
  */
 export const PREMIUM_RPC_PATHS = new Set<string>([
-  '/api/market/v1/backtest-stock',
-  '/api/market/v1/list-stored-stock-backtests',
   // /api/intelligence/v1/classify-event: LLM-backed classifier. Keep in the
   // premium path set so browser Pro callers attach the Clerk Bearer and
   // anonymous wms_ sessions cannot mint cache-miss LLM spend.

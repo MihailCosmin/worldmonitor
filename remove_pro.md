@@ -164,7 +164,7 @@ These surfaces already have real feature logic, data structures, or fetch/render
 - Acceptance:
   - A free user can open the panel and see real stock analysis data with the existing table UI.
 
-### [ ] F2. Ungate stock backtesting
+### [x] F2. Ungate stock backtesting
 
 - Files:
   - `src/components/StockBacktestPanel.ts`
@@ -183,7 +183,7 @@ These surfaces already have real feature logic, data structures, or fetch/render
 - Acceptance:
   - A free user can run the existing backtest view without seeing premium gating.
 
-### [ ] F3. Ungate Daily Market Brief
+### [x] F3. Ungate Daily Market Brief
 
 - Files:
   - `src/components/DailyMarketBriefPanel.ts`

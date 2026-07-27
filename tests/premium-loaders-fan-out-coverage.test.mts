@@ -11,7 +11,7 @@ import { resolve } from 'node:path';
 // corresponding `this.dataLoader.loadX()` line is missing from
 // `firePremiumLoaders`, the panel sits empty for the WHOLE SESSION on any
 // variant where the scheduled refresh isn't registered (the stock-analysis /
-// stock-backtest / daily-market-brief / market-implications schedulers are
+// stock-backtest / market-implications schedulers are
 // gated to SITE_VARIANT === 'finance').
 //
 // This test extracts the gated loader names from data-loader.ts and asserts

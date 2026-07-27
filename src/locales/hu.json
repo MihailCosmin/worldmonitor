@@ -1947,7 +1947,7 @@
       "infoTooltip": "<strong>Premium Részvényelemzés</strong> AI-alapú elemzés a megfigyelési listájában szereplő részvényekre — vételi/tartási/eladási jelzések, árcelok, kulcsrisikók és katalizátorok napi frissítésekkel."
     },
     "stockBacktest": {
-      "infoTooltip": "<strong>Premium Backtesting</strong> Történeti teljesítménytesztek a megfigyelési listájában szereplő részvényekre — múltbeli hozamok, maximális visszaesés és volatilitási mutatók."
+      "infoTooltip": "<strong>Backtesting</strong> Történeti teljesítménytesztek a megfigyelési listájában szereplő részvényekre — múltbeli hozamok, maximális visszaesés és volatilitási mutatók."
     },
     "dailyMarketBrief": {
       "infoTooltip": "<strong>Napi Piaci Összefoglaló</strong> AI által generált napi összegzés a globális piaci körülményekről, fő makrotrendekről és szektorszintű jelekről — minden kereskedési napon frissül."

@@ -32,7 +32,7 @@ export class StockBacktestPanel extends Panel {
   private tableView?: WatchlistTableView<StockBacktestResult>;
 
   constructor() {
-    super({ id: 'stock-backtest', title: 'Premium Backtesting', infoTooltip: t('components.stockBacktest.infoTooltip'), premium: 'locked' });
+    super({ id: 'stock-backtest', title: 'Backtesting', infoTooltip: t('components.stockBacktest.infoTooltip') });
     this.header.appendChild(createWatchlistButton('Edit Watchlist'));
   }
 
@@ -47,7 +47,7 @@ export class StockBacktestPanel extends Panel {
 
     if (!this.tableView) {
       this.tableView = new WatchlistTableView<StockBacktestResult>({
-        intro: 'Historical replay of the premium stock-analysis signal engine over recent daily bars.',
+        intro: 'Historical replay of the stock-analysis signal engine over recent daily bars.',
         columns: [
           {
             key: 'symbol', label: 'Symbol', sortable: true, sortOptionKey: 'symbol-asc',

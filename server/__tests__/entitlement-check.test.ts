@@ -111,8 +111,7 @@ async function withConvexEntitlementFetch<T>(
 describe("gateway entitlement check", () => {
   test.each([
     "/api/intelligence/v1/classify-event",
-    "/api/market/v1/backtest-stock",
-    "/api/market/v1/list-stored-stock-backtests",
+    "/api/intelligence/v1/get-country-intel-brief",
   ])("getRequiredTier returns 1 for %s (regression-lock against tier-2 revert)", (path) => {
     expect(getRequiredTier(path)).toBe(1);
   });
@@ -124,6 +123,11 @@ describe("gateway entitlement check", () => {
   test("getRequiredTier returns null for unlocked stock-analysis endpoints", () => {
     expect(getRequiredTier("/api/market/v1/analyze-stock")).toBeNull();
     expect(getRequiredTier("/api/market/v1/get-stock-analysis-history")).toBeNull();
+  });
+
+  test("getRequiredTier returns null for unlocked stock-backtest endpoints", () => {
+    expect(getRequiredTier("/api/market/v1/backtest-stock")).toBeNull();
+    expect(getRequiredTier("/api/market/v1/list-stored-stock-backtests")).toBeNull();
   });
 
   test("checkEntitlement returns null for ungated endpoint", async () => {
@@ -138,8 +142,15 @@ describe("gateway entitlement check", () => {
     expect(historyResult).toBeNull();
   });
 
+  test("checkEntitlement returns null for unlocked stock-backtest endpoints", async () => {
+    const backtestResult = await checkEntitlement(null, "/api/market/v1/backtest-stock", {});
+    const storedResult = await checkEntitlement(null, "/api/market/v1/list-stored-stock-backtests", {});
+    expect(backtestResult).toBeNull();
+    expect(storedResult).toBeNull();
+  });
+
   test("checkEntitlement returns 403 when no resolved userId is provided (fail-closed)", async () => {
-    const result = await checkEntitlement(null, "/api/market/v1/backtest-stock", {});
+    const result = await checkEntitlement(null, "/api/intelligence/v1/classify-event", {});
     expect(result).not.toBeNull();
     expect(result!.status).toBe(403);
 
@@ -150,7 +161,7 @@ describe("gateway entitlement check", () => {
 
   test("checkEntitlement returns 403 when getEntitlements returns null (fail-closed)", async () => {
     // getCachedJson returns null by default (no Redis data, no Convex URL) -> null entitlements
-    const result = await checkEntitlement("test-user", "/api/market/v1/backtest-stock", {});
+    const result = await checkEntitlement("test-user", "/api/intelligence/v1/classify-event", {});
     expect(result).not.toBeNull();
     expect(result!.status).toBe(403);
 
@@ -197,7 +208,7 @@ describe("gateway entitlement check", () => {
     await withConvexEntitlementFetch(
       () => Promise.reject(new Error("fetch failed")),
       async () => {
-        const result = await checkEntitlement("user-transient-check", "/api/market/v1/backtest-stock", {});
+        const result = await checkEntitlement("user-transient-check", "/api/intelligence/v1/classify-event", {});
         expect(result).not.toBeNull();
         expect(result!.status).toBe(503);
         expect(result!.headers.get("X-Billing-Verification")).toBe("entitlement_verification_unavailable");
@@ -223,7 +234,7 @@ describe("gateway entitlement check", () => {
         billingStatus,
         retryAfterSeconds: 17,
       },
-      () => checkEntitlement("test-user", "/api/market/v1/backtest-stock", {}),
+      () => checkEntitlement("test-user", "/api/intelligence/v1/classify-event", {}),
     );
 
     expect(result?.status).toBe(503);
@@ -246,7 +257,7 @@ describe("gateway entitlement check", () => {
         },
         () => checkEntitlement(
           "test-user",
-          "/api/market/v1/backtest-stock",
+          "/api/intelligence/v1/classify-event",
           {},
         ),
       );
@@ -262,7 +273,7 @@ describe("gateway entitlement check", () => {
         validUntil: 0,
         billingStatus: "subscription_lapsed",
       },
-      () => checkEntitlement("test-user", "/api/market/v1/backtest-stock", {}),
+      () => checkEntitlement("test-user", "/api/intelligence/v1/classify-event", {}),
     );
 
     expect(result?.status).toBe(403);
@@ -285,7 +296,7 @@ describe("gateway entitlement check", () => {
     try {
       const result = await checkEntitlement(
         "test-user",
-        "/api/market/v1/backtest-stock",
+        "/api/intelligence/v1/classify-event",
         {},
       );
 
@@ -311,7 +322,7 @@ describe("gateway entitlement check", () => {
     try {
       const result = await checkEntitlement(
         "test-user",
-        "/api/market/v1/backtest-stock",
+        "/api/intelligence/v1/classify-event",
         {},
       );
 
@@ -349,7 +360,7 @@ describe("gateway entitlement check", () => {
     try {
       const result = await checkEntitlement(
         "test-user",
-        "/api/market/v1/backtest-stock",
+        "/api/intelligence/v1/classify-event",
         {},
       );
 
@@ -387,7 +398,7 @@ describe("gateway entitlement check", () => {
     try {
       const result = await checkEntitlement(
         "test-user",
-        "/api/market/v1/backtest-stock",
+        "/api/intelligence/v1/classify-event",
         {},
       );
 
@@ -428,7 +439,7 @@ describe("gateway entitlement check", () => {
   test("checkEntitlement accepts Clerk role=pro for tier-1 gates without Convex entitlements", async () => {
     const result = await checkEntitlement(
       "test-user",
-      "/api/market/v1/backtest-stock",
+      "/api/intelligence/v1/classify-event",
       {},
       { clerkRole: "pro" },
     );
@@ -439,7 +450,7 @@ describe("gateway entitlement check", () => {
   test("checkEntitlement returns 403 for insufficient tier", async () => {
     vi.mocked(getCachedJson).mockResolvedValueOnce(makeEntitlements(0));
 
-    const result = await checkEntitlement("test-user", "/api/market/v1/backtest-stock", {});
+    const result = await checkEntitlement("test-user", "/api/intelligence/v1/classify-event", {});
 
     expect(result).not.toBeNull();
     expect(result!.status).toBe(403);
@@ -450,27 +461,27 @@ describe("gateway entitlement check", () => {
     expect(body.currentTier).toBe(0);
   });
 
-  test("checkEntitlement returns null for Pro tier (tier=1) on backtesting", async () => {
+  test("checkEntitlement returns null for Pro tier (tier=1) on tier-1 gates", async () => {
     // Regression: previous tier=2 requirement 403'd real Pro subscribers
-    // calling via Clerk session (no tester key in localStorage). Backtesting
-    // remains a Pro feature and must accept tier >= 1.
+    // calling via Clerk session (no tester key in localStorage). Tier-1 gates
+    // must accept tier >= 1.
     vi.mocked(getCachedJson).mockResolvedValueOnce(makeEntitlements(1, "pro_monthly"));
 
-    const result = await checkEntitlement("test-user", "/api/market/v1/backtest-stock", {});
+    const result = await checkEntitlement("test-user", "/api/intelligence/v1/classify-event", {});
     expect(result).toBeNull();
   });
 
   test("checkEntitlement returns null for sufficient tier", async () => {
     vi.mocked(getCachedJson).mockResolvedValueOnce(makeEntitlements(2, "api_starter"));
 
-    const result = await checkEntitlement("test-user", "/api/market/v1/backtest-stock", {});
+    const result = await checkEntitlement("test-user", "/api/intelligence/v1/classify-event", {});
     expect(result).toBeNull();
   });
 
   test("checkEntitlement ignores spoofable request headers and uses explicit userId contract", async () => {
     vi.mocked(getCachedJson).mockResolvedValueOnce(makeEntitlements(1, "pro_monthly"));
 
-    const result = await checkEntitlement("trusted-user", "/api/market/v1/backtest-stock", {});
+    const result = await checkEntitlement("trusted-user", "/api/intelligence/v1/classify-event", {});
 
     expect(result).toBeNull();
     expect(getCachedJson).toHaveBeenLastCalledWith("entitlements:test:trusted-user", true);
@@ -511,7 +522,7 @@ describe("gateway entitlement check", () => {
     vi.stubGlobal("fetch", fetchMock);
 
     try {
-      const result = await checkEntitlement("test-user", "/api/market/v1/backtest-stock", {});
+      const result = await checkEntitlement("test-user", "/api/intelligence/v1/classify-event", {});
 
       // Expect: cache rejected as stale → Convex round-trip → tier-1 row
       // with mcpAccess: true → checkEntitlement passes (returns null).
@@ -533,7 +544,7 @@ describe("gateway entitlement check", () => {
     vi.stubGlobal("fetch", fetchMock);
 
     try {
-      const result = await checkEntitlement("test-user", "/api/market/v1/backtest-stock", {});
+      const result = await checkEntitlement("test-user", "/api/intelligence/v1/classify-event", {});
 
       expect(result).toBeNull();
       expect(fetchMock).toHaveBeenCalledTimes(0); // cache hit, no Convex call
@@ -559,7 +570,7 @@ describe("gateway entitlement check", () => {
     vi.stubGlobal("fetch", fetchMock);
 
     try {
-      const result = await checkEntitlement("test-user", "/api/market/v1/backtest-stock", {});
+      const result = await checkEntitlement("test-user", "/api/intelligence/v1/classify-event", {});
       expect(result).toBeNull();
       expect(fetchMock).toHaveBeenCalledWith(
         "https://example-deployment.convex.site/api/internal-entitlements",
