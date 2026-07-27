@@ -136,7 +136,8 @@ async function getPersistentCacheApi(): Promise<{
   return { getPersistentCache, setPersistentCache };
 }
 
-const CACHE_PREFIX = 'premium:daily-market-brief:v1';
+const CACHE_PREFIX = 'daily-market-brief:v2';
+const LEGACY_CACHE_PREFIX = 'premium:daily-market-brief:v1';
 const DEFAULT_SCHEDULE_HOUR = 8;
 const DEFAULT_TARGET_COUNT = 4;
 // Intraday refresh ceiling. Without this, shouldRefreshDailyBrief returns
@@ -203,6 +204,10 @@ function sanitizeCacheKeyPart(value: string): string {
 
 function getCacheKey(timezone: string): string {
   return `${CACHE_PREFIX}:${sanitizeCacheKeyPart(resolveTimeZone(timezone))}`;
+}
+
+function getLegacyCacheKey(timezone: string): string {
+  return `${LEGACY_CACHE_PREFIX}:${sanitizeCacheKeyPart(resolveTimeZone(timezone))}`;
 }
 
 function isMeaningfulToken(token: string): boolean {
@@ -464,9 +469,18 @@ export function shouldRefreshDailyBrief(
 
 export async function getCachedDailyMarketBrief(timezone?: string): Promise<DailyMarketBrief | null> {
   const resolvedTimezone = resolveTimeZone(timezone);
-  const { getPersistentCache } = await getPersistentCacheApi();
-  const envelope = await getPersistentCache<DailyMarketBrief>(getCacheKey(resolvedTimezone));
-  return envelope?.data ?? null;
+  const { getPersistentCache, setPersistentCache } = await getPersistentCacheApi();
+  const cacheKey = getCacheKey(resolvedTimezone);
+  const envelope = await getPersistentCache<DailyMarketBrief>(cacheKey);
+  if (envelope?.data) return envelope.data;
+
+  const legacyEnvelope = await getPersistentCache<DailyMarketBrief>(getLegacyCacheKey(resolvedTimezone));
+  if (!legacyEnvelope?.data) return null;
+
+  // Opportunistically mirror legacy cached briefs into the neutral namespace
+  // so the migration completes passively on the next successful read.
+  void setPersistentCache(cacheKey, legacyEnvelope.data, legacyEnvelope.updatedAt).catch(() => {});
+  return legacyEnvelope.data;
 }
 
 export async function cacheDailyMarketBrief(brief: DailyMarketBrief): Promise<void> {

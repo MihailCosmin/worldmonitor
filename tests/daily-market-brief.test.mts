@@ -1,11 +1,16 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
+import { readFileSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import type { MarketData, NewsItem } from '../src/types/index.ts';
 import {
   buildDailyMarketBrief,
   shouldRefreshDailyBrief,
 } from '../src/services/daily-market-brief.ts';
+
+const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
 function makeNewsItem(title: string, source = 'Reuters', publishedAt = '2026-03-08T05:00:00.000Z'): NewsItem {
   return {
@@ -171,6 +176,16 @@ describe('daily market brief schedule logic', () => {
     );
 
     assert.equal(shouldRefresh, false);
+  });
+});
+
+describe('daily market brief cache migration', () => {
+  it('uses a neutral cache namespace and keeps a legacy premium fallback path', () => {
+    const src = readFileSync(resolve(root, 'src/services/daily-market-brief.ts'), 'utf8');
+    assert.match(src, /const CACHE_PREFIX = 'daily-market-brief:v2';/);
+    assert.match(src, /const LEGACY_CACHE_PREFIX = 'premium:daily-market-brief:v1';/);
+    assert.match(src, /getPersistentCache<DailyMarketBrief>\(getLegacyCacheKey\(resolvedTimezone\)\)/);
+    assert.match(src, /setPersistentCache\(cacheKey, legacyEnvelope\.data, legacyEnvelope\.updatedAt\)/);
   });
 });
 

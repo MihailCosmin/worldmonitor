@@ -601,7 +601,7 @@ export class App {
     if (shouldPrime('stock-backtest')) {
       primeTask('stockBacktest', () => this.dataLoader.loadStockBacktest());
     }
-    if (hasPremiumAccess() && shouldPrime('daily-market-brief')) {
+    if (shouldPrime('daily-market-brief')) {
       primeTask('dailyMarketBrief', () => this.dataLoader.loadDailyMarketBrief());
     }
 
@@ -1412,7 +1412,6 @@ export class App {
         // `hasPremiumAccess() && shouldLoad('X')` gate in data-loader.ts has a
         // matching call here.
         void this.dataLoader.loadTradePolicy();
-        void this.dataLoader.loadDailyMarketBrief();
         void this.dataLoader.loadResilienceRanking();
         void this.dataLoader.loadGlobalTenders();
       } else if (!nowPremium && hadPremium) {

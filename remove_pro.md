@@ -581,7 +581,7 @@ Intentional paid boundaries that are not part of this follow-up remain allowed: 
 - Acceptance:
   - Anonymous and signed-in free users can load, refresh, sort, filter, and backtest the same supported watchlist without a gate CTA or reduced tier-specific result set.
 
-### [ ] D2. Complete Daily Market Brief ungating
+### [x] D2. Complete Daily Market Brief ungating
 
 - Files:
   - `src/app/panel-layout.ts`

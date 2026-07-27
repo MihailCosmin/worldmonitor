@@ -109,7 +109,6 @@ function writeSessionStorageValue(key: string, value: string): void {
  * `apiKeyPanels ⊆ WEB_PREMIUM_PANELS` so this drift can't recur silently.
  */
 const WEB_PREMIUM_PANELS = new Set([
-  'daily-market-brief',
   'deduction',
 ]);
 

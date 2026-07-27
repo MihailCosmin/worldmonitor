@@ -93,6 +93,29 @@ describe('firePremiumLoaders fan-out coverage', () => {
   const gatedLoaders = extractGatedLoaders(DATA_LOADER_TS);
   const fanOutLoaders = extractFanOutLoaders(APP_TS);
 
+  it('keeps Daily Market Brief on the public load path', () => {
+    assert.doesNotMatch(
+      DATA_LOADER_TS,
+      /if\s*\(\s*hasPremiumAccess\(\)\s*\)\s*\{\s*await\s+this\.loadDailyMarketBrief\(true\);\s*\}/s,
+      'watchlist-triggered Daily Market Brief refresh must not be wrapped in hasPremiumAccess()',
+    );
+    assert.doesNotMatch(
+      DATA_LOADER_TS,
+      /async\s+loadDailyMarketBrief\([^)]*\):\s*Promise<void>\s*\{\s*if\s*\(!hasPremiumAccess\(\)\)\s*return;/s,
+      'loadDailyMarketBrief() must not early-return for non-premium users',
+    );
+    assert.doesNotMatch(
+      APP_TS,
+      /if\s*\(\s*hasPremiumAccess\(\)\s*&&\s*shouldPrime\('daily-market-brief'\)\s*\)/,
+      'fast-prime must not gate Daily Market Brief behind hasPremiumAccess()',
+    );
+    assert.doesNotMatch(
+      APP_TS,
+      /void\s+this\.dataLoader\.loadDailyMarketBrief\(\)/,
+      'Daily Market Brief should no longer be treated as an entitlement-transition fan-out loader',
+    );
+  });
+
   it('PR #3828 review fix: extracts loaders from single-line gates (no braces)', () => {
     // Synthetic fixture covering all three shapes the production regex must
     // handle. If a future "simplification" of the regex drops shape (c) again,

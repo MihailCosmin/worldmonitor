@@ -468,9 +468,7 @@ export class DataLoaderManager implements AppModule {
       void this.loadMarkets().then(async () => {
         await this.loadStockAnalysis();
         await this.loadStockBacktest();
-        if (hasPremiumAccess()) {
-          await this.loadDailyMarketBrief(true);
-        }
+        await this.loadDailyMarketBrief(true);
       });
     };
     window.addEventListener('wm-market-watchlist-changed', this.boundMarketWatchlistHandler as EventListener);
@@ -931,10 +929,10 @@ export class DataLoaderManager implements AppModule {
 
     this.updateSearchIndex();
 
-    const postHydrationLoads = [this.loadMarketImplications()];
-    if (hasPremiumAccess()) {
-      postHydrationLoads.unshift(this.loadDailyMarketBrief());
-    }
+    const postHydrationLoads = [
+      this.loadDailyMarketBrief(),
+      this.loadMarketImplications(),
+    ];
     await Promise.allSettled(postHydrationLoads);
 
     const bootstrapTemporal = consumeServerAnomalies();
@@ -2043,7 +2041,6 @@ export class DataLoaderManager implements AppModule {
   }
 
   async loadDailyMarketBrief(force = false): Promise<void> {
-    if (!hasPremiumAccess()) return;
     if (this.ctx.isDestroyed || this.ctx.inFlight.has('dailyMarketBrief')) return;
 
     this.dailyBriefGeneration++;
