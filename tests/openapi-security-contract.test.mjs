@@ -420,9 +420,11 @@ describe('OpenAPI security contract', () => {
 
   it('parses the bearer-auth and entitlement path sources from gateway-adjacent code', () => {
     assert.ok(BEARER_AUTH_PATHS.size > 0, 'expected at least one bearer-auth path');
-    assert.ok(ENDPOINT_ENTITLEMENTS.size >= 14, 'expected issue-scoped entitlement-gated paths');
+    assert.ok(ENDPOINT_ENTITLEMENTS.size >= 10, 'expected issue-scoped entitlement-gated paths');
     assert.ok(!ENDPOINT_ENTITLEMENTS.has('/api/market/v1/analyze-stock'), 'expected stock analysis market path to be ungated');
     assert.ok(!ENDPOINT_ENTITLEMENTS.has('/api/market/v1/backtest-stock'), 'expected stock backtest market path to be ungated');
+    assert.ok(!ENDPOINT_ENTITLEMENTS.has('/api/supply-chain/v1/get-route-explorer-lane'), 'expected route explorer lane path to be ungated');
+    assert.ok(!ENDPOINT_ENTITLEMENTS.has('/api/supply-chain/v1/get-route-impact'), 'expected route impact path to be ungated');
     assert.equal(ENDPOINT_ENTITLEMENTS.get('/api/sanctions/v1/list-sanctions-pressure'), 1, 'expected sanctions pressure path');
     assert.ok(!ENDPOINT_ENTITLEMENTS.has('/api/trade/v1/list-comtrade-flows'), 'expected Comtrade path to be ungated');
     assert.ok(!ENDPOINT_ENTITLEMENTS.has('/api/trade/v1/get-tariff-trends'), 'expected tariff trends path to be ungated');
@@ -430,6 +432,8 @@ describe('OpenAPI security contract', () => {
     assert.ok(PUBLIC_FORBIDDEN_GATES.has('/api/leads/v1/register-interest'), 'expected Leads register-interest 403 gate');
     assert.ok(!BEARER_AUTH_PATHS.has('/api/intelligence/v1/get-regional-brief'), 'expected regional brief path to be ungated');
     assert.ok(!PREMIUM_ONLY_PATHS.has('/api/intelligence/v1/get-regional-brief'), 'expected regional brief path to stay out of legacy premium-only paths');
+    assert.ok(!PREMIUM_ONLY_PATHS.has('/api/supply-chain/v1/get-route-explorer-lane'), 'route explorer lane must not be treated as premium-only');
+    assert.ok(!PREMIUM_ONLY_PATHS.has('/api/supply-chain/v1/get-route-impact'), 'route impact must not be treated as premium-only');
     assert.ok(!PREMIUM_ONLY_PATHS.has('/api/market/v1/analyze-stock'), 'stock analysis path must not be treated as premium-only');
     assert.ok(!PREMIUM_ONLY_PATHS.has('/api/market/v1/backtest-stock'), 'stock backtest path must not be treated as premium-only');
   });

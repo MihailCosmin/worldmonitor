@@ -16,7 +16,6 @@ import { AlternativesTab } from './tabs/AlternativesTab';
 import { LandTab } from './tabs/LandTab';
 import { CountryImpactTab } from './tabs/CountryImpactTab';
 import { inferCargoFromHs2, type ExplorerCargo } from './RouteExplorer.utils';
-import COUNTRY_PORT_CLUSTERS from '../../../scripts/shared/country-port-clusters.json';
 import {
   parseExplorerUrl,
   serializeExplorerUrl,
@@ -29,23 +28,13 @@ import type { GetRouteExplorerLaneResponse, GetRouteImpactResponse, BypassCorrid
 import { fetchRouteExplorerLane, fetchRouteImpact } from '@/services/supply-chain';
 import { hasPremiumAccess } from '@/services/panel-gating';
 import { getAuthState } from '@/services/auth-state';
-import { trackGateHit, track, type UmamiEvent } from '@/services/analytics';
+import { track, type UmamiEvent } from '@/services/analytics';
 
-import { TRADE_ROUTES } from '@/config/trade-routes';
 import { setTrustedHtml, trustedHtml } from '@/utils/dom-utils';
 
 
 const TAB_LABELS: Record<ExplorerTab, string> = { 1: 'Current', 2: 'Alternatives', 3: 'Land', 4: 'Impact' };
 const FETCH_DEBOUNCE_MS = 250;
-
-const CARGO_TO_ROUTE_CATEGORY: Record<string, string> = {
-  container: 'container',
-  tanker: 'energy',
-  bulk: 'bulk',
-  roro: 'container',
-};
-
-const ROUTE_CATEGORY_MAP = new Map(TRADE_ROUTES.map((r) => [r.id, r.category]));
 
 interface MapRef {
   highlightRoute(routeIds: string[]): void;
@@ -92,10 +81,9 @@ export class RouteExplorer {
   private debounceTimer: ReturnType<typeof setTimeout> | null = null;
   private laneData: GetRouteExplorerLaneResponse | null = null;
   public isLoading = false;
-  private displayMode: 'idle' | 'loading' | 'data' | 'error' | 'gate' = 'idle';
+  private displayMode: 'idle' | 'loading' | 'data' | 'error' = 'idle';
   private openedAt = 0;
   private queryCount = 0;
-  private gateHitTracked = false;
 
   constructor() {
     this.state = { ...DEFAULT_EXPLORER_STATE };
@@ -125,10 +113,6 @@ export class RouteExplorer {
     this.isOpen = true;
     this.openedAt = Date.now();
     this.queryCount = 0;
-    if (!this.gateHitTracked && this.tier === 'free') {
-      trackGateHit('route-explorer');
-      this.gateHitTracked = true;
-    }
     this.trackEvent('route-explorer:opened', { source });
     document.addEventListener('keydown', this.handleGlobalKeydown, { capture: true });
     this.focusInitial();
@@ -197,7 +181,7 @@ export class RouteExplorer {
     }, FETCH_DEBOUNCE_MS);
   }
 
-  private resetLaneState(mode?: 'loading' | 'error' | 'gate'): void {
+  private resetLaneState(mode?: 'loading' | 'error'): void {
     this.laneData = null;
     this.impactData = null;
     this.clearMapState();
@@ -211,14 +195,6 @@ export class RouteExplorer {
 
   private async fetchLane(): Promise<void> {
     if (!this.isQueryComplete()) return;
-    if (!hasPremiumAccess(getAuthState())) {
-      this.generationId++;
-      this.displayMode = 'gate';
-      this.resetLaneState('gate');
-      this.renderFreeGate();
-      this.applyPublicRouteHighlight();
-      return;
-    }
 
     const gen = ++this.generationId;
     this.displayMode = 'loading';
@@ -340,52 +316,9 @@ export class RouteExplorer {
     }
   }
 
-  private renderFreeGate(): void {
-    this.leftRail?.element.classList.add('re-leftrail--blurred');
-    this.leftRail?.element.setAttribute('aria-hidden', 'true');
-    if (this.contentEl) {
-      setTrustedHtml(this.contentEl, trustedHtml('<div class="re-content__gate">' +
-        '<h3>Unlock route intelligence</h3>' +
-        '<ul><li>Current route with chokepoint risk</li><li>Ranked bypass alternatives</li><li>Overland corridor options</li></ul>' +
-        '<button class="re-content__upgrade" type="button">Upgrade to PRO</button>' +
-        '</div>', "legacy direct innerHTML migration"));
-      const btn = this.contentEl.querySelector<HTMLButtonElement>('.re-content__upgrade');
-      btn?.addEventListener('click', () => {
-        this.trackEvent('route-explorer:free-cta-click', {
-          from: this.state.fromIso2 ?? '',
-          to: this.state.toIso2 ?? '',
-          hs2: this.state.hs2 ?? '',
-        });
-        void import('@/services/checkout')
-          .then((m) => m.startCheckout('pro_monthly'))
-          .catch(() => window.open('https://worldmonitor.app/pro', '_blank', 'noopener,noreferrer'));
-      }, { once: true });
-    }
-  }
-
-  private applyPublicRouteHighlight(): void {
-    if (!this.mapRef || !this.state.fromIso2 || !this.state.toIso2) return;
-    const clusters = COUNTRY_PORT_CLUSTERS as unknown as Record<string, { nearestRouteIds: string[] }>;
-    const fromRoutes = new Set(clusters[this.state.fromIso2]?.nearestRouteIds ?? []);
-    const toRoutes = new Set(clusters[this.state.toIso2]?.nearestRouteIds ?? []);
-    const shared = [...fromRoutes].filter((r) => toRoutes.has(r));
-    if (shared.length === 0) return;
-    const cargoCategory = CARGO_TO_ROUTE_CATEGORY[this.getEffectiveCargo()] ?? 'container';
-    const ranked = [...shared].sort((a, b) => {
-      const catA = ROUTE_CATEGORY_MAP.get(a) ?? '';
-      const catB = ROUTE_CATEGORY_MAP.get(b) ?? '';
-      return (catA === cargoCategory ? 0 : 1) - (catB === cargoCategory ? 0 : 1);
-    });
-    const routeId = ranked[0] ?? '';
-    if (routeId) {
-      this.mapRef.highlightRoute([routeId]);
-      this.mapRef.zoomToRoutes([routeId]);
-    }
-  }
-
   private showActiveTab(): void {
     if (!this.contentEl) return;
-    if (this.displayMode === 'loading' || this.displayMode === 'error' || this.displayMode === 'gate') {
+    if (this.displayMode === 'loading' || this.displayMode === 'error') {
       return;
     }
     setTrustedHtml(this.contentEl, trustedHtml('', "legacy direct innerHTML migration"));

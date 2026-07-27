@@ -109,8 +109,6 @@ const ENDPOINT_ENTITLEMENTS: Record<string, number> = {
   '/api/supply-chain/v1/get-country-chokepoint-index': 1,
   '/api/supply-chain/v1/get-bypass-options': 1,
   '/api/supply-chain/v1/get-country-cost-shock': 1,
-  '/api/supply-chain/v1/get-route-explorer-lane': 1,
-  '/api/supply-chain/v1/get-route-impact': 1,
   '/api/supply-chain/v1/get-country-products': 1,
   '/api/supply-chain/v1/get-multi-sector-cost-shock': 1,
   '/api/supply-chain/v1/get-sector-dependency': 1,

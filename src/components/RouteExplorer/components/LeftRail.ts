@@ -38,11 +38,10 @@ export class LeftRail {
     this.renderPlaceholder();
   }
 
-  public updateLane(data: GetRouteExplorerLaneResponse | null, mode?: 'loading' | 'error' | 'gate'): void {
+  public updateLane(data: GetRouteExplorerLaneResponse | null, mode?: 'loading' | 'error'): void {
     this.resilience = null;
     if (mode === 'loading') { this.renderLoading(); return; }
     if (mode === 'error') { this.renderError(); return; }
-    if (mode === 'gate') { this.renderGate(); return; }
     if (!data || data.noModeledLane) { this.renderNoLane(); return; }
     this.renderSummary(data);
   }
@@ -69,10 +68,6 @@ export class LeftRail {
 
   private renderError(): void {
     setTrustedHtml(this.element, trustedHtml('<div class="re-leftrail__empty">Failed to load lane data.</div>', "legacy direct innerHTML migration"));
-  }
-
-  private renderGate(): void {
-    setTrustedHtml(this.element, trustedHtml('<div class="re-leftrail__empty">Upgrade to PRO for route intelligence.</div>', "legacy direct innerHTML migration"));
   }
 
   private static readonly FLAG_LABELS: Record<string, string> = {

@@ -50,8 +50,6 @@ const ISSUE_4609_GATED_ROUTES = [
   { method: 'GET', path: '/api/supply-chain/v1/get-country-chokepoint-index' },
   { method: 'GET', path: '/api/supply-chain/v1/get-bypass-options' },
   { method: 'GET', path: '/api/supply-chain/v1/get-country-cost-shock' },
-  { method: 'GET', path: '/api/supply-chain/v1/get-route-explorer-lane' },
-  { method: 'GET', path: '/api/supply-chain/v1/get-route-impact' },
   { method: 'GET', path: '/api/supply-chain/v1/get-country-products' },
   { method: 'GET', path: '/api/supply-chain/v1/get-multi-sector-cost-shock' },
   { method: 'GET', path: '/api/supply-chain/v1/get-sector-dependency' },

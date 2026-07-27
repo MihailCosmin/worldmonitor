@@ -18,8 +18,6 @@ export const PREMIUM_RPC_PATHS = new Set<string>([
   '/api/supply-chain/v1/get-country-chokepoint-index',
   '/api/supply-chain/v1/get-bypass-options',
   '/api/supply-chain/v1/get-country-cost-shock',
-  '/api/supply-chain/v1/get-route-explorer-lane',
-  '/api/supply-chain/v1/get-route-impact',
   '/api/supply-chain/v1/get-country-products',
   '/api/supply-chain/v1/get-multi-sector-cost-shock',
   '/api/supply-chain/v1/get-sector-dependency',

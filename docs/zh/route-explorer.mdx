@@ -81,13 +81,11 @@ Route Explorer 为键盘使用而构建——所有输入和标签页都无需�
 
 ## 分层与门控
 
-Route Explorer 为 **PRO** 功能。免费层访客可以打开工作流并填写输入栏，但在拉取数据时会遇到硬门控——左侧栏被模糊处理，标签页区域被替换为"Unlock route intelligence"卡片和 **Upgrade to PRO** 按钮，任何标签页中都不会渲染数值化数据。模态背后可见的底层地图会显示一条通用公开航线高亮，作为 PRO 功能预览。
-
-门控路径由 `src/components/RouteExplorer/RouteExplorer.ts:342` 中的 `renderFreeGate()` 实现；若点击 Upgrade 按钮，会触发 `route-explorer:free-cta-click` 分析事件。点击 Upgrade 会进入 Pro 结账流程（或回退到 Pro 营销页面）。
+Route Explorer 在 Web 应用中为公开功能。免费用户可以运行完整的当前 / 替代方案 / 陆路 / 影响工作流，无需再经过 Pro 升级门控。
 
 ## Route Explorer 背后的数据
 
-Route Explorer 调用由 `SupplyChainService` 生成的 sebuf REST RPC。航线与影响调用均为 PRO 路径；免费用户可打开工作流，但拉取时的门控会用升级卡片替换数值结果。航线情报供应商路径由 `get-route-explorer-lane` 在服务端封装；浏览器代码应使用下方生成的 REST 路由。
+Route Explorer 调用由 `SupplyChainService` 生成的 sebuf REST RPC。航线情报供应商路径由 `get-route-explorer-lane` 在服务端封装；浏览器代码应使用下方生成的 REST 路由。
 
 | 工作流区域 | 方法 + 路由 | 支撑内容 |
 |---|---|---|

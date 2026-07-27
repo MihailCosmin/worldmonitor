@@ -320,7 +320,7 @@ These surfaces already have real feature logic, data structures, or fetch/render
 - Acceptance:
   - The regional board loads for free users with its existing snapshot UI.
 
-### [ ] F11. Ungate Route Explorer
+### [x] F11. Ungate Route Explorer
 
 - Files:
   - `src/components/RouteExplorer/RouteExplorer.ts`

@@ -81,13 +81,11 @@ When the workflow closes, the map restores its prior state.
 
 ## Tier & gating
 
-Route Explorer is **PRO**. Free-tier visitors can open the workflow and fill in the input bar, but they hit a hard gate at fetch time — the left rail is blurred, the tab area is replaced with an "Unlock route intelligence" card and an **Upgrade to PRO** button, and no numeric payload is rendered in any tab. The underlying map, visible behind the modal, shows a generic public-route highlight as a preview of what PRO exposes.
-
-The gate path is implemented by `renderFreeGate()` in `src/components/RouteExplorer/RouteExplorer.ts:342`; a `route-explorer:free-cta-click` analytics event fires if the Upgrade button is clicked. Clicking Upgrade routes into the Pro checkout (or falls back to the Pro marketing page).
+Route Explorer is public in the web app. Free users can run the full Current / Alternatives / Land / Impact workflow and see the same lane and impact surfaces without a Pro-only upgrade gate.
 
 ## Data behind Route Explorer
 
-Route Explorer calls generated sebuf REST RPCs from `SupplyChainService`. Both lane and impact calls are PRO paths; free users can open the workflow, but fetch-time gating replaces numeric results with the upgrade card. The route-intelligence vendor path is wrapped server-side by `get-route-explorer-lane`; browser code should use the generated REST routes below.
+Route Explorer calls generated sebuf REST RPCs from `SupplyChainService`. The route-intelligence vendor path is wrapped server-side by `get-route-explorer-lane`; browser code should use the generated REST routes below.
 
 | Workflow area | Method + route | Feeds |
 |---|---|---|

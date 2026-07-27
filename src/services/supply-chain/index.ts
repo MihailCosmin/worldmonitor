@@ -317,8 +317,6 @@ export interface FetchRouteExplorerLaneArgs {
 export async function fetchRouteExplorerLane(
   args: FetchRouteExplorerLaneArgs,
 ): Promise<GetRouteExplorerLaneResponse> {
-  // Pro-gated path — see fetchCountryChokepointIndex.
-  if (!hasPremiumAccess()) return { ...emptyRouteExplorerLane, ...args };
   try {
     return await client.getRouteExplorerLane(args);
   } catch {
@@ -347,8 +345,6 @@ export interface FetchRouteImpactArgs {
 export async function fetchRouteImpact(
   args: FetchRouteImpactArgs,
 ): Promise<GetRouteImpactResponse> {
-  // Pro-gated path — see fetchCountryChokepointIndex.
-  if (!hasPremiumAccess()) return { ...emptyRouteImpact };
   try {
     return await client.getRouteImpact(args);
   } catch {
