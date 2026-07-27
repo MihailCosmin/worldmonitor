@@ -555,21 +555,21 @@ describe('country evidence bundle export', () => {
     assert.match(legacySource, /exportCountryEvidenceMarkdown/);
     assert.match(legacySource, /data-format="evidence-md"/);
     assert.match(legacySource, /format === 'json' \|\| format === 'csv' \|\| format === 'evidence-md'/);
-    assert.match(legacySource, /if \(format === 'evidence-md' && !this\.canExportEvidenceBundle\(\)\) return;/);
     assert.match(legacySource, /if \(format === 'evidence-md'\) exportCountryEvidenceMarkdown\(data\)/);
     assert.match(legacySource, /data-format="json"/);
     assert.match(legacySource, /data-format="csv"/);
-    assert.match(legacySource, /trackGateHit\('evidence-export'\)/);
+    assert.doesNotMatch(legacySource, /canExportEvidenceBundle/);
+    assert.doesNotMatch(legacySource, /trackGateHit\('evidence-export'\)/);
 
     assert.match(dossierSource, /exportCountryEvidenceMarkdown/);
     assert.match(dossierSource, /cdp-evidence-export-btn/);
-    assert.match(dossierSource, /if \(!hasPremiumAccess\(getAuthState\(\)\)\)/);
-    assert.match(dossierSource, /trackGateHit\('evidence-export'\)/);
     assert.match(dossierSource, /this\.exportEvidenceBundle\(\)/);
     assert.match(dossierSource, /exportCountryEvidenceMarkdown\(data\)/);
+    assert.match(dossierSource, /Export evidence bundle as Markdown/);
+    assert.doesNotMatch(dossierSource, /Evidence export is available on Pro\./);
   });
 
-  it('blocks country brief evidence export for free users', async () => {
+  it('allows country brief evidence export for free users', async () => {
     const harness = await createCountryBriefPageHarness({ premiumAccess: false });
     try {
       const page = harness.createPage();
@@ -582,9 +582,9 @@ describe('country evidence bundle export', () => {
 
       dispatchDelegatedClick(overlay, button);
 
-      assert.equal(harness.getEvidenceExports().length, 0);
-      assert.deepEqual(harness.getGateHits(), ['evidence-export']);
-      assert.deepEqual(harness.getToasts(), ['Evidence export is available on Pro.']);
+      assert.equal(harness.getEvidenceExports().length, 1);
+      assert.deepEqual(harness.getGateHits(), []);
+      assert.deepEqual(harness.getToasts(), []);
     } finally {
       harness.cleanup();
     }
@@ -672,7 +672,7 @@ describe('country evidence bundle export', () => {
     }
   });
 
-  it('blocks active dossier evidence export for free users', async () => {
+  it('allows active dossier evidence export for free users', async () => {
     const harness = await createCountryDeepDivePanelHarness({ premiumAccess: false });
     try {
       const panel = harness.createPanel();
@@ -713,9 +713,9 @@ describe('country evidence bundle export', () => {
       assert.ok(button, 'expected evidence export button');
       button.dispatchEvent(new Event('click'));
 
-      assert.equal(harness.getEvidenceExports().length, 0);
-      assert.deepEqual(harness.getGateHits(), ['evidence-export']);
-      assert.deepEqual(harness.getToasts(), ['Evidence export is available on Pro.']);
+      assert.equal(harness.getEvidenceExports().length, 1);
+      assert.deepEqual(harness.getGateHits(), []);
+      assert.deepEqual(harness.getToasts(), []);
     } finally {
       harness.cleanup();
     }

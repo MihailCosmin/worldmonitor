@@ -395,7 +395,7 @@ These surfaces already have real feature logic, data structures, or fetch/render
 - Acceptance:
   - These cards load real data instead of lock placeholders.
 
-### [ ] F15. Ungate evidence export
+### [x] F15. Ungate evidence export
 
 - Files:
   - `src/components/CountryDeepDivePanel.ts`

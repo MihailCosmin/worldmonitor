@@ -21,9 +21,6 @@ import { toFlagEmoji } from '@/utils/country-flag';
 import { PORTS } from '@/config/ports';
 import { getChokepointRoutes } from '@/config/trade-routes';
 import { STRATEGIC_WATERWAYS } from '@/config/geo';
-import { hasPremiumAccess } from '@/services/panel-gating';
-import { getAuthState } from '@/services/auth-state';
-import { trackGateHit } from '@/services/analytics';
 import { fetchBypassOptions, fetchChokepointStatus } from '@/services/supply-chain';
 import { haversineDistanceKm } from '@/services/related-assets';
 import { enqueueSentryCall } from '@/bootstrap/sentry-defer';
@@ -2498,13 +2495,8 @@ export class CountryDeepDivePanel implements CountryBriefPanel {
     });
     const evidenceButton = this.el('button', 'cdp-action-btn cdp-evidence-export-btn', 'Evidence') as HTMLButtonElement;
     evidenceButton.setAttribute('type', 'button');
-    evidenceButton.setAttribute('title', 'Export evidence bundle as Markdown (PRO)');
+    evidenceButton.setAttribute('title', 'Export evidence bundle as Markdown');
     evidenceButton.addEventListener('click', () => {
-      if (!hasPremiumAccess(getAuthState())) {
-        trackGateHit('evidence-export');
-        showToast('Evidence export is available on Pro.');
-        return;
-      }
       this.exportEvidenceBundle();
     });
     right.append(shareBtn, maxBtn, storyButton, exportButton, evidenceButton);

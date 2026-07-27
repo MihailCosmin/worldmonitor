@@ -17,9 +17,6 @@ import type { CountryBriefExport, CountryEvidenceBundleInput } from '@/utils/exp
 import { ME_STRIKE_BOUNDS } from '@/services/country-geometry';
 import { toFlagEmoji } from '@/utils/country-flag';
 import { setTrustedHtml, trustedHtml } from '@/utils/dom-utils';
-import { getAuthState } from '@/services/auth-state';
-import { hasPremiumAccess } from '@/services/panel-gating';
-import { trackGateHit } from '@/services/analytics';
 
 
 type BriefAssetType = AssetType | 'port';
@@ -687,7 +684,6 @@ export class CountryBriefPage implements CountryBriefPanel {
 
   private exportBrief(format: 'json' | 'csv' | 'evidence-md'): void {
     if (!this.currentCode || !this.currentName) return;
-    if (format === 'evidence-md' && !this.canExportEvidenceBundle()) return;
     const exportedAt = new Date().toISOString();
     const data: CountryBriefExport & CountryEvidenceBundleInput = {
       country: this.currentName,
@@ -741,13 +737,6 @@ export class CountryBriefPage implements CountryBriefPanel {
     if (format === 'evidence-md') exportCountryEvidenceMarkdown(data);
     else if (format === 'json') exportCountryBriefJSON(data);
     else exportCountryBriefCSV(data);
-  }
-
-  private canExportEvidenceBundle(): boolean {
-    if (hasPremiumAccess(getAuthState())) return true;
-    trackGateHit('evidence-export');
-    showToast('Evidence export is available on Pro.');
-    return false;
   }
 
   private exportPdf(): void {
