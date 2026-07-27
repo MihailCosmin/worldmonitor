@@ -56,6 +56,14 @@ const PREMIUM_FETCH_BYPASS_ALLOWLIST: Record<string, string> = {
 // its translate mode is intentionally available to free callers and the
 // gateway only applies direct-LLM quota after inspecting the request body.
 const DIRECT_LLM_PREMIUM_BYPASS_ALLOWLIST: Record<string, string> = {
+  '/api/market/v1/analyze-stock':
+    'stock-analysis.ts calls the generated client through premiumFetch with ' +
+    'forcePremium so signed-in free users attach Clerk auth without treating ' +
+    'the whole route as premium-gated.',
+  '/api/intelligence/v1/deduct-situation':
+    'DeductionPanel.ts and correlation-engine/engine.ts call the generated ' +
+    'client through premiumFetch with forcePremium so signed-in free users ' +
+    'attach Clerk auth without treating the whole route as premium-gated.',
   '/api/news/v1/summarize-article':
     'The route also serves free translate mode; spend-bearing summarize calls ' +
     'opt into premiumFetch with forcePremium instead of gating the whole path.',
@@ -251,6 +259,31 @@ describe('premium-paths guard — browser direct-LLM routes cannot trigger wm-se
       usesPremiumFetch,
       true,
       'The country-intel call site must attach Clerk auth through premiumFetch.',
+    );
+  });
+
+  it('Deduct Situation callers force premiumFetch auth on the public quota path', () => {
+    const panelSource = readFileSync(join(repoRoot, 'src/components/DeductionPanel.ts'), 'utf8');
+    assert.match(
+      panelSource,
+      /premiumFetch\(input,\s*\{\s*\.\.\.\(init \?\? \{\}\),\s*forcePremium:\s*true\s*\}\)/,
+      'DeductionPanel must attach Clerk auth through premiumFetch(forcePremium:true).',
+    );
+
+    const engineSource = readFileSync(join(repoRoot, 'src/services/correlation-engine/engine.ts'), 'utf8');
+    assert.match(
+      engineSource,
+      /premiumFetch\(input,\s*\{\s*\.\.\.\(init \?\? \{\}\),\s*forcePremium:\s*true\s*\}\)/,
+      'CorrelationEngine must attach Clerk auth through premiumFetch(forcePremium:true).',
+    );
+  });
+
+  it('Stock analysis callers force premiumFetch auth on the public quota path', () => {
+    const analysisSource = readFileSync(join(repoRoot, 'src/services/stock-analysis.ts'), 'utf8');
+    assert.match(
+      analysisSource,
+      /premiumFetch\(input,\s*\{\s*\.\.\.\(init \?\? \{\}\),\s*forcePremium:\s*true\s*\}\)/,
+      'stock-analysis.ts must attach Clerk auth through premiumFetch(forcePremium:true).',
     );
   });
 });

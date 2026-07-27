@@ -576,6 +576,12 @@ function createGatewayAuthErrorResponse(
   });
 }
 
+function directLlmAuthError(pathname: string): string {
+  return pathname === '/api/intelligence/v1/deduct-situation'
+    ? 'Authentication required'
+    : 'Pro authentication required';
+}
+
 const GATEWAY_DIRECT_LLM_QUOTA_METHODS: Record<string, string> = {
   '/api/intelligence/v1/classify-event': 'GET',
   '/api/intelligence/v1/deduct-situation': 'POST',
@@ -1763,7 +1769,7 @@ export function createDomainGateway(
     if (requiresDirectLlmQuota && !isEnterpriseAuth) {
       if (!sessionUserId) {
         emitRequest(401, 'auth_401', null);
-        return createGatewayAuthErrorResponse(401, 'Pro authentication required', corsHeaders);
+        return createGatewayAuthErrorResponse(401, directLlmAuthError(pathname), corsHeaders);
       }
 
       const reservation = await reserveDirectLlmQuota({

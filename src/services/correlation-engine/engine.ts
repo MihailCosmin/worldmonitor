@@ -11,6 +11,7 @@ import { haversineKm } from '@/utils/distance';
 
 import { premiumFetch } from '@/services/premium-fetch';
 import { hasPremiumAccess } from '@/services/panel-gating';
+import { getCurrentClerkUser } from '@/services/clerk';
 import { IntelligenceServiceClient } from '@/services/generated-rpc-clients';
 
 const LLM_SCORE_THRESHOLD = 60;
@@ -33,10 +34,12 @@ export class CorrelationEngine {
 
   constructor() {
     // Use '' base URL — requests go to current origin, same as other panels.
-    // premiumFetch — deductSituation is in PREMIUM_RPC_PATHS. globalThis.fetch
-    // (the generated default) would 401 signed-in browser pros so the LLM
-    // assessment never lands. See #3242 review HIGH(new) #1 for the bug class.
-    this.intelligenceClient = new IntelligenceServiceClient('', { fetch: premiumFetch });
+    // Deduct Situation is public for signed-in users, but correlation
+    // assessments still need a Clerk bearer on web so the direct-LLM quota
+    // layer can attribute spend to the real user.
+    this.intelligenceClient = new IntelligenceServiceClient('', {
+      fetch: (input, init) => premiumFetch(input, { ...(init ?? {}), forcePremium: true }),
+    });
   }
 
   registerAdapter(adapter: DomainAdapter): void {
@@ -366,7 +369,7 @@ export class CorrelationEngine {
   // ── LLM Assessment ─────────────────────────────────────────
 
   private queueLlmAssessments(cards: ConvergenceCard[], adapter: DomainAdapter): void {
-    if (!hasPremiumAccess()) return;
+    if (!hasPremiumAccess() && getCurrentClerkUser() === null) return;
     const pending: Array<{ card: ConvergenceCard; cacheKey: string }> = [];
     for (const card of cards) {
       if (card.score < LLM_SCORE_THRESHOLD) continue;

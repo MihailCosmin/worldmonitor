@@ -108,9 +108,7 @@ function writeSessionStorageValue(key: string, value: string): void {
  * The static test in tests/panel-config-guardrails.test.mjs enforces
  * `apiKeyPanels ⊆ WEB_PREMIUM_PANELS` so this drift can't recur silently.
  */
-const WEB_PREMIUM_PANELS = new Set([
-  'deduction',
-]);
+const WEB_PREMIUM_PANELS = new Set<string>([]);
 
 const COLLIDING_NEWS_PANEL_KEYS = new Set(['markets', 'crypto', 'economic']);
 

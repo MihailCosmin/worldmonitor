@@ -1,5 +1,6 @@
 import { Panel } from './Panel';
 import { createLazyClient, getRpcBaseUrl } from '@/services/rpc-client';
+import { getRpcErrorStatusCode } from '@/services/rpc-client';
 import { premiumFetch } from '@/services/premium-fetch';
 import { h, replaceChildren, setTrustedHtml, trustedHtml } from '@/utils/dom-utils';
 import { yieldToMain } from '@/utils/after-paint';
@@ -7,16 +8,25 @@ import { marked } from 'marked';
 import DOMPurify from 'dompurify';
 import type { NewsItem, DeductContextDetail } from '@/types';
 import { buildNewsContext } from '@/utils/news-context';
-import { getActiveFrameworkForPanel } from '@/services/analysis-framework-store';
+import { getActiveFrameworkForPanel, isFrameworkSelectionEnabledForPanel } from '@/services/analysis-framework-store';
 import { hasPremiumAccess } from '@/services/panel-gating';
+import { getCurrentClerkUser, openSignIn } from '@/services/clerk';
 import { FrameworkSelector } from './FrameworkSelector';
 import { extractDeductionProbability } from './deduction-probability';
 import { IntelligenceServiceClient } from '@/services/generated-rpc-clients';
 
-// deduct-situation + list-market-implications are premium-gated.
-const getIntelligenceClient = createLazyClient(() => new IntelligenceServiceClient(getRpcBaseUrl(), { fetch: premiumFetch }));
+const deductSituationFetch = (input: RequestInfo | URL, init?: RequestInit): Promise<Response> =>
+  premiumFetch(input, { ...(init ?? {}), forcePremium: true });
+
+// Deduct Situation is public for signed-in users, but still needs a Clerk
+// bearer on web so the gateway can bind direct-LLM quota to the real user.
+const getIntelligenceClient = createLazyClient(() => new IntelligenceServiceClient(getRpcBaseUrl(), { fetch: deductSituationFetch }));
 
 const COOLDOWN_MS = 5_000;
+
+function canUseDeductionAnalysis(): boolean {
+    return hasPremiumAccess() || getCurrentClerkUser() !== null;
+}
 
 export class DeductionPanel extends Panel {
     private formEl: HTMLFormElement;
@@ -102,7 +112,11 @@ export class DeductionPanel extends Panel {
         }) as EventListener;
         document.addEventListener('wm:deduct-context', this.contextHandler);
 
-        this.fwSelector = new FrameworkSelector({ panelId: 'deduction', isPremium: hasPremiumAccess(), panel: this });
+        this.fwSelector = new FrameworkSelector({
+            panelId: 'deduction',
+            isPremium: isFrameworkSelectionEnabledForPanel('deduction'),
+            panel: this,
+        });
         this.header.appendChild(this.fwSelector.el);
     }
 
@@ -227,6 +241,13 @@ export class DeductionPanel extends Panel {
         const query = this.inputEl.value.trim();
         if (!query) return;
 
+        if (!canUseDeductionAnalysis()) {
+            this.resultContainer.className = 'deduction-result error';
+            this.resultContainer.textContent = 'Sign in to run Deduct Situation analyses.';
+            openSignIn();
+            return;
+        }
+
         let geoContext = this.geoInputEl.value.trim();
 
         if (this.getLatestNews && !geoContext.includes('Recent News:')) {
@@ -279,7 +300,15 @@ export class DeductionPanel extends Panel {
             if (!this.element?.isConnected) return;
             console.error('[DeductionPanel] Error:', err);
             this.resultContainer.className = 'deduction-result error';
-            this.resultContainer.textContent = 'An error occurred while analyzing the situation.';
+            const status = getRpcErrorStatusCode(err);
+            if (status === 401) {
+                this.resultContainer.textContent = 'Sign in to run Deduct Situation analyses.';
+                openSignIn();
+            } else if (status === 429) {
+                this.resultContainer.textContent = 'Daily AI analysis quota reached. Try again after UTC midnight.';
+            } else {
+                this.resultContainer.textContent = 'An error occurred while analyzing the situation.';
+            }
         } finally {
             this.isSubmitting = false;
             if (this.element?.isConnected) {

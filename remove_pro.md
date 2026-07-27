@@ -601,7 +601,7 @@ Intentional paid boundaries that are not part of this follow-up remain allowed: 
 - Acceptance:
   - The Daily Market Brief builds and refreshes for anonymous and signed-in free users, including watchlist and framework changes.
 
-### [ ] D3. Ungate Deduct Situation and its AI assessment path
+### [x] D3. Ungate Deduct Situation and its AI assessment path
 
 - Files:
   - `src/config/panels.ts`

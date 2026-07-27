@@ -98,6 +98,19 @@ describe('agent bus applier', () => {
     assert.equal(panel.showCalls, 0);
   });
 
+  it('allows Deduct Situation for free users once the panel is public', () => {
+    const panel = makePanel();
+    const ctx = makeCtx({
+      panels: { deduction: panel.panel as never },
+      panelSettings: { deduction: { name: 'Deduct Situation', enabled: true } },
+    });
+    const result = applyAgentBusAction(ctx, { type: 'open_panel', panelId: 'deduction' }, entitled);
+
+    assert.equal(result.ok, true);
+    assert.equal(result.status, 'applied');
+    assert.equal(panel.showCalls, 1);
+  });
+
   it('moves the map only after action validation', () => {
     const ctx = makeCtx();
     const result = applyAgentBusAction(ctx, { type: 'set_view', view: 'mena', zoom: 4 }, entitled);

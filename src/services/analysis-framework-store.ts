@@ -144,7 +144,7 @@ export function renameImportedFramework(id: string, name: string): void {
   _activeCache.clear();
 }
 
-const FREE_FRAMEWORK_PANELS = new Set<AnalysisPanelId>(['daily-market-brief']);
+const FREE_FRAMEWORK_PANELS = new Set<AnalysisPanelId>(['daily-market-brief', 'deduction']);
 
 export function isFrameworkSelectionEnabledForPanel(panelId: AnalysisPanelId): boolean {
   return hasPremiumAccess() || FREE_FRAMEWORK_PANELS.has(panelId);

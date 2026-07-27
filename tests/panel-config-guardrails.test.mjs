@@ -340,8 +340,8 @@ describe('panel-config guardrails', () => {
 
     const allowedContexts = [
       /this\.ctx\.panels\[key\]\s*=/,             // createPanel helper
-      /this\.ctx\.panels\['deduction'\]/,          // async-mounted PRO panel — gated via WEB_PREMIUM_PANELS
-      /this\.ctx\.panels\['regional-intelligence'\]/, // async-mounted PRO panel — gated via WEB_PREMIUM_PANELS
+      /this\.ctx\.panels\['deduction'\]/,          // async-mounted panel — mounted through lazyPanel/importPanel
+      /this\.ctx\.panels\['regional-intelligence'\]/, // async-mounted panel — mounted through lazyPanel/importPanel
       /this\.ctx\.panels\['runtime-config'\]/,     // desktop-only, intentionally ungated
       /this\.ctx\.panels\['live-news'\]/,          // mountLiveNewsIfReady — has its own channel guard
       /panel as unknown as/,                       // lazyPanel generic cast
@@ -532,15 +532,13 @@ describe('panel-config guardrails', () => {
     // shrink the verified set and let an orphan re-appear.
     const QUOTED = /['"]([^'"]+)['"]/g;
 
-    const apiKeyPanelsMatch = panelsSrc.match(/const apiKeyPanels = \[([^\]]+)\];/);
+    const apiKeyPanelsMatch = panelsSrc.match(/const apiKeyPanels(?::[^=]+)? = \[([^\]]*)\];/);
     assert.ok(apiKeyPanelsMatch, 'apiKeyPanels array not found in panels.ts');
     const apiKeyPanels = [...apiKeyPanelsMatch[1].matchAll(QUOTED)].map(m => m[1]);
-    assert.ok(apiKeyPanels.length > 0, 'apiKeyPanels parse returned no entries');
 
-    const webPremiumMatch = panelLayoutSrc.match(/const WEB_PREMIUM_PANELS = new Set\(\[([\s\S]*?)\]\);/);
+    const webPremiumMatch = panelLayoutSrc.match(/const WEB_PREMIUM_PANELS = new Set(?:<[^>]+>)?\(\[([\s\S]*?)\]\);/);
     assert.ok(webPremiumMatch, 'WEB_PREMIUM_PANELS not found in panel-layout.ts');
     const webPremium = new Set([...webPremiumMatch[1].matchAll(QUOTED)].map(m => m[1]));
-    assert.ok(webPremium.size > 0, 'WEB_PREMIUM_PANELS parse returned no entries');
 
     const orphans = apiKeyPanels.filter(k => !webPremium.has(k));
     assert.deepStrictEqual(

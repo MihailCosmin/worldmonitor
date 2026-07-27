@@ -10,7 +10,10 @@ import {
 } from '@/services/stock-analysis-targets';
 import { MarketServiceClient } from '@/services/generated-rpc-clients';
 
-const client = new MarketServiceClient(getRpcBaseUrl(), { fetch: premiumFetch });
+const analyzeStockFetch: typeof fetch = (input, init) =>
+  premiumFetch(input, { ...(init ?? {}), forcePremium: true });
+
+const client = new MarketServiceClient(getRpcBaseUrl(), { fetch: analyzeStockFetch });
 
 export type StockAnalysisResult = AnalyzeStockResponse;
 
