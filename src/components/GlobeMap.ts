@@ -1951,7 +1951,7 @@ export class GlobeMap {
             <label class="layer-toggle${isLocked ? ' layer-toggle-locked' : ''}" data-layer="${key}">
               <input type="checkbox" ${this.layers[key] ? 'checked' : ''}${isLocked ? ' disabled' : ''}>
               <span class="toggle-icon">${icon}</span>
-              <span class="toggle-label">${label}${isLocked ? ' \uD83D\uDD12' : ''}${isEnhanced ? ' <span class="layer-pro-badge">PRO</span>' : ''}</span>
+              <span class="toggle-label">${label}${isLocked ? ' \uD83D\uDD12' : ''}</span>
             </label>
             <button type="button" class="layer-explain-btn${hasExplanation ? ' has-layer-explanation' : ''}" data-layer="${key}" aria-label="${explainLabel}" title="${explainLabel}">i</button>
           </div>`;

@@ -103,7 +103,7 @@ These are pure upsell or navigation surfaces. They should lose `Pro` / `Premium`
 - Acceptance:
   - Base panel chrome does not inject `PRO` badges or `Upgrade to Pro` buttons on its own.
 
-### [ ] R5. Remove the notifications-tab upsell card and replace with neutral onboarding
+### [x] R5. Remove the notifications-tab upsell card and replace with neutral onboarding
 
 - Files:
   - `src/services/notifications-settings.ts`
@@ -119,7 +119,7 @@ These are pure upsell or navigation surfaces. They should lose `Pro` / `Premium`
 - Acceptance:
   - The notifications tab does not show an upsell-only `Upgrade to Pro` card.
 
-### [ ] R6. Remove `Pro` category chips and badge-only labels after unlock work is done
+### [x] R6. Remove `Pro` category chips and badge-only labels after unlock work is done
 
 - Files:
   - `src/components/MobilePanelNav.ts`

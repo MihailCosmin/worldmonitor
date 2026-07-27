@@ -95,8 +95,11 @@ export function renderNotificationsSettings(host: NotificationsSettingsHost): No
     html += `</div>`;
   } else {
     html += `<div class="wm-pref-group-content wm-notif-tab-content">`;
-    html += `<div class="ai-flow-toggle-desc">Get real-time intelligence alerts delivered to Telegram, Slack, Discord, and Email with configurable sensitivity, quiet hours, and digest scheduling.</div>`;
-    html += `<button type="button" class="panel-locked-cta" id="usNotifUpgradeBtn">Upgrade to Pro</button>`;
+    html += `<div class="ai-flow-toggle-desc">Notification delivery setup is currently unavailable in this dashboard view.</div>`;
+    html += `<div class="ai-flow-toggle-desc">Supported channels include Telegram, Slack, Discord, Email, Webhook, and Browser Push when notification settings are enabled.</div>`;
+    if (!host.isSignedIn) {
+      html += `<button type="button" class="panel-locked-cta" id="usNotifSignInBtn">Sign In</button>`;
+    }
     html += `</div>`;
   }
 
@@ -107,17 +110,11 @@ export function renderNotificationsSettings(host: NotificationsSettingsHost): No
       const { signal } = ac;
 
       if (!isPro) {
-        const upgradeBtn = container.querySelector<HTMLButtonElement>('#usNotifUpgradeBtn');
-        if (upgradeBtn) {
-          upgradeBtn.addEventListener('click', () => {
-            if (!host.isSignedIn) {
-              import('@/services/clerk').then(m => m.openSignIn()).catch(() => {
-                window.open('https://worldmonitor.app/pro', '_blank', 'noopener,noreferrer');
-              });
-              return;
-            }
-            import('@/services/checkout').then(m => import('@/config/products').then(p => m.startCheckout(p.DEFAULT_UPGRADE_PRODUCT))).catch(() => {
-              window.open('https://worldmonitor.app/pro', '_blank', 'noopener,noreferrer');
+        const signInBtn = container.querySelector<HTMLButtonElement>('#usNotifSignInBtn');
+        if (signInBtn) {
+          signInBtn.addEventListener('click', () => {
+            import('@/services/clerk').then(m => m.openSignIn()).catch(() => {
+              window.open('https://worldmonitor.app/', '_blank', 'noopener,noreferrer');
             });
           }, { signal });
         }
