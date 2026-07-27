@@ -817,7 +817,7 @@ Intentional paid boundaries that are not part of this follow-up remain allowed: 
 - Acceptance:
   - No base panel can render a plan badge, plan lock, or upgrade CTA, and locale fallback cannot reintroduce one in another language.
 
-### [ ] D14. Replace tests that still enforce the old premium dashboard contract
+### [x] D14. Replace tests that still enforce the old premium dashboard contract
 
 - Files:
   - `e2e/auth-ui.spec.ts`
@@ -836,6 +836,12 @@ Intentional paid boundaries that are not part of this follow-up remain allowed: 
   - Include data-bearing assertions, not only absence of `PRO` text.
 - Acceptance:
   - Tests fail if a public feature regains a client lock, server 403, empty entitlement fallback, reduced tier-specific dataset, or upgrade copy.
+- Resolution (2026-07-27):
+  - `tests/a11y-axe-regression.test.mts` never existed (no axe-core dependency anywhere in the repo); the real stale a11y contract was in `tests/a11y-issue-5059-invariants.test.mjs` instead.
+  - Audited every named file plus the gateway/sanctions/supply-chain/followed-country/entitlement-gate candidate set (24 files). D1-D13 had already rewritten almost all of them to the ungated contract with real data-bearing assertions (e.g. `followed-countries-service.test.mjs`, `global-procurement-ui-guard.test.mts`, `country-evidence-bundle-export.test.mts`, `premium-loaders-fan-out-coverage.test.mts` were already correct).
+  - Confirmed genuinely separate, still-real paid capabilities that are correctly out of scope: LLM-spend throttles gating `classify-event`/`summarize-article` (fall back to non-LLM paths, panel itself is never locked), the Pro-fresh-cache TTL tier (identical data, only cache freshness differs), and the AI Widget Builder's Sonnet-vs-Haiku tier (real cost difference, not panel visibility).
+  - Fixed the actual hold-outs: `agent-bus-applier.test.mts` (removed a `premium: 'locked'` fixture from the generic-denial test, added a test proving the default entitlement path opens panels), `e2e/auth-ui.spec.ts` (inverted `'premium panels gated for anonymous users'` requiring `.panel-is-locked` to a `toHaveCount(0)` check — verified failing before the fix and passing after, against a live dev server), `tests/resilience-widget.test.mts` (deleted two tests pinning the dead `LOCKED_PREVIEW` fixture shape), `tests/sector-route-explorer.test.mjs` (deleted a currently-failing test requiring `trackGateHit`, which has been fully removed from source; replaced with a doesNotMatch guard), `tests/a11y-issue-5059-invariants.test.mjs` (de-real-panel-named the synthetic locked-toggle example and added a test proving the real "Force Posture" panel is unlocked via `isPanelEntitled`).
+  - All touched files pass under `tsx --test`; the e2e fix was verified against a real Playwright run.
 
 ### [ ] D15. Correct Pro marketing source and rebuild static output
 

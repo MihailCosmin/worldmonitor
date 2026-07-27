@@ -44,9 +44,13 @@ test.describe('auth UI (anonymous state)', () => {
     expect(errors.filter((e) => e.includes('auth'))).toHaveLength(0);
   });
 
-  test('premium panels gated for anonymous users', async ({ page }) => {
+  test('no panel is locked for anonymous users', async ({ page }) => {
     await page.goto('/');
     await page.waitForSelector('.panel', { timeout: 20000 });
-    await expect(page.locator('.panel-is-locked').first()).toBeVisible({ timeout: 15000 });
+    // Let every panel finish mounting before asserting absence, so the check
+    // reflects the settled dashboard rather than an early paint.
+    await page.waitForTimeout(3000);
+    await expect(page.locator('.panel-is-locked')).toHaveCount(0);
+    await expect(page.locator('.panel-locked-state')).toHaveCount(0);
   });
 });

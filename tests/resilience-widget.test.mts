@@ -3,7 +3,6 @@ import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 
 import {
-  LOCKED_PREVIEW,
   collectDimensionConfidences,
   formatBaselineStress,
   formatDimensionConfidence,
@@ -602,55 +601,6 @@ test('collectDimensionConfidences returns an empty list for an empty response', 
   assert.deepEqual(collectDimensionConfidences([{ dimensions: [] }]), []);
 });
 
-// PR #2949 review followup: the gated LOCKED_PREVIEW must populate
-// the per-dimension confidence grid so locked users see a blurred
-// representative card instead of a blank gap between the domain rows
-// and the footer. If a future edit accidentally drops a dimension
-// from the preview, this regression test fails loudly.
-test('LOCKED_PREVIEW populates all 22 serialized dimensions for the gated preview (PR #2949 review)', async () => {
-  const {
-    RESILIENCE_DIMENSION_ORDER,
-    RESILIENCE_RETIRED_DIMENSIONS,
-  } = await import('../server/worldmonitor/resilience/v1/_dimension-scorers.ts');
-  const retiredDimensions = new Set<string>(RESILIENCE_RETIRED_DIMENSIONS);
-  const all = collectDimensionConfidences(LOCKED_PREVIEW.domains);
-  assert.equal(
-    all.length,
-    22,
-    `locked preview should carry all 22 serialized dimensions (20 active + 2 retired), got ${all.length}`,
-  );
-  assert.deepEqual(
-    all.map((dim) => dim.id),
-    RESILIENCE_DIMENSION_ORDER,
-    'locked preview dimension order must match RESILIENCE_DIMENSION_ORDER',
-  );
-  // Every cell should resolve to a short label (no raw IDs leaking through).
-  for (const dim of all) {
-    assert.ok(
-      dim.label.length > 0 && dim.label !== dim.id,
-      `${dim.id} should resolve to a short display label in the preview, got "${dim.label}"`,
-    );
-  }
-  // Every active dimension in the preview should have non-absent status
-  // so the blurred grid renders a meaningful visual. Retired dimensions
-  // deliberately mirror the live retired shape: coverage=0 and absent.
-  for (const dim of all) {
-    if (retiredDimensions.has(dim.id)) {
-      assert.equal(
-        dim.status,
-        'absent',
-        `${dim.id} should mirror the live retired zero-coverage shape`,
-      );
-      continue;
-    }
-    assert.notEqual(
-      dim.status,
-      'absent',
-      `${dim.id} should not be absent in the locked preview (active fixture values are populated)`,
-    );
-  }
-});
-
 // T1.6 full grid (PR 3 of 5): formatDimensionConfidence must surface
 // the new imputationClass and freshness fields from PR 1 / PR 2 as
 // typed nulls when unset or unknown, and the label/glyph helpers must
@@ -778,23 +728,3 @@ test('getStalenessIcon gives each visible freshness level a distinct non-color c
   assert.equal(getStalenessIcon(null), '');
 });
 
-test('LOCKED_PREVIEW smoke: at least one dimension has imputationClass and one has staleness set (PR 3 / T1.6)', () => {
-  const all = collectDimensionConfidences(LOCKED_PREVIEW.domains);
-  const withClass = all.filter((d) => d.imputationClass != null);
-  const withStaleness = all.filter((d) => d.staleness != null);
-  assert.ok(
-    withClass.length >= 1,
-    `locked preview should exercise at least one imputation class, got ${withClass.length}`,
-  );
-  assert.ok(
-    withStaleness.length >= 1,
-    `locked preview should exercise at least one staleness level, got ${withStaleness.length}`,
-  );
-  // Non-fresh staleness should appear at least once so the preview
-  // visibly shows off the aging/stale color variants.
-  const nonFresh = withStaleness.filter((d) => d.staleness !== 'fresh');
-  assert.ok(
-    nonFresh.length >= 1,
-    `locked preview should exercise at least one non-fresh staleness level, got ${nonFresh.length}`,
-  );
-});

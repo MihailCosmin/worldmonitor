@@ -147,19 +147,12 @@ describe('CountryDeepDivePanel sector route interaction', () => {
     );
   });
 
-  it('trackGateHit is NOT called during render (should be in click handler)', () => {
-    const importLine = deepDiveSrc.indexOf("import { trackGateHit }");
-    const importEnd = deepDiveSrc.indexOf('\n', importLine);
-    const matches = [...deepDiveSrc.matchAll(/trackGateHit/g)];
-    assert.ok(matches.length >= 2, 'trackGateHit must be imported and used at least once');
-    for (const m of matches) {
-      if (m.index >= importLine && m.index <= importEnd) continue;
-      const contextBefore = deepDiveSrc.slice(Math.max(0, m.index - 200), m.index);
-      assert.ok(
-        contextBefore.includes('addEventListener') || contextBefore.includes("'click'"),
-        'trackGateHit must only be called inside an event listener, never during render',
-      );
-    }
+  it('does not reference trackGateHit — sector/route exploration has no gate-hit telemetry to trigger', () => {
+    assert.doesNotMatch(
+      deepDiveSrc,
+      /trackGateHit/,
+      'CountryDeepDivePanel should not import or call trackGateHit now that sector rows and route exploration are fully public',
+    );
   });
 
   it('resetPanelContent clears selectedSectorHs2', () => {

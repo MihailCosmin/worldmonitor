@@ -82,11 +82,11 @@ describe('agent bus applier', () => {
     assert.equal(result.reason, 'panel_not_live');
   });
 
-  it('enforces premium panel entitlement in the applier', () => {
+  it('denies opening a panel when the host denies it via isPanelAllowed', () => {
     const panel = makePanel();
     const ctx = makeCtx({
       panels: { forecast: panel.panel as never },
-      panelSettings: { forecast: { name: 'Forecasts', enabled: true, premium: 'locked' } },
+      panelSettings: { forecast: { name: 'Forecasts', enabled: true } },
     });
     const result = applyAgentBusAction(ctx, { type: 'open_panel', panelId: 'forecast' }, {
       ...entitled,
@@ -96,6 +96,26 @@ describe('agent bus applier', () => {
     assert.equal(result.ok, false);
     assert.equal(result.reason, 'panel_not_entitled');
     assert.equal(panel.showCalls, 0);
+  });
+
+  it('opens a panel by default when no host entitlement override is supplied', () => {
+    // Exercises defaultPanelAllowed (`!config.premium`) directly — the
+    // fallback path used when a caller supplies no isPanelAllowed override.
+    // No panel config sets `premium` anymore, so this must always open.
+    const panel = makePanel();
+    const ctx = makeCtx({
+      panels: { forecast: panel.panel as never },
+      panelSettings: { forecast: { name: 'Forecasts', enabled: true } },
+    });
+    const result = applyAgentBusAction(ctx, { type: 'open_panel', panelId: 'forecast' }, {
+      getPanelConfig: entitled.getPanelConfig,
+      hasPremiumAccess: entitled.hasPremiumAccess,
+      applyLayerChange: entitled.applyLayerChange,
+    });
+
+    assert.equal(result.ok, true);
+    assert.equal(result.status, 'applied');
+    assert.equal(panel.showCalls, 1);
   });
 
   it('allows Deduct Situation for free users once the panel is public', () => {

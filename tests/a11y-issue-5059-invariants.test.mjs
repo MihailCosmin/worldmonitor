@@ -10,6 +10,7 @@ import {
   restoreSettingsToggleFocus,
   updateSettingsTabSelection,
 } from '../src/components/unified-settings-interactions.ts';
+import { isPanelEntitled } from '../src/config/panels.ts';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const read = (...p) => readFileSync(resolve(__dirname, '..', ...p), 'utf-8');
@@ -75,12 +76,16 @@ describe('panel toggles are real buttons', () => {
     );
   });
 
-  it('locked panels are announced as unavailable actions rather than false toggles', () => {
+  it('if a panel toggle is ever locked, it is announced as an unavailable action rather than a false toggle', () => {
+    // No real panel is locked today (isPanelEntitled always passes — see the
+    // test below), but the render helper still owns correct a11y semantics
+    // for the branch: a locked control must never assert a false pressed
+    // state. 'Example Panel' is a synthetic name, not a real registered panel.
     assert.deepEqual(
-      getPanelToggleA11yState(true, false, 'Force posture'),
+      getPanelToggleA11yState(true, false, 'Example Panel'),
       {
         ariaPressed: null,
-        ariaLabel: 'Locked: Force posture',
+        ariaLabel: 'Locked: Example Panel',
       },
     );
     assert.match(
@@ -89,6 +94,19 @@ describe('panel toggles are real buttons', () => {
       'locked controls must omit aria-pressed',
     );
     assert.match(settings, /a11yState\.ariaLabel === null \? '' : `aria-label=/);
+  });
+
+  it('no real panel is locked, so every panel toggle exposes a live pressed state', () => {
+    // Force Posture is a real, currently-public panel with no `premium`
+    // field — regression guard for the old contract that used to lock it.
+    const config = { name: 'Force Posture', enabled: true };
+    const locked = !isPanelEntitled('military-correlation', config);
+
+    assert.equal(locked, false, 'Force Posture must be unlocked for anonymous and signed-in users alike');
+    assert.deepEqual(
+      getPanelToggleA11yState(locked, true, 'Force posture'),
+      { ariaPressed: 'true', ariaLabel: null },
+    );
   });
 
   it('source-toggle-item has aria-pressed', () => {
