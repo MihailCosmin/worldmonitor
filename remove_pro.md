@@ -779,7 +779,7 @@ Intentional paid boundaries that are not part of this follow-up remain allowed: 
 - Acceptance:
   - Free users can search live flights by callsign and receive the same result interactions as paid users.
 
-### [ ] D12. Ungate analytical framework selection
+### [x] D12. Ungate analytical framework selection
 
 - Files:
   - `src/services/analysis-framework-store.ts`

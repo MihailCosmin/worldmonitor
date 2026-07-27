@@ -4,22 +4,18 @@ import {
   getActiveFrameworkForPanel,
   setActiveFrameworkForPanel,
 } from '../services/analysis-framework-store';
-import { PanelGateReason } from '../services/panel-gating';
-import type { Panel } from './Panel';
 import { t } from '../services/i18n';
 import { setTrustedHtml, trustedHtml } from '@/utils/dom-utils';
 
 
 interface FrameworkSelectorOptions {
   panelId: AnalysisPanelId;
-  isPremium: boolean;
-  panel: Panel | null;
   note?: string;
 }
 
 export class FrameworkSelector {
   readonly el: HTMLElement;
-  private select: HTMLSelectElement | null = null;
+  private select: HTMLSelectElement;
   private panelId: AnalysisPanelId;
   private popup: HTMLElement | null = null;
   private btn: HTMLButtonElement;
@@ -35,40 +31,32 @@ export class FrameworkSelector {
     setTrustedHtml(btn, trustedHtml('⚙', "legacy direct innerHTML migration"));
     this.btn = btn;
 
-    if (opts.isPremium) {
-      const select = document.createElement('select');
-      select.className = 'framework-popup-select';
-      this.select = select;
-      this.populateOptions(select);
-      select.value = getActiveFrameworkForPanel(opts.panelId)?.id ?? '';
-      select.addEventListener('change', () => {
-        setActiveFrameworkForPanel(opts.panelId, select.value || null);
-        this.updateBtnTitle();
-        this.closePopup();
-      });
+    const select = document.createElement('select');
+    select.className = 'framework-popup-select';
+    this.select = select;
+    this.populateOptions(select);
+    select.value = getActiveFrameworkForPanel(opts.panelId)?.id ?? '';
+    select.addEventListener('change', () => {
+      setActiveFrameworkForPanel(opts.panelId, select.value || null);
+      this.updateBtnTitle();
+      this.closePopup();
+    });
 
-      btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        if (this.popup) {
-          this.closePopup();
-        } else {
-          this.openPopup();
-        }
-      });
-    } else {
-      btn.classList.add('framework-settings-btn--locked');
-      btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        opts.panel?.showGatedCta(PanelGateReason.FREE_TIER, () => {});
-      });
-    }
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (this.popup) {
+        this.closePopup();
+      } else {
+        this.openPopup();
+      }
+    });
 
     this.updateBtnTitle();
     this.el = btn;
   }
 
   private updateBtnTitle(): void {
-    const fw = this.select ? getActiveFrameworkForPanel(this.panelId) : null;
+    const fw = getActiveFrameworkForPanel(this.panelId);
     this.btn.title = fw ? t('components.frameworkSelector.titlePrefix', { name: fw.name }) : t('components.frameworkSelector.titleNone');
   }
 
@@ -85,9 +73,7 @@ export class FrameworkSelector {
     label.textContent = t('components.frameworkSelector.label');
     popup.appendChild(label);
 
-    if (this.select) {
-      popup.appendChild(this.select);
-    }
+    popup.appendChild(this.select);
 
     if (this.note) {
       const noteEl = document.createElement('div');
@@ -111,7 +97,7 @@ export class FrameworkSelector {
 
   private closePopup(): void {
     if (!this.popup) return;
-    if (this.select && this.popup.contains(this.select)) {
+    if (this.popup.contains(this.select)) {
       this.popup.removeChild(this.select);
     }
     this.popup.remove();
@@ -139,7 +125,6 @@ export class FrameworkSelector {
   }
 
   refresh(): void {
-    if (!this.select) return;
     const current = this.select.value;
     this.populateOptions(this.select);
     this.select.value = getActiveFrameworkForPanel(this.panelId)?.id ?? current;

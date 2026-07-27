@@ -72,7 +72,7 @@ export class MarketImplicationsPanel extends Panel {
       title: t('components.marketImplications.title'),
       infoTooltip: t('components.marketImplications.infoTooltip'),
     });
-    this.fwSelector = new FrameworkSelector({ panelId: 'market-implications', isPremium: true, panel: this, note: t('components.marketImplications.appliesToNext') });
+    this.fwSelector = new FrameworkSelector({ panelId: 'market-implications', note: t('components.marketImplications.appliesToNext') });
     this.header.appendChild(this.fwSelector.el);
 
     this.content.addEventListener('click', (e) => {

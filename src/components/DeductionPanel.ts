@@ -8,7 +8,7 @@ import { marked } from 'marked';
 import DOMPurify from 'dompurify';
 import type { NewsItem, DeductContextDetail } from '@/types';
 import { buildNewsContext } from '@/utils/news-context';
-import { getActiveFrameworkForPanel, isFrameworkSelectionEnabledForPanel } from '@/services/analysis-framework-store';
+import { getActiveFrameworkForPanel } from '@/services/analysis-framework-store';
 import { hasPremiumAccess } from '@/services/panel-gating';
 import { getCurrentClerkUser, openSignIn } from '@/services/clerk';
 import { FrameworkSelector } from './FrameworkSelector';
@@ -114,8 +114,6 @@ export class DeductionPanel extends Panel {
 
         this.fwSelector = new FrameworkSelector({
             panelId: 'deduction',
-            isPremium: isFrameworkSelectionEnabledForPanel('deduction'),
-            panel: this,
         });
         this.header.appendChild(this.fwSelector.el);
     }
