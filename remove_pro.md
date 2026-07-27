@@ -690,7 +690,7 @@ Intentional paid boundaries that are not part of this follow-up remain allowed: 
 - Acceptance:
   - A newly created tier-0 account reaches a real `ready` brief without ever owning a paid alert or digest rule.
 
-### [ ] D7. Remove now-public panels from the Pro entitlement lifecycle
+### [x] D7. Remove now-public panels from the Pro entitlement lifecycle
 
 - Files:
   - `src/App.ts`

@@ -1,10 +1,11 @@
 import type { ListGlobalTendersRequest, ListGlobalTendersResponse } from '@/generated/client/worldmonitor/economic/v1/service_client';
 import { getRpcBaseUrl } from '@/services/rpc-client';
-import { premiumFetch } from '@/services/premium-fetch';
 import { EconomicServiceClient } from '@/services/generated-rpc-clients';
 import { createCircuitBreaker } from '@/utils';
 
-const client = new EconomicServiceClient(getRpcBaseUrl(), { fetch: premiumFetch });
+const client = new EconomicServiceClient(getRpcBaseUrl(), {
+  fetch: (...args: Parameters<typeof fetch>) => globalThis.fetch(...args),
+});
 const tenderBreaker = createCircuitBreaker<ListGlobalTendersResponse>({ name: 'Global Tenders', cacheTtlMs: 10 * 60 * 1000, persistCache: false });
 
 const EMPTY_TENDERS: ListGlobalTendersResponse = {

@@ -70,7 +70,6 @@ import type { LiquidityShiftsPanel } from '@/components/LiquidityShiftsPanel';
 import type { PositioningPanel } from '@/components/PositioningPanel';
 import type { GoldIntelligencePanel } from '@/components/GoldIntelligencePanel';
 import { isDesktopRuntime, waitForSidecarReady } from '@/services/runtime';
-import { hasPremiumAccess } from '@/services/panel-gating';
 import { BETA_MODE } from '@/config/beta';
 import { trackEvent, trackDeeplinkOpened, initAuthAnalytics } from '@/services/analytics';
 import { preloadCountryGeometry, isCountryGeometryLoaded, getCountryNameByCode } from '@/services/country-geometry';
@@ -110,7 +109,7 @@ import {
 } from '@/utils/cloud-prefs-sync';
 import { getConvexClient, getConvexApi, waitForConvexAuth } from '@/services/convex-client';
 import type { Id } from '../convex/_generated/dataModel';
-import { initEntitlementSubscription, destroyEntitlementSubscription, resetEntitlementState, onEntitlementChange } from '@/services/entitlements';
+import { initEntitlementSubscription, destroyEntitlementSubscription, resetEntitlementState } from '@/services/entitlements';
 import { initSubscriptionWatch, destroySubscriptionWatch } from '@/services/billing';
 import {
   installFollowedCountriesAuthListener,
@@ -164,7 +163,6 @@ export class App {
   private modules: { destroy(): void }[] = [];
   private unsubAiFlow: (() => void) | null = null;
   private unsubFreeTier: (() => void) | null = null;
-  private unsubEntitlementPremiumLoaders: (() => void) | null = null;
   // Resolves once Phase-4 UI modules have initialised so WebMCP bindings can
   // await readiness before touching nullable UI targets. Avoids the startup
   // race where an agent
@@ -1373,38 +1371,7 @@ export class App {
     installFollowedCountriesAuthListener();
 
     let _prevUserId: string | null = null;
-    // Track the last-seen PRO entitlement so we can re-fire the loaders that
-    // still genuinely require entitlement on a false→true transition (user
-    // signs in / purchase lands mid-session).
-    let _prevHadPremium = hasPremiumAccess();
-    // Entitlement-loader fan-out runs on EITHER Clerk auth changes OR Convex
-    // entitlement changes — Pro can come from either signal (Clerk
-    // user.role === 'pro' OR Convex tier >= 1 via Dodo).
-    const firePremiumLoaders = (): void => {
-      const hadPremium = _prevHadPremium;
-      const nowPremium = hasPremiumAccess();
-      if (nowPremium && !hadPremium) {
-        // Entitlement just resolved → fire still-gated initial loads that were
-        // skipped at boot. Each loader early-returns if the panel isn't
-        // mounted and re-checks hasPremiumAccess() internally, so these
-        // calls are safe and idempotent. The regression test in
-        // tests/premium-loaders-fan-out-coverage.test.mts asserts every
-        // `hasPremiumAccess() && shouldLoad('X')` gate in data-loader.ts has a
-        // matching call here.
-        void this.dataLoader.loadTradePolicy();
-        void this.dataLoader.loadResilienceRanking();
-        void this.dataLoader.loadGlobalTenders();
-      } else if (!nowPremium && hadPremium) {
-        // Pro data must not remain visible or available from the client cache
-        // after sign-out, expiry, or downgrade.
-        void this.dataLoader.clearGlobalTenders();
-      }
-      _prevHadPremium = nowPremium;
-    };
-    this.unsubEntitlementPremiumLoaders = onEntitlementChange(() => firePremiumLoaders());
     this.unsubFreeTier = subscribeAuthState((session) => {
-      firePremiumLoaders();
-
       const userId = session.user?.id ?? null;
       if (userId !== null && userId !== _prevUserId) {
         void cloudPrefsSignIn(userId, SITE_VARIANT);
@@ -1721,7 +1688,6 @@ export class App {
     // Clean up subscriptions, map, AIS, and breaking news
     this.unsubAiFlow?.();
     this.unsubFreeTier?.();
-    this.unsubEntitlementPremiumLoaders?.();
     mlWorker.terminate();
     this.state.findingsBadge?.destroy();
     this.state.findingsBadge = null;

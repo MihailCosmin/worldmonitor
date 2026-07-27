@@ -898,12 +898,7 @@ export class DataLoaderManager implements AppModule {
       tasks.push({ name: 'sanctions', task: () => runGuarded('sanctions', () => this.loadSanctionsPressure()) });
     }
     if (this.ctx.mapLayers.resilienceScore) {
-      if (hasPremiumAccess()) {
-        tasks.push({ name: 'resilienceRanking', task: () => runGuarded('resilienceRanking', () => this.loadResilienceRanking()) });
-      } else {
-        this.ctx.map?.setResilienceRanking([]);
-        this.ctx.map?.setLayerReady('resilienceScore', false);
-      }
+      tasks.push({ name: 'resilienceRanking', task: () => runGuarded('resilienceRanking', () => this.loadResilienceRanking()) });
     }
     if (SITE_VARIANT !== 'happy' && (shouldLoad('radiation-watch') || this.ctx.mapLayers.radiationWatch)) {
       tasks.push({ name: 'radiation', task: () => runGuarded('radiation', () => this.loadRadiationWatch()) });
@@ -3379,15 +3374,6 @@ export class DataLoaderManager implements AppModule {
     }
   }
 
-  async clearGlobalTenders(): Promise<void> {
-    this.globalTenderGeneration += 1;
-    this.globalTenderFilters = {};
-    const procurementPanel = this.ctx.panels['global-procurement'] as GlobalProcurementPanel | undefined;
-    procurementPanel?.clear();
-    const { clearGlobalTenderCache } = await import('@/services/global-tenders');
-    clearGlobalTenderCache();
-  }
-
   async loadBisData(): Promise<void> {
     const economicPanel = this.ctx.panels['economic'] as EconomicPanel;
     try {
@@ -3949,7 +3935,7 @@ export class DataLoaderManager implements AppModule {
   }
 
   async loadResilienceRanking(): Promise<void> {
-    if (!hasPremiumAccess() || !this.ctx.map?.isDeckGLActive?.()) {
+    if (!this.ctx.map?.isDeckGLActive?.()) {
       this.ctx.map?.setResilienceRanking([]);
       this.ctx.map?.setLayerReady('resilienceScore', false);
       return;
