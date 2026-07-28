@@ -8187,6 +8187,36 @@ a.prediction-link:hover {
   background: color-mix(in srgb, var(--green) 8%, transparent);
 }
 
+.pro-activation-pointer:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 2px;
+}
+
+.pro-activation-pointer-label {
+  min-width: 0;
+}
+
+.pro-activation-pointer-shortcut {
+  display: inline-flex;
+  flex-shrink: 0;
+  gap: 4px;
+}
+
+.pro-activation-pointer-shortcut kbd {
+  min-width: 26px;
+  padding: 4px 6px;
+  border: 1px solid var(--border);
+  border-bottom-color: var(--border-strong);
+  border-radius: 4px;
+  background: var(--bg);
+  color: var(--green);
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1;
+  text-align: center;
+}
+
 .pro-activation-pointer-arrow {
   color: var(--text-dim);
 }
@@ -9607,6 +9637,11 @@ a.prediction-link:hover {
 
 .export-option:last-child {
   border-radius: 0 0 3px 3px;
+}
+
+.export-option.is-exporting {
+  color: var(--text-dim);
+  cursor: progress;
 }
 
 /* Weather Markers */
@@ -12940,6 +12975,25 @@ a.prediction-link:hover {
 
 .settings-access-cta:hover {
   filter: brightness(1.15);
+}
+
+/*
+ * "shown/total" for layers the globe's marker budget is trimming (#5368).
+ * Muted and right-aligned: it reports a limit, it is not a call to action.
+ */
+.layer-truncation-count {
+  margin-left: auto;
+  font-size: 8px;
+  font-variant-numeric: tabular-nums;
+  /* Theme token, not a hardcoded white: the layer panel is theme-aware and the
+     light theme's --bg is near-white, which would hide a white badge. */
+  color: var(--text-dim);
+  white-space: nowrap;
+  /* Hoverable on purpose: the full disclosure lives in the element's `title`,
+     and `pointer-events: none` would suppress the tooltip. Safe to hover and
+     click because the badge is a SIBLING of the <label>, not inside it. */
+  cursor: help;
+  flex-shrink: 0;
 }
 
 /* -- Locked layer toggle -- */
@@ -25944,6 +25998,31 @@ body.map-width-resizing {
 .dashboard-tab-add:hover {
   color: var(--green);
   border-color: var(--green);
+}
+
+/* Tab-cap locked notice. Body-anchored and fixed-positioned from the add
+   button's viewport rect: the tabs bar is `overflow-x: auto`, so an in-flow
+   popover would be clipped by it. The "+" itself stays unstyled at rest. */
+.tab-cap-notice {
+  position: fixed;
+  z-index: 1200;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 8px;
+  padding: 12px;
+  max-width: 240px;
+  background: var(--bg-secondary, #12161c);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+}
+
+/* Gold icon/desc/CTA treatment shared with the export locked row — see the
+   grouped .export-locked-* / .tab-cap-notice-* rules near .export-locked-state. */
+.tab-cap-notice-desc {
+  margin: 0;
 }
 
 /* ── Notification channel cards (relocated from settings-window.css in PR #4385 follow-up) ──

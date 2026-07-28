@@ -2268,6 +2268,10 @@
       "lapsedDesc": "Your Pro subscription has ended. Resubscribe to regain premium access.",
       "resubscribe": "Resubscribe"
     },
+    "exportGate": {
+      "preparingPdf": "Preparing PDF…",
+      "pdfFailed": "The PDF report could not be generated. Try again, or use the JSON export."
+    },
     "checkoutFailureBanner": {
       "message": "Payment couldn't be completed. No charge was made.",
       "retry": "Try again",
@@ -2315,6 +2319,7 @@
           "summaryVerified": "Unlocked and ready when you are.",
           "channelsNote": "Prefer Telegram, Slack, Discord, or a webhook?",
           "pointers": {
+            "search": "Search the entire dashboard",
             "widgets": "Build a custom widget",
             "analyst": "Ask the AI analyst",
             "mcpClients": "Set up MCP",

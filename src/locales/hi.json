@@ -2312,6 +2312,7 @@
           "summaryVerified": "अनलॉक और तैयार, जब आप हों।",
           "channelsNote": "Telegram, Slack, Discord या वेबहुक पसंद करेंगे?",
           "pointers": {
+            "search": "पूरे डैशबोर्ड में खोजें",
             "widgets": "एक कस्टम विजेट बनाएं",
             "analyst": "AI विश्लेषक से पूछें",
             "mcpClients": "MCP सेट करें",
@@ -2559,6 +2560,10 @@
         "compactHours": "{{count}}h",
         "compactDays": "{{count}}d"
       }
+    },
+    "exportGate": {
+      "preparingPdf": "Preparing PDF…",
+      "pdfFailed": "The PDF report could not be generated. Try again, or use the JSON export."
     }
   },
   "popups": {

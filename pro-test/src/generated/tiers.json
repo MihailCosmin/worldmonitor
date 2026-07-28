@@ -35,6 +35,9 @@
       "Priority data refresh — near real-time",
       "Pro Widget Builder — smarter model, more turns, interactive JS"
     ],
+    "highlightFeatures": [
+      "Personal license"
+    ],
     "planLimits": {
       "apiRequestsPerDay": 0,
       "apiBurstRequestsPerMinute": 0,
@@ -46,11 +49,37 @@
     "highlighted": true
   },
   {
+    "name": "Pro Business",
+    "localeKey": "proBusiness",
+    "monthlyPrice": 49.99,
+    "annualPrice": 499,
+    "description": "The Pro dashboard, licensed for work",
+    "features": [
+      "Everything in Pro",
+      "Use for client work, internal tools & reporting",
+      "Data export — CSV, JSON & PDF reports",
+      "MCP + SDK: 250 calls/day (vs 50)",
+      "Priority support"
+    ],
+    "highlightFeatures": [
+      "Commercial license included"
+    ],
+    "planLimits": {
+      "apiRequestsPerDay": 0,
+      "apiBurstRequestsPerMinute": 0,
+      "mcpCallsPerDay": 250,
+      "mcpBurstRequestsPerMinute": 60
+    },
+    "monthlyProductId": "pdt_0NjyFDbhURh2oROgPIU3G",
+    "annualProductId": "pdt_0Nk072fxPUcHWivZRtlQW",
+    "highlighted": false
+  },
+  {
     "name": "API Starter",
     "localeKey": "api",
     "monthlyPrice": 99.99,
     "annualPrice": 999,
-    "description": "Programmatic access to intelligence data",
+    "description": "Build internal tools on live intelligence data",
     "features": [
       "REST API + official SDKs (npm, PyPI, RubyGems, Go)",
       "License / API key included",
@@ -60,7 +89,7 @@
       "Webhook notifications"
     ],
     "highlightFeatures": [
-      "No commercial use"
+      "Commercial license — for your organization"
     ],
     "planLimits": {
       "apiRequestsPerDay": 1000,
@@ -76,17 +105,17 @@
     "name": "API Business",
     "localeKey": "apiBusiness",
     "monthlyPrice": 299.99,
-    "description": "High-volume API for teams",
+    "description": "Launch your own product on WorldMonitor data",
     "features": [
       "Everything in API Starter",
+      "Redistribution rights — embed our data in what you sell",
       "300 requests/minute",
       "10,000 requests/day included",
       "5 Pro licenses included",
-      "Same company email required",
       "Priority support"
     ],
     "highlightFeatures": [
-      "Commercial use applicable"
+      "Commercial license — for your customers"
     ],
     "planLimits": {
       "apiRequestsPerDay": 10000,

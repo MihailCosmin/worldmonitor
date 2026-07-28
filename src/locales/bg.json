@@ -2243,6 +2243,7 @@
           "summaryVerified": "Отключен и готов, когато сте готови и вие.",
           "channelsNote": "Предпочитате Telegram, Slack, Discord или уебхук?",
           "pointers": {
+            "search": "Търси в цялото табло",
             "widgets": "Създай персонализиран уиджет",
             "analyst": "Попитай AI анализатора",
             "mcpClients": "Настрой MCP",
@@ -2490,6 +2491,10 @@
         "compactHours": "{{count}}h",
         "compactDays": "{{count}}d"
       }
+    },
+    "exportGate": {
+      "preparingPdf": "Preparing PDF…",
+      "pdfFailed": "The PDF report could not be generated. Try again, or use the JSON export."
     }
   },
   "popups": {
