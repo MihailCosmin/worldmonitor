@@ -6764,7 +6764,7 @@ paths:
             tags:
                 - EconomicService
             summary: ListGlobalTenders
-            description: ListGlobalTenders returns the Pro-gated, paginated, seed-backed canonical procurement feed.
+            description: ListGlobalTenders returns the paginated, seed-backed canonical procurement feed. Free for all users.
             operationId: ListGlobalTenders
             parameters:
                 - name: country

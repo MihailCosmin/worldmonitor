@@ -210,7 +210,7 @@ function stepFrameCopy(id: ActivationStepId): StepFrameCopy {
         }),
         body: t('components.proActivation.steps.power.body', {
           defaultValue:
-            'Custom widgets, MCP connections, and the AI researcher are unlocked. Build the board you actually want to watch.',
+            "Custom widgets and MCP connections are unlocked. Build the board you actually want to watch — or ask the AI analyst what's moving today.",
         }),
         confirmCta: t('components.proActivation.steps.power.confirmCta', {
           defaultValue: 'Explore Pro tools',

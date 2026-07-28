@@ -5,7 +5,7 @@ export type ThreatLevel = 'war_zone' | 'critical' | 'high' | 'elevated' | 'norma
 /**
  * Maps a chokepoint threat level to a war risk insurance premium in basis points (bps).
  * Based on Lloyd's JWC Listed Areas and live H&M/P&I market rates.
- * PRO-only: returned only as part of get-country-cost-shock response.
+ * Returned as part of get-country-cost-shock's response. Free for all users.
  */
 export function threatLevelToInsurancePremiumBps(threatLevel: ThreatLevel): number {
   switch (threatLevel) {

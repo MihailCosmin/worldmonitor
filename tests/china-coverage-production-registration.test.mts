@@ -56,7 +56,7 @@ describe('China coverage production registration', () => {
   it('documents the public China source contract and its operator health projection', () => {
     assert.match(dataSources, /### China Coverage, Attribution, and Freshness/);
     assert.match(dataSources, /BIS, IMF, JODI, UN Comtrade, CCFI, AviationStack, NBS\/PBoC, JMA, and HKO/);
-    assert.match(dataSources, /detailed bilateral trade data remains\s+Pro-only/i);
+    assert.match(dataSources, /detailed bilateral trade data is\s+free for all users/i);
     assert.match(healthDocs, /### China Coverage Projection/);
     assert.match(healthDocs, /CHINA_DEGRADED/);
     assert.match(healthDocs, /CHINA_UNAVAILABLE/);

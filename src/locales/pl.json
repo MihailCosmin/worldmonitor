@@ -2256,7 +2256,7 @@
         },
         "power": {
           "heading": "Twój zestaw narzędzi Pro",
-          "body": "Niestandardowe widżety, połączenia MCP i badacz AI zostały odblokowane. Zbuduj panel, który naprawdę chcesz obserwować.",
+          "body": "Niestandardowe widżety i połączenia MCP zostały odblokowane. Zbuduj panel, który naprawdę chcesz obserwować — albo zapytaj analityka AI, co się dziś dzieje.",
           "confirmCta": "Poznaj narzędzia Pro",
           "confirming": "Otwieranie…",
           "doneNote": "Już korzystasz ze swoich narzędzi Pro.",

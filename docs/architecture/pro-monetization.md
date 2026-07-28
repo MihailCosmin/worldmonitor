@@ -69,7 +69,7 @@ Before creating a session, `getCheckoutBlockingSubscription` checks for active/o
 
 - **Schema**: `subscriptions` (userId, planKey, status, currentPeriodEnd, dodoSubscriptionId) + `entitlements` (userId, tier, validUntil, derived from subscriptions).
 - **Reactive watch**: `src/services/billing.ts:initSubscriptionWatch()` subscribes to `getSubscriptionForUser` over WebSocket. Updates fire within seconds of webhook processing.
-- **Panel gating**: `src/services/entitlements.ts` exposes `isEntitled()`, `hasTier()`; `panel-layout.ts` reloads on free→pro transition so locked panels unlock without manual refresh.
+- **Panel gating**: no panel in `src/config/panels.ts` sets `premium: true` today, so no panel is ever locked. `src/services/entitlements.ts` still exposes `isEntitled()`/`hasTier()` and `panel-layout.ts` still reloads on a free→pro transition — generic entitlement-check infrastructure kept for the capabilities in [`paid-capability-allowlist.md`](./paid-capability-allowlist.md), not currently gating any panel.
 - **Cache invalidation**: entitlement changes delete the Redis cache entry via Upstash REST API before the reload.
 
 ## Billing management
