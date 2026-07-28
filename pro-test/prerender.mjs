@@ -26,7 +26,6 @@ const WM_SAMEAS = [
   'https://www.npmjs.com/package/worldmonitor',
   'https://x.com/worldmonitorai',
   'https://x.com/eliehabib',
-  'https://discord.gg/re63kWKxaz',
   'https://www.wired.com/story/world-monitor-elie-habib/',
 ];
 const ORGANIZATION_JSONLD = `    <script type="application/ld+json" nonce="${STATIC_SCRIPT_NONCE}">${JSON.stringify({

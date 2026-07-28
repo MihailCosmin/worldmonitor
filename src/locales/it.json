@@ -1156,9 +1156,6 @@
       "base": "Base",
       "nuclear": "Nucleare"
     },
-    "community": {
-      "joinDiscussion": "Contribuisci a definire il futuro"
-    },
     "threatLabels": {
       "critical": "CRIT",
       "high": "ALTO",

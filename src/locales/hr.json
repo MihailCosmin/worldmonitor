@@ -1302,12 +1302,6 @@
       "base": "Baza",
       "nuclear": "Nuklearna"
     },
-    "community": {
-      "joinDiscussion": "Pomozi oblikovati što dolazi",
-      "openDiscussion": "Pridruži se Discordu",
-      "dontShowAgain": "Nemoj pokazati opet",
-      "sectionLabel": "Zajednica"
-    },
     "threatLabels": {
       "critical": "KRIT",
       "high": "VISOKO",

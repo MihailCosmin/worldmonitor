@@ -1047,9 +1047,6 @@
       "base": "База",
       "nuclear": "Ядерный"
     },
-    "community": {
-      "joinDiscussion": "Help Shape What's Next"
-    },
     "threatLabels": {
       "critical": "КРИТ",
       "high": "ВЫС",

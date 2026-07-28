@@ -1043,9 +1043,6 @@
       "base": "Us",
       "nuclear": "Nukleer"
     },
-    "community": {
-      "joinDiscussion": "Help Shape What's Next"
-    },
     "threatLabels": {
       "critical": "KRIT",
       "high": "YUKSEK",

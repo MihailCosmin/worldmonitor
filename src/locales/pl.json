@@ -1127,9 +1127,6 @@
       "base": "Baza",
       "nuclear": "Obiekt jądrowy"
     },
-    "community": {
-      "joinDiscussion": "Help Shape What's Next"
-    },
     "threatLabels": {
       "critical": "KRYT",
       "high": "WYS",

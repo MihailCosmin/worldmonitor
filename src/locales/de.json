@@ -1154,9 +1154,6 @@
       "base": "Basis",
       "nuclear": "Nuklear"
     },
-    "community": {
-      "joinDiscussion": "Help Shape What's Next"
-    },
     "threatLabels": {
       "critical": "KRIT",
       "high": "HOCH",
