@@ -21,7 +21,6 @@ import { hasLiveClientSession } from './services/clerk-session';
 import { PricingSection } from './components/PricingSection';
 import { SoonBadge } from './components/SoonBadge';
 import { Logo } from './components/Logo';
-import { WiredBadge } from './components/WiredBadge';
 import { Footer } from './components/Footer';
 import {
   DASHBOARD_SCREENSHOT_JPG,
@@ -29,7 +28,6 @@ import {
   DASHBOARD_SCREENSHOT_WEBP_SRCSET,
 } from './assets/dashboard-screenshot';
 import { ensureTurnstileScript } from './turnstile';
-import wiredLogo from './assets/wired-logo.svg';
 import {
   DASHBOARD_EMBED_PREVIEW_URL,
   DASHBOARD_PATH,
@@ -407,10 +405,6 @@ const Hero = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
-          <div className="mb-4">
-            <WiredBadge />
-          </div>
-
           <h1 className="text-6xl md:text-8xl font-display font-bold tracking-tighter leading-[0.95]">
             <span className="text-wm-muted/40">{t('hero.noiseWord')}</span>
             <span className="mx-3 md:mx-5 text-wm-border/50">→</span>
@@ -468,16 +462,6 @@ const SocialProof = () => (
           </div>
         ))}
       </div>
-      <blockquote className="max-w-3xl mx-auto text-center">
-        <p className="text-lg md:text-xl text-wm-muted italic leading-relaxed">
-          "{t('socialProof.quote')}"
-        </p>
-        <footer className="mt-6 flex items-center justify-center gap-3">
-          <a href="https://www.wired.com/story/world-monitor-elie-habib/" target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 text-wm-muted hover:text-wm-text transition-colors">
-            <img src={wiredLogo} alt="WIRED" loading="lazy" className="h-5 brightness-0 invert opacity-60 hover:opacity-100 transition-opacity" />
-          </a>
-        </footer>
-      </blockquote>
     </div>
   </section>
 );
@@ -1314,7 +1298,6 @@ const EnterprisePage = () => (
           <img src="/favico/favicon-32x32.png" alt="" width="28" height="28" loading="lazy" className="rounded-full" />
           <div className="flex flex-col">
             <span className="font-display font-bold text-sm leading-none tracking-tight text-wm-text">WORLD MONITOR</span>
-            <span className="text-[9px] uppercase tracking-[2px] opacity-60 mt-0.5">by Someone.ceo</span>
           </div>
         </div>
         <div className="flex items-center gap-6">

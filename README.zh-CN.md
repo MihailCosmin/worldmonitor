@@ -179,10 +179,6 @@ npm run build:full       # Production build
 
 ---
 
-## 作者
-
-**Elie Habib** — [GitHub](https://github.com/koala73)
-
 ## 贡献者
 
 <a href="https://github.com/koala73/worldmonitor/graphs/contributors">

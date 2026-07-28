@@ -7,7 +7,6 @@ export const Footer = () => (
         <img src="/favico/favicon-32x32.png" alt="" width="28" height="28" loading="lazy" className="rounded-full" />
         <div className="flex flex-col">
           <span className="font-display font-bold text-sm leading-none tracking-tight text-wm-text">WORLD MONITOR</span>
-          <span className="text-[9px] uppercase tracking-[2px] opacity-60 mt-0.5">by Someone.ceo</span>
         </div>
       </div>
       <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2">

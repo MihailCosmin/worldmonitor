@@ -4,7 +4,7 @@ import { existsSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 
 const PUBLIC_DIR = join(process.cwd(), 'public');
-const DEFAULT_AUTHOR = 'Elie Habib';
+const DEFAULT_AUTHOR = 'World Monitor';
 
 function escapeXml(value: string): string {
   return value

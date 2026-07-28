@@ -20,8 +20,6 @@ const WM_SAMEAS = [
   'https://github.com/koala73/worldmonitor',
   'https://www.npmjs.com/package/worldmonitor',
   'https://x.com/worldmonitorai',
-  'https://x.com/eliehabib',
-  'https://www.wired.com/story/world-monitor-elie-habib/',
 ];
 const ORGANIZATION_JSONLD = `    <script type="application/ld+json" nonce="${STATIC_SCRIPT_NONCE}">${JSON.stringify({
   '@context': 'https://schema.org',
@@ -31,18 +29,6 @@ const ORGANIZATION_JSONLD = `    <script type="application/ld+json" nonce="${STA
   url: 'https://www.worldmonitor.app/',
   logo: 'https://www.worldmonitor.app/favico/apple-touch-icon.png',
   description: 'Open-source real-time global intelligence platform aggregating conflicts, military movements, markets, infrastructure, and geopolitical data. Used by 2M+ people across 190+ countries.',
-  founder: {
-    '@type': 'Person',
-    name: 'Elie Habib',
-    url: 'https://x.com/eliehabib',
-    sameAs: [
-      'https://x.com/eliehabib',
-      'https://github.com/koala73',
-      'https://www.linkedin.com/in/elie-habib-7047b931',
-      'https://www.wikidata.org/wiki/Q121365724',
-      'https://www.crunchbase.com/person/elie-habib-2',
-    ],
-  },
   sameAs: WM_SAMEAS,
   contactPoint: {
     '@type': 'ContactPoint',

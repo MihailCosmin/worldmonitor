@@ -256,7 +256,7 @@ async function sendConfirmationEmail(email: string, referralCode: string): Promi
             </div>
             <div style="border-top: 1px solid #1a1a1a; padding: 24px 32px; text-align: center;">
               <div style="margin-bottom: 16px;">
-                <a href="https://x.com/eliehabib" style="color: #666; text-decoration: none; font-size: 12px; margin: 0 12px;">X / Twitter</a>
+                <a href="https://x.com/worldmonitorai" style="color: #666; text-decoration: none; font-size: 12px; margin: 0 12px;">X / Twitter</a>
                 <a href="https://github.com/koala73/worldmonitor" style="color: #666; text-decoration: none; font-size: 12px; margin: 0 12px;">GitHub</a>
                 <a href="https://worldmonitor.app/pro" style="color: #666; text-decoration: none; font-size: 12px; margin: 0 12px;">Pro Waitlist</a>
               </div>

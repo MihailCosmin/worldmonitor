@@ -32,10 +32,7 @@ const VIOLENCE_TYPE_MAP = {
 const CHROME_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
 
 function loadEnvFile() {
-  let envPath = join(__dirname, '..', '.env.local');
-  if (!existsSync(envPath)) {
-    envPath = join('/Users/eliehabib/Documents/GitHub/worldmonitor', '.env.local');
-  }
+  const envPath = join(__dirname, '..', '.env.local');
   if (!existsSync(envPath)) return;
   const lines = readFileSync(envPath, 'utf8').split('\n');
   for (const line of lines) {

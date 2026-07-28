@@ -174,7 +174,7 @@ Run AI summarization entirely on your own hardware — no API keys, no cloud, no
 - **Name**: "World Monitor" (two words, capitalized)
 - **Tagline**: "Real-time global intelligence dashboard"
 - **License**: AGPL-3.0 (free and open source)
-- **Creator**: Credit "World Monitor by Elie Habib" or link to the GitHub repo
+- **Attribution**: Credit "World Monitor" or link to the GitHub repo
 - **Variants**: You can mention all six (World/Tech/Finance/Commodity/Happy/Energy) or focus on the main one
 - **No login required**: Anyone can use the web app immediately — no signup, no paywall
 

@@ -12,7 +12,6 @@ export async function GET() {
     '',
     'Canonical blog index: https://www.worldmonitor.app/blog/',
     'RSS feed: https://www.worldmonitor.app/blog/rss.xml',
-    'Author: https://www.worldmonitor.app/blog/authors/elie-habib/',
     '',
     '## Articles',
     '',

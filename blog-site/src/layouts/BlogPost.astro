@@ -38,18 +38,13 @@ const formattedDate = pubDate.toLocaleDateString('en-US', {
 });
 const isoDate = pubDate.toISOString();
 const isoModifiedDate = modifiedDate ? modifiedDate.toISOString() : isoDate;
-const DEFAULT_AUTHOR = 'Elie Habib';
-const DEFAULT_AUTHOR_URL = 'https://www.worldmonitor.app/blog/authors/elie-habib/';
-const DEFAULT_AUTHOR_ID = `${DEFAULT_AUTHOR_URL}#person`;
-const DEFAULT_AUTHOR_BIO = 'Founder of World Monitor. Previously co-founder &amp; CEO of Anghami (NASDAQ: ANGH). Building open-source global intelligence infrastructure.';
-const DEFAULT_AUTHOR_GITHUB = 'koala73';
+const DEFAULT_AUTHOR = 'World Monitor';
+const DEFAULT_AUTHOR_ID = 'https://www.worldmonitor.app/#organization';
 const DEFAULT_SECTION = 'Global Intelligence';
 const authorName = author || DEFAULT_AUTHOR;
-const resolvedAuthorUrl = authorUrl || (authorName === DEFAULT_AUTHOR ? DEFAULT_AUTHOR_URL : undefined);
-const resolvedAuthorBio = authorBio || (authorName === DEFAULT_AUTHOR ? DEFAULT_AUTHOR_BIO : undefined);
-const avatarSrc = authorName === DEFAULT_AUTHOR
-  ? `https://unavatar.io/github/${DEFAULT_AUTHOR_GITHUB}`
-  : '/favico/apple-touch-icon.png';
+const resolvedAuthorUrl = authorUrl;
+const resolvedAuthorBio = authorBio;
+const avatarSrc = '/favico/apple-touch-icon.png';
 // Committed covers have generated .webp / -640.webp siblings (guarded by
 // tests/blog-cover-webp.test.mjs); coverWebpSources() returns null when the
 // siblings don't exist (e.g. deploy-generated /blog/og/*.png covers).
@@ -120,17 +115,15 @@ const jsonLd = {
   } : {}),
   ...(wordCount ? { "wordCount": wordCount } : {}),
   ...(readingMinutes ? { "timeRequired": `PT${readingMinutes}M` } : {}),
-  "author": {
+  "author": authorName === DEFAULT_AUTHOR ? {
+    "@type": "Organization",
+    "name": DEFAULT_AUTHOR,
+    "@id": DEFAULT_AUTHOR_ID,
+    "url": "https://www.worldmonitor.app"
+  } : {
     "@type": "Person",
     "name": authorName,
-    ...(resolvedAuthorUrl ? { "url": resolvedAuthorUrl } : {}),
-    ...(authorName === DEFAULT_AUTHOR ? {
-      "@id": DEFAULT_AUTHOR_ID,
-      "sameAs": [
-        "https://x.com/eliehabib",
-        `https://github.com/${DEFAULT_AUTHOR_GITHUB}`
-      ]
-    } : {})
+    ...(resolvedAuthorUrl ? { "url": resolvedAuthorUrl } : {})
   },
   "publisher": {
     "@type": "Organization",

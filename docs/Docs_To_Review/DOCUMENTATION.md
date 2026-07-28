@@ -3936,10 +3936,6 @@ PRs that don't follow the code style or introduce security issues will be asked 
 
 MIT
 
-## Author
-
-**Elie Habib**
-
 ---
 
 *Built for situational awareness and open-source intelligence gathering.*

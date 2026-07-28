@@ -179,10 +179,6 @@ Copyright (C) 2024-2026 Elie Habib. All rights reserved.
 
 ---
 
-## Author
-
-**Elie Habib** — [GitHub](https://github.com/koala73)
-
 ## Contributors
 
 <a href="https://github.com/koala73/worldmonitor/graphs/contributors">

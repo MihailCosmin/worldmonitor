@@ -98,16 +98,6 @@ img { max-width: 100%; height: auto; border-radius: var(--radius); }
   line-height: 1;
 }
 
-.site-header .logo .logo-sub {
-  font-family: var(--font-mono);
-  font-size: 0.5625rem;
-  color: var(--wm-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  line-height: 1;
-  margin-top: 3px;
-}
-
 .site-header .nav-links {
   display: flex;
   gap: 1.5rem;
@@ -176,14 +166,6 @@ img { max-width: 100%; height: auto; border-radius: var(--radius); }
   font-size: 0.75rem;
   color: var(--wm-text);
   letter-spacing: 0.02em;
-}
-
-.site-footer .footer-sub {
-  font-family: var(--font-mono);
-  font-size: 0.5625rem;
-  color: var(--wm-muted);
-  text-transform: uppercase;
-  letter-spacing: 2px;
 }
 
 .site-footer .footer-links {

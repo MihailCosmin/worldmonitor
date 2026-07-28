@@ -233,9 +233,9 @@ describe('validateBearerToken (with JWKS)', () => {
     const token = await new SignJWT({
       sub: 'user_prefill',
       plan: 'pro',
-      email: 'elie@worldmonitor.app',
-      given_name: 'Elie',
-      family_name: 'Habib',
+      email: 'jane@worldmonitor.app',
+      given_name: 'Jane',
+      family_name: 'Doe',
     })
       .setProtectedHeader({ alg: 'RS256', kid: 'test-key-1' })
       .setIssuer(`http://127.0.0.1:${jwksPort}`)
@@ -247,8 +247,8 @@ describe('validateBearerToken (with JWKS)', () => {
 
     const result = await validateBearerToken(token);
     assert.equal(result.valid, true);
-    assert.equal(result.email, 'elie@worldmonitor.app');
-    assert.equal(result.name, 'Elie Habib');
+    assert.equal(result.email, 'jane@worldmonitor.app');
+    assert.equal(result.name, 'Jane Doe');
   });
 
   it('handles missing email/name gracefully (no prefill)', async () => {

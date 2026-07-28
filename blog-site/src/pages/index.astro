@@ -15,9 +15,8 @@ const posts = (await getCollection('blog')).sort(
 // render at ~340-540px, so the 640w thumb covers 1x displays and the full
 // WebP covers high-DPI ones.
 
-const DEFAULT_AUTHOR = 'Elie Habib';
-const DEFAULT_AUTHOR_URL = 'https://www.worldmonitor.app/blog/authors/elie-habib/';
-const DEFAULT_AUTHOR_ID = `${DEFAULT_AUTHOR_URL}#person`;
+const DEFAULT_AUTHOR = 'World Monitor';
+const DEFAULT_AUTHOR_ID = 'https://www.worldmonitor.app/#organization';
 
 const jsonLd = {
   "@context": "https://schema.org",
@@ -39,7 +38,7 @@ const jsonLd = {
   },
   "blogPost": posts.map(post => {
     const authorName = post.data.author || DEFAULT_AUTHOR;
-    const authorUrl = post.data.authorUrl || (authorName === DEFAULT_AUTHOR ? DEFAULT_AUTHOR_URL : undefined);
+    const authorUrl = post.data.authorUrl;
 
     return {
       "@type": "BlogPosting",
@@ -48,11 +47,14 @@ const jsonLd = {
       "description": post.data.description,
       "datePublished": post.data.pubDate.toISOString(),
       ...(post.data.modifiedDate ? { "dateModified": post.data.modifiedDate.toISOString() } : {}),
-      "author": {
+      "author": authorName === DEFAULT_AUTHOR ? {
+        "@type": "Organization",
+        "name": DEFAULT_AUTHOR,
+        "@id": DEFAULT_AUTHOR_ID
+      } : {
         "@type": "Person",
         "name": authorName,
-        ...(authorUrl ? { "url": authorUrl } : {}),
-        ...(authorName === DEFAULT_AUTHOR ? { "@id": DEFAULT_AUTHOR_ID } : {})
+        ...(authorUrl ? { "url": authorUrl } : {})
       },
       "url": `https://www.worldmonitor.app/blog/posts/${post.id}/`,
       "image": post.data.heroImage ? `https://www.worldmonitor.app${post.data.heroImage}` : "https://www.worldmonitor.app/favico/og-image.png"

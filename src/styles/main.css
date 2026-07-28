@@ -801,26 +801,6 @@ canvas,
   vertical-align: middle;
 }
 
-.credit-link {
-  font-size: 9px;
-  color: var(--muted);
-  opacity: 0.6;
-  font-weight: normal;
-  letter-spacing: 0.5px;
-  text-decoration: none;
-  transition: opacity 0.2s;
-}
-
-.credit-link:hover {
-  opacity: 1;
-  color: var(--accent);
-}
-
-/* Hide X logo on desktop, show text */
-.credit-link .x-logo {
-  display: none;
-}
-
 .status-indicator {
   display: flex;
   align-items: center;
@@ -1074,8 +1054,7 @@ canvas,
    full mobile hamburger takes over at <=768px. !important mirrors the <=768
    block below (needed to beat the #missionPresetMount id rule in header.css). */
 @media (max-width: 1530px) {
-  /* redundant with footer/menu: X credit + GitHub icon */
-  .credit-link,
+  /* redundant with footer/menu: GitHub icon */
   .github-link { display: none !important; }
 }
 @media (max-width: 1420px) {
@@ -13926,7 +13905,6 @@ a.prediction-link:hover {
   .mission-preset-mount,
   .version,
   .beta-badge,
-  .credit-link,
   .github-link,
   .region-selector,
   .mobile-settings-btn,
@@ -18154,18 +18132,6 @@ a.prediction-link:hover {
 .maplibregl-ctrl-top-right,
 .maplibregl-ctrl-bottom-right {
   display: none;
-}
-
-/* Map author credit badge (inside layers panel) */
-.map-author-badge {
-  padding: 6px 10px;
-  font-family: var(--font-mono, 'JetBrains Mono', monospace);
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 1.5px;
-  color: #00e5ff;
-  border-top: 1px solid rgba(0, 229, 255, 0.2);
-  pointer-events: none;
 }
 
 /* Map tile attribution */

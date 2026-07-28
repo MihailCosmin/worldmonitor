@@ -91,30 +91,27 @@ describe('blog SEO and GEO corpus contract', () => {
     assert.match(post, /article-dek/);
     assert.match(post, /"@type": "Audience"/);
     assert.match(post, /"citation": citations/);
-    assert.match(post, /\/blog\/authors\/elie-habib\//);
   });
 
-  it('keeps author archives and blog JSON-LD attribution accurate', () => {
-    const authorPage = readFileSync(resolve(root, 'blog-site/src/pages/authors/elie-habib.astro'), 'utf8');
+  it('keeps blog JSON-LD attribution accurate for both the default and custom-author cases', () => {
     const blogIndex = readFileSync(resolve(root, 'blog-site/src/pages/index.astro'), 'utf8');
+    const post = readFileSync(resolve(root, 'blog-site/src/layouts/BlogPost.astro'), 'utf8');
 
-    assert.ok(
-      authorPage.includes('.filter((post) => (post.data.author || DEFAULT_AUTHOR) === DEFAULT_AUTHOR)'),
-      'Elie author archive must exclude posts that resolve to a custom author',
-    );
-    assert.ok(
-      blogIndex.includes('const authorName = post.data.author || DEFAULT_AUTHOR;'),
-      'blog JSON-LD must resolve the default author per post',
-    );
-    assert.ok(
-      blogIndex.includes(
-        'const authorUrl = post.data.authorUrl || (authorName === DEFAULT_AUTHOR ? DEFAULT_AUTHOR_URL : undefined);',
-      ),
-      'blog JSON-LD must honor a custom authorUrl without assigning Elie’s URL to custom authors',
-    );
-    assert.ok(
-      blogIndex.includes('...(authorName === DEFAULT_AUTHOR ? { "@id": DEFAULT_AUTHOR_ID } : {})'),
-      'blog JSON-LD must assign Elie’s stable Person ID only to the default author',
-    );
+    for (const source of [blogIndex, post]) {
+      assert.ok(
+        source.includes("const DEFAULT_AUTHOR = 'World Monitor';"),
+        'blog JSON-LD must default unattributed posts to the World Monitor organization, not a named person',
+      );
+      assert.match(
+        source,
+        /"author":\s*authorName === DEFAULT_AUTHOR \? \{\s*"@type": "Organization"/,
+        'the default author must resolve to an Organization, not a Person',
+      );
+      assert.match(
+        source,
+        /"@type": "Person",\s*"name": authorName,/,
+        'a post-level custom author must still resolve to a Person',
+      );
+    }
   });
 });

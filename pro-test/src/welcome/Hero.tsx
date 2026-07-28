@@ -1,6 +1,5 @@
 import { motion } from 'motion/react';
 import { ArrowRight, Github } from 'lucide-react';
-import { WiredBadge } from '../components/WiredBadge';
 import { t } from '../i18n';
 import { DASHBOARD_PATH } from '../routes';
 import {
@@ -144,7 +143,6 @@ export const Hero = () => (
         transition={{ duration: 0.6, delay: 0.3 }}
         className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-3 text-xs font-mono text-wm-muted"
       >
-        <WiredBadge />
         <span>{t('welcome.hero.trustUsers')}</span>
         <span aria-hidden="true" className="text-wm-border">|</span>
         <a
