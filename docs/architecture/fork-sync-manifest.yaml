@@ -1,0 +1,341 @@
+# Fork sync manifest — read this BEFORE merging from upstream (koala73/worldmonitor).
+#
+# This fork intentionally diverges from upstream in four ways: removed Pro/Premium
+# gating, removed Discord marketing links, removed personal attribution to the
+# original founder, and ungated the API Keys settings tab. Upstream keeps adding
+# new gating, new personal branding, and new marketing links in parallel — none of
+# that is malicious, it's just upstream's own product direction. Every sync has to
+# re-apply our divergence on top of whatever upstream shipped since last time.
+#
+# What this file is for:
+#   1. `high_risk_files` — files where a CLEAN auto-merge (zero conflict markers)
+#      has previously reintroduced gating/branding we'd already removed, or
+#      silently reverted a real upstream fix we should have kept. Review these by
+#      hand on every sync even when git reports no conflict.
+#   2. `evaluated_upstream_commits` — specific upstream commits/patterns already
+#      judged once. If the same commit (or a near-identical re-implementation)
+#      shows up again, the decision below still applies — don't re-litigate from
+#      scratch.
+#   3. `protected_invariant_tests` — the existing test suite already encodes most
+#      "this must never come back" rules. Run these FIRST after any sync, before
+#      declaring the merge done. A green `git diff` with a red test here means the
+#      merge is NOT actually finished.
+#
+# What this file is NOT: a substitute for `git merge -X ours` / a `.gitattributes`
+# merge driver. Both were tried in spirit and both failed in practice this project
+# — a blanket "keep ours" on vercel.json and index.html silently discarded a real
+# content-corpus routing addition and a real SEO cloaking fix (see
+# `evaluated_upstream_commits.keep` below). There is no shortcut around actually
+# reading each high-risk file's diff.
+#
+# Companion docs:
+#   - remove_pro.md                                — full task-by-task Pro/Premium
+#     removal audit (D1-D17, F1-F18, R1-R6, S1-S3, C1-C3), with file:line refs.
+#   - docs/architecture/paid-capability-allowlist.md — the exhaustive list of what
+#     is STILL genuinely paid (API/MCP access, scheduled digest delivery, Widget
+#     Builder tier, priority refresh cache TTL). Anything not on that list that
+#     looks gated is a bug, not a feature.
+#   - docs/architecture/pro-monetization.md          — living architecture doc,
+#     keep in sync with actual gating state on every sync (D17 caught it drifting
+#     stale once already).
+
+meta:
+  upstream_remote: upstream
+  upstream_repo: koala73/worldmonitor
+  last_sync_commit: "d9a2d1f23"           # our merge commit on this fork
+  last_sync_upstream_head: "3645a1e29"    # upstream/main SHA merged as of last sync
+  # `git log 3645a1e29..upstream/main --oneline` shows how far upstream has moved
+  # since. As of this manifest's last update that was 13 commits (274f67f33).
+  categories: [pro-removal, discord-removal, owner-branding-removal, feature-ungate, upstream-sync]
+
+# ---------------------------------------------------------------------------
+# 1. Commit ranges by category — what we changed, and where to look for detail.
+# ---------------------------------------------------------------------------
+commit_ranges:
+  - category: pro-removal
+    range: "9edbe71df..fbcf75487"       # 34 first-parent commits
+    detail_doc: remove_pro.md
+    summary: >
+      Full Pro/Premium dashboard-gating removal. Every panel/feature that was
+      locked behind a paid tier and already had real rendering/fetch logic was
+      ungated (stock analysis, backtesting, daily market brief, WM Analyst chat,
+      global procurement, trade policy, latest brief, WSB ticker scanner, AI
+      market implications, regional intelligence, route explorer, scenario
+      engine, bypass corridors, country deep-dive cards, evidence export,
+      chokepoint popups, resilience scores, map layers, deduct situation, free
+      panel/source caps, followed-country cap, flight search, framework
+      selection). Pure upsell/navigation surfaces (Pro banner, Pro nav links,
+      generic upgrade CTAs, PRO badges) were deleted outright. See remove_pro.md
+      for the complete file:line index — not duplicated here.
+    still_intentionally_paid: >
+      See docs/architecture/paid-capability-allowlist.md. As of last sync:
+      PREMIUM_RPC_PATHS (classify-event, trigger-simulation, route-intelligence,
+      webhooks, mcp-proxy), ENDPOINT_ENTITLEMENTS (trigger-simulation,
+      classify-event), notification-channels.ts's tier gate (scheduled digest/
+      alert delivery), widget-agent.ts's tier gate (AI Widget Builder), and
+      apiAccess on actual API *calls* at the gateway (creating/viewing keys is
+      no longer gated — see feature-ungate below).
+
+  - category: discord-removal
+    range: "ea5ab472e"                  # single commit
+    summary: >
+      Removed Discord marketing/community links only — the "Join the Discord
+      Community" pill (CommunityWidget.ts, deleted), README badges, docs.json
+      socials entries, docs/support.mdx mentions, pro-test WM_SAMEAS array
+      entries, blog-site footer link, digest-email footer link. Deliberately
+      KEPT: the functional Discord notification-channel feature (OAuth connect
+      flow, webhook delivery to a user's own Discord server) — that's a real
+      feature a user opts into, not marketing.
+    high_risk_files: [src/app/panel-layout.ts, docs/support.mdx, docs/docs.json]
+
+  - category: upstream-sync
+    range: "d9a2d1f23"                  # our merge commit
+    summary: >
+      Synced 86 upstream commits. Upstream had built a parallel monetization
+      layer (export gates, dashboard tab caps, MCP quota gating, analyst-denial
+      billing checks, a "Pro Business" SKU) alongside genuine fixes. Excluded
+      the former, kept the latter — see evaluated_upstream_commits below for the
+      specific decisions, most of which will recur on the next sync since
+      upstream continues developing the excluded features.
+    excluded_new_gating:
+      - src/components/ExportGateControl.ts (deleted)
+      - src/services/export-gate.ts (deleted)
+      - src/services/pro-banner-policy.ts (deleted)
+      - src/components/gate-icons.ts (deleted)
+      - PanelTabBar.ts tab-cap locked-state UI (reverted to pre-sync content)
+      - panel-gating.ts / panel-layout.ts / Panel.ts / event-handlers.ts export-gate
+        and tab-cap wiring (stripped back out)
+      - CountryBriefPage.ts canExportStructuredData/canExportEvidenceBundle (removed)
+      - server/worldmonitor/scenario/v1/run-scenario.ts + get-scenario-status.ts
+        requirePremiumRpcAccess gate (removed — genuinely-free supply-chain
+        scenario service, distinct from the actually-gated forecast/v1/trigger-simulation)
+      - api/latest-brief.ts pro_required 403 (removed)
+      - api/chat-analyst.ts premium caller-identity gate (kept 401-only auth gate)
+      - ~10 new test files asserting the excluded gating behavior (deleted)
+    kept_as_legitimate:
+      - >-
+        Pro Business tier ($49.99/mo) as a real new SKU — trimmed only the stale
+        feature-count marketing claims that don't apply to this fork's ungated
+        dashboard ("25 custom dashboards", "10 custom dashboards" etc.)
+      - >-
+        server/_shared/pro-entitlement.ts, pro-mcp-gate.ts — DRY extraction of
+        pre-existing tier-check/MCP-grant logic, not a new restriction
+      - >-
+        src/services/premium-intent.ts, analyst-denial.ts, mcp-grant-denial.ts —
+        extracted-for-testability leaves (copy corrected to say "analyst access"
+        instead of the stale "Pro access" wording)
+      - >-
+        api/product-catalog.js, scripts/ais-relay.cjs — switched to importing the
+        generated catalog instead of hand-maintained mirrors (removes a 3-way
+        sync problem)
+      - >-
+        content-corpus SEO pages (/research/, /countries/, /chokepoints/ etc.)
+        and their vercel.json routing/build pipeline
+      - "4 proto files — documentation-only enrichments"
+
+  - category: owner-branding-removal
+    range: "e02586e7a"
+    summary: >
+      Removed personal attribution to the original founder (name, handles,
+      social links, press-feature links, security contact) from all
+      marketing/branding surfaces. Deliberately KEPT the LICENSE copyright
+      notices (main LICENSE, cli/LICENSE, sdk/{go,python,ruby}/LICENSE, and
+      README's "Copyright (C)..." line) — AGPL/MIT require preserving the
+      original author's copyright notice in redistributed code; that is a
+      legal question, not a branding one, and was explicitly left untouched by
+      user decision. Also left untouched: docs/audits/ and docs/plans/ (dated
+      internal records where the only mention is a local filesystem username,
+      not attribution) and workers/api-cors-preflight/index.test.mjs (a code
+      comment documenting an already-completed Vercel-team-scope migration).
+    high_risk_files:
+      - index.html
+      - pro-test/prerender.mjs
+      - pro-test/index.html
+      - pro-test/welcome.html
+      - blog-site/src/layouts/BlogPost.astro
+      - blog-site/src/pages/index.astro
+      - src/app/panel-layout.ts
+      - src/components/DeckGLMap.ts
+      - src/components/GlobeMap.ts
+
+  - category: feature-ungate
+    range: "e9d08b999"
+    summary: >
+      Removed the apiAccess paywall from Settings > API Keys so any signed-in
+      user can create/view/revoke their own WorldMonitor API keys (kept the
+      sign-in requirement itself — a key is inherently account-scoped).
+      Deliberately did NOT touch server/gateway.ts's separate, request-time
+      apiAccess check (#4611) that still gates whether a created key actually
+      authenticates real API calls — that's the genuine metered API Starter+
+      product, a bigger pricing decision than "let me manage my keys."
+    high_risk_files: [src/components/UnifiedSettings.ts, convex/apiKeys.ts]
+
+# ---------------------------------------------------------------------------
+# 2. High-risk files — hand-review on every sync regardless of conflict markers.
+# ---------------------------------------------------------------------------
+high_risk_files:
+  - path: src/shared/premium-paths.ts
+    risk: >
+      This is NOT a short list — it legitimately has ~28 entries on this fork's
+      main (supply-chain, resilience, scenario, sanctions, trade, intelligence
+      endpoints), all pre-existing and correct. Do not assume a long list means
+      gating crept back in. DO check for entries that duplicate a feature this
+      fork has explicitly made free.
+    known_entries_to_exclude_if_upstream_adds_them:
+      - /api/market/v1/analyze-stock
+      - /api/market/v1/get-stock-analysis-history
+      - /api/market/v1/backtest-stock
+      - /api/market/v1/list-stored-stock-backtests
+    companion_test: tests/premium-paths-guard.test.mts
+
+  - path: server/_shared/entitlement-check.ts
+    risk: "ENDPOINT_ENTITLEMENTS registry — same category of risk as premium-paths.ts."
+    companion_test: tests/pro-gated-allowlist.test.mjs
+
+  - path: convex/config/productCatalog.ts
+    risk: >
+      Single source of truth for pricing/marketingFeatures. New tier entries
+      (e.g. a future SKU) auto-merge cleanly with zero conflict, but stale
+      feature-count claims ("25 custom dashboards (vs 10)") slip through
+      unreviewed inside them — this bit us once with the pro_business entry.
+      Always re-run `npm run product:facts` after merging and re-read every
+      marketingFeatures array for capability-count claims that don't match
+      this fork's actual (ungated) feature set.
+
+  - path: vercel.json
+    risk: >
+      Two independent concerns collide in one file: CSP script-src sha256
+      hashes (recompute via `npx tsx --test tests/deploy-config.test.mjs` after
+      ANY change to an un-nonced inline <script>) and content-corpus routing
+      (/research/* redirects, cache headers, the SPA-catchall regex's excluded-
+      segment list). A blanket `git checkout --ours` on the visible conflict has
+      twice silently discarded legitimate unconflicted upstream additions
+      elsewhere in the same file. Diff PARSED JSON (upstream vs current) to
+      enumerate exactly what's missing — never just pick a side wholesale.
+    mirrors: [docker/nginx.conf, docker/nginx-security-headers.conf]
+
+  - path: pro-test/prerender.mjs
+    risk: >
+      Where JSON-LD founder/sameAs attribution and the Discord link both live.
+      Also the exact file where the fix(seo) crawler-cloaking fix (7313562e4)
+      was accidentally reverted once during conflict resolution, because
+      resolving the Discord/branding conflict "kept ours" without noticing
+      upstream had ALSO shipped an unrelated correctness fix in the same hunk.
+    also_check: [pro-test/index.html, pro-test/welcome.html, index.html]
+
+  - path: index.html
+    risk: >
+      Same JSON-LD attribution/gating overlap as pro-test/prerender.mjs, PLUS
+      it's the file where fix(seo) 7313562e4 (crawler-only prerender content →
+      real noscript fallback) and fix(i18n) 534a3efd9 (hreflang query-locale
+      alternates) both live. If either pattern (`#seo-prerender` div + CSS hide
+      rule, or `hreflang="xx" href="...?lang=xx"` link tags) is present again
+      after a merge, one of those two fixes got reverted — re-adopt it, don't
+      just re-strip branding on top of the reverted state.
+    companion_tests: [tests/pro-critical-css.test.mjs, tests/indexable-content-visibility.test.mjs, tests/i18n-hreflang-contract.test.mts]
+
+  - path: src/app/panel-layout.ts
+    risk: >
+      Touched by every category: Pro nav links (removed), Discord footer link
+      (removed), @eliehabib credit-link + site-footer byline (removed), AND
+      it's where upstream adds new content-corpus reference links
+      (DASHBOARD_REFERENCE_LINKS) and nav restructuring. High conflict surface.
+
+  - path: src/styles/main.css
+    risk: >
+      Every gating/branding removal pass leaves CSS behind if the corresponding
+      markup removal isn't done in the same edit. Orphaned selectors for
+      deleted UI (.panel-pro-badge, .credit-link, .map-author-badge,
+      .export-locked-state, .tab-cap-notice-*) are easy to miss on a merge —
+      cross-check every selector removed/kept against components actually
+      still rendered, not just against the visible conflict hunk.
+
+  - path: blog-site/src/layouts/BlogPost.astro
+    also: blog-site/src/pages/index.astro
+    risk: >
+      DEFAULT_AUTHOR now resolves to the "World Monitor" Organization, not a
+      named Person — a naive merge favoring upstream's version here silently
+      reintroduces personal-founder attribution as the default blog author.
+
+# ---------------------------------------------------------------------------
+# 3. Upstream commits/patterns already evaluated — the decision still applies
+#    if the same commit, a rebase of it, or a near-identical reimplementation
+#    reappears.
+# ---------------------------------------------------------------------------
+evaluated_upstream_commits:
+  keep:
+    - sha: "7313562e4"
+      title: "fix(seo): replace crawler-only prerender content"
+      reason: >
+        Genuine cloaking-risk fix (upstream's own realization that hiding
+        content from JS users while showing it to no-JS crawlers is an SEO
+        anti-pattern), unrelated to gating. Adopt in full if reverted.
+    - sha: "534a3efd9"
+      title: "fix(i18n): stop advertising query locale alternates"
+      reason: >
+        Genuine hreflang correctness fix (query-string locale variants aren't
+        separate indexable pages). Adopt in full if reverted.
+    - pattern: "server/_shared/pro-entitlement.ts / pro-mcp-gate.ts DRY extraction"
+      reason: >
+        Consolidates tier-check/MCP-grant logic previously duplicated across
+        several API routes — a refactor, not a new restriction. Exact upstream
+        commit SHA not recorded; judge future changes to these two files by
+        whether they still just extract EXISTING entitlement-check.ts logic.
+  exclude:
+    - pattern: "ExportGateControl / export-gate.ts / pro-banner-policy.ts / gate-icons.ts"
+      reason: "New export-gating feature built in parallel to our de-gating work."
+    - pattern: "PanelTabBar.ts locked-state / tab-cap machinery"
+      reason: "New dashboard-tab-count paywall."
+    - pattern: "requirePremiumRpcAccess on scenario/v1 run-scenario or get-scenario-status"
+      reason: >
+        Genuinely-free supply-chain scenario service; do not confuse with the
+        actually-gated forecast/v1/trigger-simulation.
+    - pattern: "api/latest-brief.ts pro_required 403"
+      reason: "This fork's shared-dashboard-edition fallback already makes Latest Brief free."
+    - pattern: "api/chat-analyst.ts resolvePremiumCallerIdentity / 403 Pro-gate"
+      reason: "Keep the 401-only resolveAuthenticatedCallerIdentity gate instead."
+
+# ---------------------------------------------------------------------------
+# 4. Run these after every sync, before declaring the merge finished. A test
+#    failure here with zero git conflict markers means something slipped back
+#    in silently — go find it, don't just note the test as "newly failing."
+# ---------------------------------------------------------------------------
+protected_invariant_tests:
+  - tests/remove-pro-cleanup.test.mjs
+  - tests/premium-paths-guard.test.mts
+  - tests/pro-gated-allowlist.test.mjs
+  - tests/blog-seo-contract.test.mjs
+  - tests/i18n-hreflang-contract.test.mts
+  - tests/indexable-content-visibility.test.mjs
+  - tests/pro-critical-css.test.mjs
+  - tests/deploy-config.test.mjs
+  - convex/__tests__/apiKeys.test.ts
+
+# Known gaps in the above, so they aren't mistaken for sync regressions.
+known_pre_existing_gaps:
+  - test: tests/pro-gated-allowlist.test.mjs
+    issue: >
+      Its hardcoded EXPECTED_PREMIUM_RPC_PATHS (5 entries) and
+      EXPECTED_ENDPOINT_ENTITLEMENTS (2 entries) are stale — the real registries
+      have grown to ~28/~5 legitimate entries over time and nobody updated the
+      test's expectations. Fails on a clean checkout of main, independent of
+      any sync. Needs a dedicated fix (update the hardcoded arrays to match
+      current reality), not a merge-conflict resolution.
+  - test: tests/pro-locale-freshness.test.mjs
+    issue: >
+      24 non-English pro-test locales carry English-fallback text for
+      pricing.tiers.free/pro.features, pending a real translation pass. Fix:
+      `ANTHROPIC_API_KEY=... node scripts/translate-locales.mjs --pro-test`
+      (then rebuild pro-test and commit public/pro/). No key available when
+      this gap was last confirmed.
+  - test: tests/locale-staleness.test.mjs
+    issue: >
+      Depends on `Intl.PluralRules` category ordering, which is ICU-version-
+      dependent and not guaranteed by spec. Fails on this Node's ICU build
+      independent of any sync; a pre-existing upstream test/environment issue.
+  - test: tests/wm-session-auto-refresh.test.mts
+    issue: >
+      One subtest ("does NOT retry when the path is in PREMIUM_RPC_PATHS")
+      hardcodes `/api/market/v1/analyze-stock` as its example premium path —
+      stale, since this fork made stock analysis free. Confirmed pre-existing
+      on main, unrelated to any sync.

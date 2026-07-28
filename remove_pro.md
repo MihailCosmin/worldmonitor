@@ -1,5 +1,13 @@
 # Remove `Pro` / `Premium` UI Audit And Task List
 
+> **Syncing from upstream (koala73/worldmonitor)?** See
+> `docs/architecture/fork-sync-manifest.yaml` first — it indexes every
+> fork-specific change (this doc's Pro/Premium removal, plus Discord-link
+> removal, owner/founder-attribution removal, and the API Keys ungate) with
+> the high-risk files and upstream commits already evaluated, so conflicts
+> and silent auto-merge regressions can be resolved without re-deriving this
+> whole history from scratch.
+
 Audit date: 2026-07-27
 
 Purpose: convert every current `Pro` / `Premium` UI finding into an actionable task. Each item is intentionally phrased so we do one of two things:

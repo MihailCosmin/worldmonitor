@@ -1,5 +1,9 @@
 # Paid-capability allowlist
 
+> Merging from upstream? `fork-sync-manifest.yaml` in this same directory
+> indexes the high-risk files and upstream commits already evaluated for
+> re-introducing exactly the kind of gating this doc tracks.
+
 This is the complete, exhaustive list of capabilities where World Monitor
 still differentiates Free from Pro, as of the D17 stale-gating sweep
 (`remove_pro.md`). It exists so a future PR that adds a new upgrade prompt,
