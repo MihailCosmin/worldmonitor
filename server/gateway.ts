@@ -390,6 +390,10 @@ const RPC_CACHE_TIER: Record<string, CacheTier> = {
   '/api/intelligence/v1/get-regional-snapshot': 'slow',
   '/api/intelligence/v1/get-regime-history': 'slow',
   '/api/intelligence/v1/get-regional-brief': 'slow',
+  // Historical intelligence memory (#5694) — the timeline is a generated GET
+  // and therefore requires an explicit gateway cache tier. The two semantic
+  // reads are POSTs and cache successful results inside their handlers.
+  '/api/intelligence/v1/get-intel-timeline': 'slow',
   '/api/resilience/v1/get-resilience-score': 'slow',
   '/api/resilience/v1/get-resilience-ranking': 'slow',
   '/api/resilience/v1/get-runtime-manifest': 'no-store',

@@ -31,8 +31,8 @@ These subscription licenses cover the hosted Service and its outputs. They are s
 - Price: $39.99/month
 - Annual price: $399.99/year
 - Annual savings: 2 months free versus monthly billing
-- Best for: Investors, analysts, researchers, traders and operators who need scheduled delivery and build workflows on top of the free dashboard
-- Includes: WM Analyst chat across 30+ live services with citations, Scenario Engine, Route Explorer, personal AI digest, custom alert rules with quiet hours and AES-256 encrypted channels, priority near-real-time data refresh, MCP access (42 tools under one key, 50 calls/day), and the Pro Widget Builder (smarter model, more turns, interactive JS — the base Widget Builder is free)
+- Best for: Investors, analysts, researchers, traders and operators who need the decision layer on top of the free dashboard
+- Includes: WM Analyst chat across 30+ live services with citations, Scenario Engine, Route Explorer, personal AI digest, custom widget builder, MCP access and 49 tools under one key
 - License: Personal use
 - Digest cadence: Daily, twice-daily or weekly
 - Delivery channels: Slack, Discord, Telegram, email and webhook
