@@ -1983,6 +1983,7 @@
           "summaryVerified": "Ontgrendeld en klaar wanneer jij dat bent.",
           "channelsNote": "Heb je liever Telegram, Slack, Discord of een webhook?",
           "pointers": {
+            "search": "Het hele dashboard doorzoeken",
             "widgets": "Een aangepaste widget maken",
             "analyst": "Stel de AI-analist een vraag",
             "mcpClients": "MCP instellen",
@@ -2230,6 +2231,10 @@
         "compactHours": "{{count}}h",
         "compactDays": "{{count}}d"
       }
+    },
+    "exportGate": {
+      "preparingPdf": "Preparing PDF…",
+      "pdfFailed": "The PDF report could not be generated. Try again, or use the JSON export."
     }
   },
   "popups": {

@@ -2243,6 +2243,7 @@
           "summaryVerified": "Đã mở khóa và sẵn sàng khi bạn sẵn sàng.",
           "channelsNote": "Bạn thích Telegram, Slack, Discord hay webhook hơn?",
           "pointers": {
+            "search": "Tìm kiếm toàn bộ bảng điều khiển",
             "widgets": "Tạo widget tùy chỉnh",
             "analyst": "Hỏi nhà phân tích AI",
             "mcpClients": "Thiết lập MCP",
@@ -2490,6 +2491,10 @@
         "compactHours": "{{count}}g",
         "compactDays": "{{count}}n"
       }
+    },
+    "exportGate": {
+      "preparingPdf": "Preparing PDF…",
+      "pdfFailed": "The PDF report could not be generated. Try again, or use the JSON export."
     }
   },
   "popups": {

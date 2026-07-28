@@ -2261,6 +2261,7 @@
           "summaryVerified": "Odblokowane i gotowe, gdy Ty będziesz gotowy.",
           "channelsNote": "Wolisz Telegram, Slack, Discord czy webhook?",
           "pointers": {
+            "search": "Przeszukaj cały pulpit",
             "widgets": "Utwórz niestandardowy widżet",
             "analyst": "Zapytaj analityka AI",
             "mcpClients": "Skonfiguruj MCP",
@@ -2526,6 +2527,10 @@
         "compactHours": "{{count}}h",
         "compactDays": "{{count}}d"
       }
+    },
+    "exportGate": {
+      "preparingPdf": "Preparing PDF…",
+      "pdfFailed": "The PDF report could not be generated. Try again, or use the JSON export."
     }
   },
   "popups": {

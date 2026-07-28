@@ -4,7 +4,6 @@
     "pro": "Pro",
     "api": "API",
     "enterprise": "Enterprise",
-    "reserveAccess": "Rezervirajte rani pristup",
     "signIn": "Prijava",
     "upgradeToPro": "Nadogradite na Pro",
     "goToDashboard": "Idi na nadzornu ploču"
@@ -12,12 +11,9 @@
   "hero": {
     "noiseWord": "Šum",
     "signalWord": "Signal",
-    "valueProps": "Sloj isporuke obavještajnih podataka — pretplatite se, gradite na tome, doznajte prvi.",
-    "reserveEarlyAccess": "Rezervirajte rani pristup",
+    "valueProps": "Geopolitički AI sloj za obavještajne uvide — pitajte ga, pretplatite se, gradite na njemu.",
     "launchingDate": "Dostupno sada",
     "tryFreeDashboard": "Isprobajte besplatnu nadzornu ploču",
-    "emailPlaceholder": "Unesite e-poštu",
-    "emailAriaLabel": "Adresa e-pošte za listu čekanja",
     "choosePlan": "Odaberite plan",
     "signIn": "Prijava",
     "goToDashboard": "Idi na nadzornu ploču"
@@ -27,14 +23,16 @@
   },
   "twoPath": {
     "proTitle": "World Monitor Pro",
-    "proDesc": "Osobni obavještajni centar na koji se pretplaćujete. Platforma na kojoj možete graditi. Jedan ključ za 30+ live usluga.",
-    "proF1": "Osobni AI sažetak — dnevno, dvaput dnevno ili tjedno — na Slack, Discord, Telegram, e-poštu ili webhook",
-    "proF2": "Upozorenja u stvarnom vremenu za kritične događaje, ne samo planirani sažeci",
-    "proF3": "Prilagođena pravila upozorenja — tihi sati, kanali šifrirani AES-256",
-    "proF4": "MCP konektori — povežite WorldMonitor s Claude, GPT, vlastitim LLM-ovima (50 poziva/dan)",
-    "proF5": "Prioritetno osvježavanje podataka — gotovo u stvarnom vremenu za svih 30+ usluga",
-    "proF6": "Pro Widget Builder — snažniji model, više krugova, interaktivni JS",
-    "proCta": "Rezervirajte rani pristup",
+    "proDesc": "Vaš AI analitičar. Osobni obavještajni desk. Platforma na kojoj možete graditi. Jedan ključ za 30+ servisa uživo.",
+    "proF1": "WM Analyst chat — razgovorno pretražujte svih 30+ servisa",
+    "proF2": "AI sažetak — dnevno, dvaput dnevno ili tjedno — putem Slacka, Discorda, Telegrama, e-pošte ili webhooka",
+    "proF3": "Custom Widget Builder — HTML/CSS/JS uz izmjene potpomognute AI-jem",
+    "proF4": "MCP konektori — povežite WorldMonitor s Claudeom, GPT-om ili vlastitim LLM-ovima",
+    "proF5": "Istraživanje dionica, burzovna analiza i backtesting",
+    "proF6": "Pretraga letova i usporedba cijena",
+    "proF7": "Mehanizam pravila upozorenja — prilagođeni okidači, mirni sati, kanali šifrirani AES-256",
+    "proF8": "Tržišna watchlista, makro i praćenje središnjih banaka",
+    "proF9": "AI Market Implications i Regional Intelligence (uskoro: orbitalni nadzor, premium slojevi karte, dulja povijest)",
     "choosePlan": "Odaberite plan",
     "entTitle": "World Monitor Enterprise",
     "entDesc": "Za timove kojima trebaju zajednički monitoring, API pristup, opcije implementacije, TV aplikacije i izravna podrška.",
@@ -56,20 +54,20 @@
     "title": "Zašto nadograditi",
     "noiseTitle": "Saznajte prvi",
     "noiseDesc": "AIS anomalija → skok Brenta → vaš Slack za manje od minute. Signal, ne naslovi.",
-    "fasterTitle": "Doznajte brže",
-    "fasterDesc": "Svaka od 30+ usluga s Pro-om se osvježava gotovo u stvarnom vremenu — ne svakih 5-15 minuta.",
+    "fasterTitle": "Pitajte bilo što",
+    "fasterDesc": "Razgovarajte s istih 30+ servisa koje vidi vaša nadzorna ploča. WM Analyst, uvijek uključen.",
     "controlTitle": "Izgradite bilo što",
-    "controlDesc": "MCP konektori za vlastite AI tokove rada, plus snažniji Pro Widget Builder — više krugova, veće izrade, interaktivni JS.",
+    "controlDesc": "Custom widget builder (HTML/CSS/JS + AI) i MCP za vaše vlastite AI radne tokove.",
     "deeperTitle": "Probudite se informirani",
     "deeperDesc": "AI sažetak od 30 stavki rangiran prema vašim pravilima upozorenja. Critical, High, Medium — uz Assessment i Signals to watch."
   },
   "pillars": {
-    "askIt": "Doznajte brže",
-    "askItDesc": "Svaka usluga se s Pro-om osvježava gotovo u stvarnom vremenu — ne svakih 5-15 minuta kao kod Free.",
+    "askIt": "Pitajte ga",
+    "askItDesc": "WM Analyst chat. Svih 30+ servisa dostupno je upitima prirodnim jezikom.",
     "subscribeIt": "Pretplatite se",
     "subscribeItDesc": "AI sažetak prema vašem rasporedu — dnevno, dvaput dnevno ili tjedno. Slack, Discord, Telegram, e-pošta, webhook.",
     "buildOnIt": "Gradite na njemu",
-    "buildOnItDesc": "MCP za Claude, GPT, vlastite LLM-ove, plus snažniji Pro Widget Builder — više krugova, veće izrade, interaktivni JS."
+    "buildOnItDesc": "Custom Widget Builder (HTML/CSS/JS + AI) i MCP za Claude, GPT i vlastite LLM-ove."
   },
   "deliveryDesk": {
     "eyebrow": "DELIVERY DESK",
@@ -101,7 +99,7 @@
     "tradersTitle": "Trgovci energijom i robama",
     "tradersDesc": "Pratite kretanja brodova, inferenciju tereta, poremećaje opskrbnog lanca i geopolitičke signale koji pokreću tržišta.",
     "researchersTitle": "Istraživači i analitičari",
-    "researchersDesc": "Korelacija između izvora i ekonomska analitika, s jednim MCP-povezanim ključem kroz 30+ usluga za dublju analizu i izvještavanje.",
+    "researchersDesc": "Istraživanje dionica, ekonomska analitika i geopolitički okviri za dublju analizu i izvještavanje.",
     "journalistsTitle": "Novinari i mediji",
     "journalistsDesc": "Pratite brze događaje kroz tržišta i regije bez ručnog spajanja izvora.",
     "govTitle": "Vlada i institucije",
@@ -140,26 +138,29 @@
   "tiers": {
     "free": "Besplatno",
     "pro": "Pro",
-    "enterprise": "Enterprise"
+    "enterprise": "Enterprise",
+    "priceMonthly": "39,99 $ / mjesec",
+    "priceAnnual": "399,99 $ / godinu",
+    "annualSavingsNote": "2 mjeseca besplatno"
   },
   "proShowcase": {
     "proTier": "PRO RAZINA",
-    "title": "Vaš osobni obavještajni centar, automatiziran",
-    "subtitle": "Besplatna nadzorna ploča već uključuje analizu dionica, ocjene otpornosti i Scenario Engine. Pro dodaje sloj isporuke: sažetak na pretplatu, upozorenja u stvarnom vremenu, MCP za vlastite agente i snažniji graditelj widgeta.",
-    "equityResearch": "Prioritetno osvježavanje podataka",
-    "equityResearchDesc": "Svih 30+ usluga se s Pro-om osvježava gotovo u stvarnom vremenu — nasuprot svakih 5-15 minuta kod Free.",
-    "geopoliticalAnalysis": "Pristup MCP-u i agentima",
-    "geopoliticalAnalysisDesc": "Povežite Claude, GPT ili vlastite LLM-ove izravno s WorldMonitorom putem MCP-a — 50 poziva/dan uključeno.",
-    "economyAnalytics": "Pro Widget Builder",
-    "economyAnalyticsDesc": "Snažniji model, više krugova, veće izrade i interaktivni JavaScript — gradite bogatije prilagođene panele nego u besplatnoj razini.",
-    "riskMonitoring": "Prilagođena pravila upozorenja",
-    "riskMonitoringDesc": "Okidači za cijenu i događaje, tihi sati i kanali isporuke šifrirani AES-256 — prilagođeni onome što pratite.",
+    "title": "Vaš AI analitičar koji nikad ne spava",
+    "subtitle": "Besplatna nadzorna ploča pokazuje vam svijet. Pro vam daje analitičara kojeg možete pitati, sažetak na koji se pretplaćujete i gradivne elemente na kojima možete graditi. Dionice, makro, geopolitički rizik — i veze među njima.",
+    "equityResearch": "Istraživanje dionica",
+    "equityResearchDesc": "Globalna analiza dionica s vizualizacijom financijskih izvještaja, ciljnim cijenama analitičara i metrikama vrednovanja. Pratite što pokreće tržišta.",
+    "geopoliticalAnalysis": "Geopolitička analiza",
+    "geopoliticalAnalysisDesc": "Strateški okvir Grand Chessboard, modeli Prisoners of Geography te praćenje središnjih banaka i monetarne politike.",
+    "economyAnalytics": "Ekonomska analitika",
+    "economyAnalyticsDesc": "BDP, inflacija, kamatne stope i ciklusi rasta. Makro podaci povezani s tržišnim signalima i geopolitičkim događajima.",
+    "riskMonitoring": "Monitoring rizika i scenariji",
+    "riskMonitoringDesc": "Globalno bodovanje rizika, analiza scenarija i procjena geopolitičkog rizika. Detekcija konvergencije tržišnih i političkih signala.",
     "orbitalSurveillance": "Orbitalni nadzor",
-    "orbitalSurveillanceDesc": "(Uskoro) Predviđanja preleta i upozorenja o prozorima snimanja za imenovane satelite — uz već uključene live orbitalne pozicije u besplatnoj razini.",
+    "orbitalSurveillanceDesc": "(Uskoro) Predikcije preleta, analiza učestalosti ponovnog snimanja i upozorenja o prozorima snimanja. Znajte kada obavještajni sateliti promatraju vaša područja interesa.",
     "morningBriefs": "Osobni obavještajni desk",
     "morningBriefsDesc": "Do 30 rangiranih priča po sažetku, dedupliciranih među više od 500 izvora. Odaberite dnevni, dvaput dnevni ili tjedni ritam — ili upozorenja u stvarnom vremenu za kritične događaje. AI Assessment i Signals to watch dostavljeni putem Slacka, Discorda, Telegrama, e-pošte ili webhooka. Nije newsletter — to je analitičar.",
-    "oneKey": "Eskalacija u stvarnom vremenu",
-    "oneKeyDesc": "Kritični događaji šalju se u trenutku kad se dogode putem istih šifriranih kanala — bez čekanja na sljedeći planirani sažetak.",
+    "oneKey": "30+ servisa, 1 ključ",
+    "oneKeyDesc": "Finnhub, FRED, ACLED, UCDP, NASA FIRMS, AISStream, OpenSky i drugi — svi aktivni, bez zasebnih registracija.",
     "deliveryLabel": "Odaberite kako obavještajni uvidi dolaze do vas"
   },
   "slackMock": {
@@ -183,8 +184,9 @@
     "starterWebhooks": "5 webhook pravila",
     "business": "Business",
     "businessReqs": "10.000 zahtjeva/dan",
-    "businessWebhooks": "Priority support",
-    "feedData": "Dovedite podatke u svoje nadzorne ploče, automatizirajte upozorenja preko Zapier/n8n/Makea i gradite vlastite modele bodovanja na podacima CII/rizika."
+    "feedData": "Dovedite podatke u svoje nadzorne ploče, automatizirajte upozorenja preko Zapier/n8n/Makea i gradite vlastite modele bodovanja na podacima CII/rizika.",
+    "cli": "CLI bez ovisnosti za skriptanje svakog alata iz vaše ljuske",
+    "businessWebhooks": "Prioritetna podrška"
   },
   "enterpriseShowcase": {
     "enterpriseTier": "ENTERPRISE RAZINA",
@@ -197,7 +199,7 @@
     "dataLayers": "Prošireni podatkovni slojevi",
     "dataLayersDesc": "Deseci tisuća infrastrukturnih objekata mapirani globalno. Integracija satelitskih snimaka s detekcijom promjena i SAR-om.",
     "connectors": "100+ podatkovnih konektora",
-    "connectorsDesc": "PostgreSQL, Snowflake, Splunk, Sentinel, Jira, Slack, Teams i drugi. Izvoz u PDF, PowerPoint, CSV, GeoJSON.",
+    "connectorsDesc": "PostgreSQL, Snowflake, Splunk, Sentinel, Jira, Slack, Teams i drugo. Izvezite u PDF, CSV, JSON.",
     "whiteLabel": "White-label, TV i ugradivo",
     "whiteLabelDesc": "Vaš brand, vaša domena, vaša desktop aplikacija. Android TV aplikacija za SOC zidove i trgovačke parkete. Ugradivi iframe paneli.",
     "financial": "Financijska inteligencija",
@@ -207,7 +209,7 @@
     "government": "Vlade i institucije",
     "governmentDesc": "Air-gapped, AI agenti, puna situacijska svijest, MCP. Podaci ne napuštaju vašu mrežu.",
     "risk": "Konzultanti za rizik",
-    "riskDesc": "Simulacija scenarija, investitorske persone, brandirani PDF/PowerPoint izvještaji na zahtjev.",
+    "riskDesc": "Simulacija scenarija, investitorske persone, brendirani PDF izvještaji na zahtjev.",
     "soc": "SOC-ovi i CERT-ovi",
     "socDesc": "Cyber threat sloj, SIEM integracija, monitoring BGP anomalija, ransomware feedovi.",
     "talkToSales": "Razgovarajte s prodajom",
@@ -268,19 +270,19 @@
     "fStandard": "Standard",
     "fKeyAuth": "Autentifikacija ključem",
     "fSsoMfa": "SSO/MFA/RBAC/audit",
-    "noteBelow": "Osnovna platforma ostaje besplatna. Plaćeni planovi otključavaju planiranu AI isporuku, MCP pristup, prioritetno osvježavanje i organizacijsku upotrebu.",
+    "noteBelow": "Temeljna platforma ostaje besplatna. Plaćeni planovi otključavaju istraživanje dionica, makro analitiku, AI sažetke i organizacijsku upotrebu.",
     "f50plus": "50+"
   },
   "faq": {
     "title": "Često postavljana pitanja",
     "q1": "Je li World Monitor i dalje besplatan?",
-    "a1": "Da. Osnovna platforma ostaje besplatna — uključujući analizu dionica, ocjene otpornosti i Scenario Engine. Pro dodaje planiranu AI isporuku, prilagođena pravila upozorenja, MCP pristup i prioritetno osvježavanje. Enterprise dodaje timske implementacije i TV aplikacije.",
+    "a1": "Da. Osnovna platforma ostaje besplatna. Pro dodaje istraživanje kapitala, makro analitiku i AI sažetke. Pro Business dodaje komercijalnu licenciju i izvoz podataka. Enterprise dodaje timske implementacije i TV aplikacije.",
     "q2": "Zašto platiti Pro?",
-    "a2": "Pro je namijenjen investitorima, analitičarima i profesionalcima koji žele vlastiti AI sažetak isporučen prema rasporedu, prilagođena pravila upozorenja, MCP pristup za vlastite agente i prioritetno osvježavanje podataka — sve pod jednim ključem.",
+    "a2": "Pro je za investitore, analitičare i profesionalce koji žele monitoring dionica, geopolitičku analizu, ekonomsku analitiku i AI dnevne sažetke — sve pod jednim ključem.",
     "q3": "Za koga je Enterprise?",
     "a3": "Enterprise je za timove kojima trebaju zajedničko korištenje, API-ji, integracije, opcije implementacije i izravna podrška.",
     "q4": "Mogu li početi s Pro planom i kasnije nadograditi?",
-    "a4": "Da. Pro je dobar za ozbiljne pojedince. Enterprise je tu kada narastu potrebe tima i implementacije.",
+    "a4": "Da. Pro je za osobnu upotrebu. Pro Business (49,99 €/mj) dodaje komercijalnu licenciju, izvoz podataka, 25 nadzornih ploča i 250 MCP poziva/dan. API planovi pokrivaju programatski pristup, a Enterprise pokriva prilagođene implementacije. Nadogradnje se vrše preko portala naplate — aplikacija vas vodi kroz korake.",
     "q5": "Je li ovo samo za monitoring sukoba?",
     "a5": "Ne. World Monitor je prvenstveno globalna obavještajna platforma koja pokriva burze, makroekonomiju, geopolitičku analizu, energiju, infrastrukturu i više. Praćenje sukoba samo je jedna od mnogih sposobnosti — nije fokus.",
     "q6": "Zašto temeljnu platformu zadržati besplatnom?",
@@ -290,7 +292,7 @@
     "q8": "Što je MCP?",
     "a8": "MCP omogućuje AI agentima — Claudeu, GPT-u i vlastitim LLM-ovima — da koriste WorldMonitor kao alat i upituju svih 30+ servisa. Uključeno je u Pro. Enterprise dodaje privatne MCP servere i prilagođene implementacije.",
     "q9": "Mogu li izgraditi vlastite panele?",
-    "a9": "Da — za sve. Besplatna razina uključuje Custom Widget Builder. Pro ga nadograđuje snažnijim modelom, više krugova, većim izradama i interaktivnim JavaScriptom.",
+    "a9": "Da. Pro uključuje Custom Widget Builder — gradite panele iz HTML-a, CSS-a i JavaScripta uz izmjene potpomognute AI-jem.",
     "q10": "Mogu li povezati Claude ili GPT s WorldMonitorom?",
     "a10": "Da. MCP je uključen u Pro — povežite WorldMonitor s Claudeom, GPT-om ili bilo kojim MCP-kompatibilnim LLM-om kao živim alatom.",
     "q11": "Koliko je sažetak personaliziran?",
@@ -302,41 +304,20 @@
   },
   "finalCta": {
     "title": "Počnite s Pro. Skalirajte na Enterprise.",
-    "subtitle": "Nastavite besplatno koristiti World Monitor ili nadogradite na Pro radi planirane AI isporuke, MCP pristupa i prioritetnog osvježavanja. Ako vašoj organizaciji treba timski pristup, TV aplikacije ili API podrška, javite nam se.",
-    "getPro": "Rezervirajte rani pristup",
+    "subtitle": "Nastavite koristiti World Monitor besplatno ili nadogradite za istraživanje dionica, makro analitiku i AI sažetke. Ako vašoj organizaciji trebaju timski pristup, TV aplikacije ili API podrška, javite nam se.",
     "talkToSales": "Razgovarajte s prodajom"
   },
   "footer": {
-    "beFirstInLine": "Budite prvi u redu.",
     "lookingForEnterprise": "Tražite Enterprise?",
     "contactUs": "Kontaktirajte nas",
     "wiredArticle": "WIRED članak"
   },
-  "form": {
-    "submitting": "Slanje...",
-    "joinWaitlist": "Rezervirajte rani pristup",
-    "tooManyRequests": "Previše zahtjeva",
-    "failedTryAgain": "Nije uspjelo — pokušajte ponovno"
-  },
-  "referral": {
-    "alreadyOnList": "Već ste na listi.",
-    "shareHint": "Podijelite svoju poveznicu kako biste napredovali u redu. Svaki prijatelj koji se pridruži približava vas vrhu.",
-    "copied": "Kopirano!",
-    "shareOnX": "Podijeli na X-u",
-    "linkedin": "LinkedIn",
-    "whatsapp": "WhatsApp",
-    "telegram": "Telegram",
-    "shareText": "Upravo sam se pridružio/la listi čekanja za World Monitor Pro — osobni AI sažetak, MCP pristup i prioritetno osvježavanje u jednoj platformi. Pridružite se:",
-    "joinWaitlistShare": "Pridružite se World Monitor Pro listi čekanja:",
-    "youreIn": "Upisani ste!",
-    "invitedBanner": "Pozvani ste — pridružite se listi čekanja"
-  },
   "soonBadge": "Uskoro",
   "meta": {
-    "title": "World Monitor Pro — Osobni obavještajni centar, MCP za Claude i GPT",
-    "description": "Sloj isporuke obavještajnih podataka. Osobni AI sažetak putem 30+ live usluga — dnevno, dvaput dnevno ili tjedno na Slack, Discord, Telegram, e-poštu ili webhook — s prilagođenim pravilima upozorenja, MCP konektorima za Claude, GPT i vlastite LLM-ove, snažnijim Pro Widget Builderom i prioritetnim osvježavanjem podataka gotovo u stvarnom vremenu.",
-    "ogTitle": "World Monitor Pro — Sloj isporuke obavještajnih podataka",
-    "ogDescription": "Pretplatite se, gradite na tome, doznajte prvi. Osobni AI sažetak prema vašem rasporedu, MCP za Claude/GPT, snažniji Pro Widget Builder i prioritetno osvježavanje podataka — kroz 30+ usluga pod jednim ključem."
+    "title": "World Monitor Pro — AI analitičar, osobni obavještajni desk, MCP za Claude i GPT",
+    "description": "Geopolitički AI sloj. Pitajte ga, pretplatite se, gradite na njemu. WM Analyst chat kroz 30+ servisa uživo, AI sažetak dostavljen dnevno, dvaput dnevno ili tjedno putem Slacka, Discorda, Telegrama, e-pošte ili webhooka, custom widget builder (HTML/CSS/JS + AI) i MCP konektori za Claude, GPT i vlastite LLM-ove.",
+    "ogTitle": "World Monitor Pro — geopolitički AI sloj",
+    "ogDescription": "Pitajte ga, pretplatite se, gradite na njemu. WM Analyst chat, AI sažetak prema vašem rasporedu (dnevno, dvaput dnevno ili tjedno), custom widget builder i MCP za Claude/GPT — kroz 30+ servisa uživo pod jednim ključem."
   },
   "pricing": {
     "suffixForever": "zauvijek",
@@ -356,26 +337,29 @@
       "free": {
         "description": "Započnite s osnovama",
         "features": [
-          "Potpuna live karta — svih 56 slojeva, 500+ izvora",
-          "Analiza dionica, backtesting i dnevni AI tržišni pregledi",
-          "WM Analyst chat kroz 30+ live usluga",
-          "Pregledi po državama, indeks nestabilnosti i ocjene otpornosti"
+          "Full live map — all 56 layers, 500+ feeds",
+          "Stock analysis, backtesting & daily AI market briefs",
+          "WM Analyst chat across 30+ live services",
+          "Country briefs, instability index & resilience scores"
         ],
         "cta": "Započnite"
       },
       "pro": {
         "description": "Puna obavještajna nadzorna ploča",
         "features": [
-          "Sve iz Free",
-          "Osobni AI sažetak i upozorenja u stvarnom vremenu — Slack, Discord, Telegram, e-pošta, webhook",
-          "Prilagođena pravila upozorenja — tihi sati, kanali šifrirani AES-256",
-          "MCP + SDK pristup za Claude Desktop i druge AI klijente (50 poziva/dan)",
-          "Prioritetno osvježavanje podataka — gotovo u stvarnom vremenu",
-          "Pro Widget Builder — snažniji model, više krugova, interaktivni JS"
+          "Everything in Free",
+          "Personal AI digest & real-time alerts — Slack, Discord, Telegram, Email, webhook",
+          "Custom alert rules — quiet hours, AES-256 encrypted channels",
+          "MCP + SDK access for Claude Desktop & other AI clients (50 calls/day)",
+          "Priority data refresh — near real-time",
+          "Pro Widget Builder — smarter model, more turns, interactive JS"
+        ],
+        "highlightFeatures": [
+          "Personal license"
         ]
       },
       "api": {
-        "description": "Programski pristup obavještajnim podacima",
+        "description": "Gradite interno alate na temelju podataka užive obavještajne analize",
         "features": [
           "REST API + službeni SDK-ovi (npm, PyPI, RubyGems, Go)",
           "Uključen licencni / API ključ",
@@ -385,7 +369,7 @@
           "Webhook obavijesti"
         ],
         "highlightFeatures": [
-          "Bez komercijalne uporabe"
+          "Komercijalna licencija — za vašu organizaciju"
         ]
       },
       "enterprise": {
@@ -401,23 +385,292 @@
         "cta": "Kontaktirajte prodaju"
       },
       "apiBusiness": {
-        "description": "API velikog volumena za timove",
+        "description": "Pokrenite vlastiti proizvod na podacima WorldMonitora",
         "features": [
           "Sve iz API Startera",
+          "Prava redistribucije — ugradite naše podatke u ono što prodajete",
           "300 zahtjeva/minutu",
-          "10.000 zahtjeva/dan uključeno",
-          "Uključeno 5 Pro licenci",
-          "Obavezan isti email tvrtke",
+          "10 000 zahtjeva/dan uključeno",
+          "5 Pro licencija uključeno",
           "Prioritetna podrška"
         ],
         "highlightFeatures": [
-          "Komercijalna uporaba dopuštena"
+          "Komercijalna licencija — za vaše klijente"
+        ]
+      },
+      "proBusiness": {
+        "description": "Pro nadzorna ploča, licencirana za rad",
+        "features": [
+          "Sve iz Pro",
+          "Korištenje za rad s klijentima, interne alate i izvještaje",
+          "Izvoz podataka — CSV, JSON i PDF izvještaji",
+          "MCP + SDK: 250 poziva/dan (vs 50)",
+          "Prioritetna podrška"
+        ],
+        "highlightFeatures": [
+          "Komercijalna licenca uključena"
         ]
       }
     },
     "cta": {
       "checkoutDefault": "Započnite",
       "learnMore": "Saznajte više"
+    },
+    "axisPersonal": "Osobno",
+    "axisPersonalNote": "individualna upotreba",
+    "axisCommercial": "Komercijalno",
+    "axisCommercialNote": "rad, timovi i proizvodi"
+  },
+  "welcome": {
+    "meta": {
+      "title": "World Monitor — Besplatna nadzorna ploča globalne obavještajne službe u stvarnom vremenu",
+      "description": "Dok postane vijest, već si znao. Sukobi, uska mjesta u transportu, vojna letenja, tržišta i cyber na jednoj besplatnoj živoj svjetskoj karti, s AI analizom. Bez prijave.",
+      "ogTitle": "World Monitor — Dok postane vijest, već si znao.",
+      "ogDescription": "Sirovi signali svijeta — brodovi, zrakoplovi, sirene, kabeli, tržišta — na jednoj besplatnoj živoj obavještajnoj karti, s AI koji se aktivira kada se konvergiraju. Besplatno, bez prijave."
+    },
+    "nav": {
+      "useCases": "Korelacije",
+      "firstFive": "Prvih 5 min",
+      "depth": "Dubina",
+      "pricing": "Cijene",
+      "faq": "Često postavljana pitanja",
+      "docs": "Dokumentacija",
+      "launch": "Pokreni nadzornu ploču",
+      "blog": "Blog",
+      "menu": "Izbornik"
+    },
+    "hero": {
+      "eyebrow": "Besplatna nadzorna ploča globalne obavještajne službe · sada dostupna",
+      "headline1": "Dok postane vijest,",
+      "headline2": "već si znao.",
+      "sub": "Naslovi su kašnjenje. World Monitor prenosi sirove signale svijeta — brodove, zrakoplove, sirene, kabele, tržišta — na jednu živu kartu, s AI koji se aktivira kada se konvergiraju u nešto što je važno.",
+      "ctaPrimary": "Pokreni nadzornu ploču",
+      "ctaFree": "Besplatno · Bez prijave · Učitava se u sekundama",
+      "ctaSecondary": "Vidi kako ga koriste ↓",
+      "trustUsers": "2M+ korisnika",
+      "trustOpenSource": "Otvoreni kod · AGPL-3.0",
+      "screenshotAlt": "World Monitor živa obavještajna nadzorna ploča — globalna karta sa slojevima sukoba, transporta i tržišta",
+      "plateNote": "Snimljeno sa živih karti — klikni da je otvoriš",
+      "trustBuild": "Izgradi na njoj:",
+      "positioningLink": "WorldMonitor nije otvoreni kod Palantira"
+    },
+    "live": {
+      "eyebrow": "Uživo sada",
+      "title": "Ova stranica je povezana na iste API-je kao nadzorna ploča.",
+      "subtitle": "Četiri od stotinu-plus signala koje World Monitor prati 24/7.",
+      "liveBadge": "Uživo",
+      "sampleBadge": "Primjer",
+      "cardHeadlines": "Vrhunski signali",
+      "cardCii": "Indeks nestabilnosti",
+      "ciiNote": "12 fuzioniranih signala po zemlji",
+      "cardChokepoints": "Pomorske uske grlice",
+      "chokeSummary": "{{disrupted}} od {{total}} poremećena",
+      "cardMarkets": "Tržišta",
+      "marketBreadth": "Rast",
+      "marketBest": "Najbolje",
+      "marketWeakest": "Najslabije",
+      "trendRising": "rastući",
+      "trendFalling": "padajući",
+      "trendStable": "stabilan"
+    },
+    "moments": {
+      "eyebrow": "Mehanizam za korelaciju",
+      "title": "Prednost je vidjeti kako se signali međusobno kreću.",
+      "sub": "Feedove možete pronaći na stotinu mjesta. Prednost je jedna površina gdje geoopolitika, brodovlje, robe, makro, tržišta, vremenske prilike, infrastruktura, cyber, vijesti i rizik zemlje mogu objasniti jedne druge.",
+      "signalStack": "Fuzioniranih signala",
+      "correlation": "Korelacija",
+      "bridge1": "Nije popis feedova.",
+      "bridge2": "Korelacijska površina: kada se tri sistema krenu zajedno, karta čini vidljivim ↓",
+      "m1": {
+        "kicker": "Geoopolitika + tržišta + makro",
+        "title1": "Kretanje tržišta",
+        "title2": "ima kartu.",
+        "s1": "Rizik zemlje, sankcije, eskalacija problema, službena upozorenja i brzina vijesti pokazuju gdje geoopolitički pritisak raste.",
+        "s2": "Brodovi, uske grlice, letovi, kabeli i blizina infrastrukture pokazuju može li taj pritisak pogoditi opskrbu, trgovinu ili rutu kapitala.",
+        "s3": "Kamatne stope, devizni tečaj, dionice, kripto i sigurna imovina pokazuju koji se tržišni režim ponovno vrednuje.",
+        "s4": "Prednost je vidjeti geoopolitički pritisak, putanju prenošenja i kretanje cijena zajedno prije nego što postane konsenzusna bilješka.",
+        "c1": "Rizik zemlje",
+        "c2": "Tokovi trgovine",
+        "c3": "Kamatne stope + devizni tečaj",
+        "c4": "Dionice + kripto",
+        "link": "Otvorite tržišnu leću →"
+      },
+      "m2": {
+        "kicker": "Robe + uske grlice + vremenske prilike",
+        "title1": "Kretanja roba počinju",
+        "title2": "u fizičkom svijetu.",
+        "s1": "AIS, Luke, cjevovodi, LNG, rafinerije, plovni putovi i uske grlice pokazuju kada se opskrba usporava, preusmjerava ili koncentrira.",
+        "s2": "Vremenske prilike, požari, potresi, prekidi i slojevi sukoba pokazuju fizičke događaje koji mogu pogoditi proizvodnju ili transport.",
+        "s3": "Ulje, plin, zlato, žitarice, rudarnici, imena brodova i valute povezane s robama pokazuju kako se šok prolazi kroz cijene.",
+        "s4": "Obavještajnost o robama funkcionira samo kada su fizički tok, signal poremećaja i spred robe vidljivi zajedno.",
+        "c1": "AIS + Luke",
+        "c2": "Vremenske prilike + požari",
+        "c3": "Energetska sredstva",
+        "link": "Otvorite robnu leću →",
+        "c4": "Ulje/zlato/žitarice"
+      },
+      "m3": {
+        "kicker": "AI infrastruktura + energija + klima",
+        "title1": "Boom AI-ja ima",
+        "title2": "fizički balans.",
+        "s1": "AI podatkovni centri nalaze se pored mreža, cjevovoda, LNG, nuklearnih objekata, oblačnih regija i izloženosti tržištu energije.",
+        "s2": "Stres mreže, prekidi, toplina, požari i slojevi vremenskih prilika pokazuju koja računalna sredstva su aujourd'hui pod pritiskom.",
+        "s3": "Paneli poduzeća, burze i makra pokazuju tko je izložen kada se energija, računalstvo i kapital sudare.",
+        "s4": "Rizik AI infrastrukture pojavljuje se samo kada fizička sredstva, signali klime i tržišta dijele jedan zaslon.",
+        "c1": "AI podatkovni centri",
+        "c2": "Energetska sredstva",
+        "c3": "Požari + vremenski uvjeti",
+        "c4": "Tržišta",
+        "link": "Mapiraj AI infrastrukturu →"
+      },
+      "m4": {
+        "kicker": "Kabeli + prekidi + trgovina",
+        "title": "Puknuće kabela postaje kaskada",
+        "s1": "Podmorski kabeli, pristaništne stanice, luke, naftovodi i uska grla mapiraju se zajedno.",
+        "s2": "Hrani internetskih anomalija i BGP anomalija pokazuju je li fizička greška postala digitalni prekid.",
+        "s3": "Trgovinski koridori, otpornost zemlje i podaci o redundanciji pokazuju tko gubi резервне rute prvi.",
+        "s4": "Oštećenje kabela je važno kada se telekomunikacijska redundancija, trgovinski koridori i izloženost zemlje podudaraju.",
+        "c1": "86 kabela",
+        "c2": "BGP + prekidi",
+        "c3": "Luke + naftovodi",
+        "c4": "Otpornost",
+        "link": "Prati kabl na karti →"
+      }
+    },
+    "firstFive": {
+      "eyebrow": "Od nule do orijentacije",
+      "title": "Vaših prvih pet minuta na živoj karti.",
+      "sub": "Nema ture, nema praznih stanja, nema zida za prijavu. Evo što se zapravo događa.",
+      "f1Title": "Karta se već kreće",
+      "f1Desc": "Konflikti, plovila, letovi, požari i prekidi se prikazuju tijekom učitavanja stranice. Nema što konfigurirati prvo.",
+      "f2Title": "Klikni bilo koju zemlju",
+      "f2Desc": "Otvara se potpuni dosje: rezultat nestabilnosti s komponentama, AI sažetak s citiranim vijestima, aktivni signali, vremenski prikaz od 7 dana.",
+      "f3Title": "Pritisni ⌘K / Ctrl-K",
+      "f3Desc": "154 naredbe. Skoči do bilo kojeg sloja, panela ili zemlje bez učenja UI-ja.",
+      "f4Title": "Odaberi svoju leću",
+      "f4Desc": "Svjetski, Tech, Financije, Robe, Energija ili Pozitivno — isti sustav, šest prilagođenih monitora, jedan klik dalje.",
+      "f5Title": "Vidio si možda deseti dio",
+      "f5Desc": "Ostatak se pojavljuje kako se svijet kreće — prolasci satelita, GPS ometanje, mračni brodovi, skupini prosvjeda, alarmi sirena.",
+      "cta": "Počni odbrojavanje"
+    },
+    "depth": {
+      "eyebrow": "Ispod haube",
+      "title": "Dubina je proizvod.",
+      "sub": "Svaki broj dolje je trenutno uživo na nadzornoj ploči — nije dio plana.",
+      "s1v": "56",
+      "s1l": "Slojevi karte",
+      "s2v": "500+",
+      "s2l": "Kurirani izvori podataka",
+      "s3v": "65+",
+      "s3l": "Davatelji podataka",
+      "s4v": "13",
+      "s4l": "Uska grla · uživo AIS",
+      "s5v": "31",
+      "s5l": "Indeks nestabilnosti · uživo",
+      "s6v": "196",
+      "s6l": "Rangiranja otpornosti",
+      "s7v": "86",
+      "s7l": "Podmorski kabeli",
+      "s8v": "88",
+      "s8l": "Naftovodi i LNG",
+      "s9v": "313",
+      "s9l": "Mapirana AI data centra",
+      "s10v": "29",
+      "s10l": "Hotspoti s bodovima",
+      "s11v": "92",
+      "s11l": "Razmjene i imovina",
+      "s12v": "42",
+      "s12l": "MCP alati",
+      "s13v": "154",
+      "s13l": "⌘K naredbe",
+      "s14v": "24",
+      "s14l": "Jezici · RTL uključen",
+      "s15v": "5",
+      "s15l": "Nezavisni izvori upozorenja",
+      "n1Title": "Praćenje satelita",
+      "n1Desc": "Užive orbitalne pozicije računate u pregledniku sa SGP4 — pratite ISS, Starlink i vojne satelite iznad vas.",
+      "n2Title": "Zone ometanja GPS-a",
+      "n2Desc": "Živa RF mapa smetnji koja pokazuje gdje se GPS trenutno degradira ili falsificira.",
+      "n3Title": "Intel uskih grla u tranzitu",
+      "n3Desc": "Broj brodova kroz Hormuz, Suez, Bab el-Mandeb i 10 drugih tjesnaca — s bodovanjem smetnji.",
+      "n4Title": "Mapa AI podatkovnih centara",
+      "n4Desc": "313 AI podatkovnih centara mapiranih s metapodacima o snazi i operatorima — fizički sloj AI utrke.",
+      "n5Title": "Podmorski kabeli",
+      "n5Desc": "86 podmorskih kabela koji nose internet, preklapajući se sa signalima kvarova i prijetnji.",
+      "n6Title": "Praćenje protesta",
+      "n6Desc": "Dvostruko-izvorena detekcija protesta s dedupliciranjem između izvora — signal, ne tračak.",
+      "faith": "Ne vjerujte brojevima na samo vjeru —",
+      "faithCta": "otvorite aplikaciju i prebrojite.",
+      "faithNote": "Izvori su navedeni na svakom panelu."
+    },
+    "agents": {
+      "eyebrow": "Za graditelje i AI agente",
+      "title": "Gradite na živim obavještajima o svijetu — iz bilo kojeg stack-a.",
+      "sub": "Sve što se nalazi na karti je ujedno i API. Uključite ga u Claude preko MCP-a, pozovite REST krajnje točke odavde ili instalirajte nativnog klijenta za Python, Ruby, Go ili JavaScript — vaš kod provjerava s živim podacima umjesto memorija podataka o treningu.",
+      "b1": "42 MCP alata — bodovi rizika, uska grla, konflikti, tržišta, brifing",
+      "b2": "Dokumentirani REST API — 193 operacije, jedan OpenAPI 3.1 spec, jedan ključ",
+      "b3": "Službeni SDK-ovi na npm, PyPI, RubyGems i Go — bez ovisnosti, MCP-prvi",
+      "b4": "JMESPath projekcija na svakom pozivu — dohvatite točno polja koja trebate",
+      "cta": "Pročitajte dokumentaciju za razvijatelje",
+      "termTitle": "claude — sesija",
+      "termQuery": "Je li naša ekspozicija Crvenog mora ova tjedna gore?",
+      "termAnswer": "Brojevi tranzita padaju tjedan po tjedan; razina rizika rata je povećana; dvije anomalije gustoće u posljednjih 48h.",
+      "termDocs": "Vidi puni referenac alata →",
+      "promise": "Jedan ključ. 42 MCP alata. Potpuni REST API. Jezično-Native klijenti."
+    },
+    "pricing": {
+      "eyebrow": "Pristup",
+      "title1": "Besplatno je opservatorij.",
+      "title2": "Pro je operacijska soba.",
+      "sub": "Kompletan nadzorni ploča je besplatan — svaki sloj, svaki feed, bez registracije. Pro dodaje sloj odlučivanja.",
+      "freeTitle": "Besplatno",
+      "freeDesc": "Besplatni plan je kompletan proizvod, ne pokušaj. Svaki sloj mape, svaki feed, svaki monitor — bez registracije, bez vremenske ljestvice pokušaja, bez stijene značajki na karti.",
+      "freeF1": "Svih 56 slojeva mape i 500+ feedova",
+      "freeF2": "Tehnološki pregledi država, hotspoti, bodovi nestabilnosti",
+      "freeF3": "Uska grla, kabeli, analiza kaskade",
+      "freeF4": "Pipelina s kritičnim upozorenjem i liste praćenja",
+      "proTitle": "Pro",
+      "proDesc": "Djeluj na osnovu toga. Sloj odlučivanja korišten u gornjim trenucima:",
+      "proF1": "WM Analyst — razgovaraj preko 30+ živih servisa, s citacijama",
+      "proF2": "Scenario engine & Route Explorer — simuliraj prekide prije nego što se dogode",
+      "proF3": "Osobni AI sažetak — dnevno, dva puta dnevno ili tjedno, na Slack, Telegram ili email",
+      "proF4": "MCP, REST API & zvanični SDK-ovi — 42 alata pod jednim ključem",
+      "proF5": "Prilagođeni builder widgeta za vlastite panele",
+      "cta": "Pogledaj planove i cijene",
+      "note": "Od 39,99 €/mj · 2 mjeseca besplatno pri godišnoj naplati"
+    },
+    "faq": {
+      "eyebrow": "Bez skrivenih troškova",
+      "title": "Poštena pitanja.",
+      "q1": "Je li World Monitor stvarno besplatan?",
+      "a1": "Da. Kompletan živi kartogram — svi slojevi, 500+ izvora, kratke preglede država, upozorenja o važnim vijestima, svih šest monitora — je besplatan bez registracije i bez vremenskog ograničenja pokušaja. Pro plaća za izvore: dodaje WM Analyst, mehanizam scenarija, Route Explorer, zakazane sažetke i MCP pristup za AI klijente. Bez oglasa, a bez računa znači da nema korisničkih podataka za prodaju.",
+      "q2": "Što je globalni intelligence dashboard?",
+      "a2": "Jedan živu prikaz koji spaja signale koje većina alata čuva odvojeno: događaje sukoba, praćenje brodova i zrakoplova, trgovačke uske grlo, satelite, podmorske kabele, cjevovode, tržišta i cyber prijetnje — na jednoj karta u stvarnom vremenu, s AI ocjenom i sažecima na vrhu. World Monitor je besplatan.",
+      "q3": "Gdje dolaze podaci?",
+      "a3": "65+ pružatelja, nanizvučeni: ACLED i UCDP za sukobe, AISStream za live brodove, OpenSky za zrakoplove, NASA FIRMS za požare, USGS za zemljotrese, IMF, BIS, FRED i Finnhub za tržišta i makro — plus 500+ kurirane vijest-feedove. Svaki panel navodira svoje izvore i vremenske žigove u tekstu.",
+      "q4": "Mogu li pratiti uska grla poput Hormuzа ili Bab el-Mandeba u stvarnom vremenu?",
+      "a4": "Da. 13 uskih grla prate se s živim AIS brojevima brodova, promjenom tranzita tjedan-na-tjedan i ocjenom prekida — a anomalije gustoće označavaju se prema osnovnoj liniji svakog tjesnaца.",
+      "q5": "Kako se ovo razlikuje od konfliktne karte kao što je Liveuamap?",
+      "a5": "Sukob je jedan sloj od 56. World Monitor spaja sukobe s brodarstvom, vojnim letovima, infrastrukturom, tržištima i cyber — zatim AI ocjenjuje konvergenciju: indekse nestabilnosti, eskalaciju hotspota, potvrđene hitne upozore i dnevne sažetke.",
+      "q6": "Zašto bih trebao vjerovati upozoru?",
+      "a6": "Banerski hitni slučaj aktivira se samo kada neovisni tipovi izvora potvrde — klasifikacija vijesti, brzina ključnih riječi, eskalacija hotspota, vojne surge, službene sirene — dedupliciranih i ograničenih brzinom. Manje upozora, pravi.",
+      "q7": "Mogu li AI agenti kao Claude ili GPT koristiti?",
+      "a7": "Da. World Monitor isporučuje MCP server od 42 alata, tako da Claude, GPT ili bilo koji MCP-kompatibilan agent može upitati živuće bodove rizika, status uskih grla, konflikte, tržišta i brifinge — sa JMESPath projekcijom tako da agenti preuzimaju točno što trebaju.",
+      "q8": "Trebam li račun?",
+      "a8": "Ne. Dashboard radi odmah bez prijave. Račun je bitan samo kada nadogradiš na Pro ili želiš sinkronizirati postavke na više uređaja.",
+      "q9": "Je li to open source?",
+      "a9": "Da — open source pod AGPL-3.0 na GitHubu: čitaj kod, samodostavi ili izgradi na njemu. Izvorne desktop aplikacije za Windows, macOS i Linux dostupne su, plus Android TV aplikacija za zidne zaslone.",
+      "q10": "Zašto World Monitor nije Palantir?",
+      "a10": "Palantir čini podatke institucije operativnima unutar te institucije. World Monitor počinje s druge strane: skuplja, normalizira, korelira i prati javne podatke svijeta, a zatim objavljuje taj sloj obavještajnih podataka kroz besplatnu nadzornu ploču i kod otvorenog koda. Drugi zadatak, drugi proizvod.",
+      "q11": "Which World Monitor license do I need?",
+      "a11": "Choose based on who will use the output. Pro's Personal license is for one person using World Monitor for their own research and decisions. Pro Business lets one licensed user use it for company or client work, internal tools, and reports. API Starter covers API use inside one organization, with no customer redistribution. API Business lets that organization embed World Monitor data in products and services for its customers. Enterprise covers custom seats, white-labeling, and deployments. These subscription licenses are separate from the AGPL/MIT source-code licenses. Full terms: worldmonitor.app/docs/terms."
+    },
+    "cta": {
+      "title": "Mapa svijeta ne čeka za tebe.",
+      "subtitle": "Dok čitaš ovu stranicu, nastavila se kretati — 13 tjesnaца, 29 hotspota, 92 tržišta, 500+ feedova. Jedan od njih je sutrašnja prva stranica. Pronađi ga prvi — besplatno, bez računa.",
+      "button": "Pronađi ga prvi",
+      "note": "Besplatno · Bez prijave · Učitava se u sekundama",
+      "secondary": "Ili pogledaj Pro planove →"
     }
   }
 }

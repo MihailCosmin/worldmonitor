@@ -2243,6 +2243,7 @@
           "summaryVerified": "ปลดล็อกแล้ว พร้อมใช้งานเมื่อคุณพร้อม",
           "channelsNote": "ต้องการ Telegram, Slack, Discord หรือเว็บฮุกมากกว่ากัน?",
           "pointers": {
+            "search": "ค้นหาทั่วทั้งแดชบอร์ด",
             "widgets": "สร้างวิดเจ็ตที่กำหนดเอง",
             "analyst": "ถามนักวิเคราะห์ AI",
             "mcpClients": "ตั้งค่า MCP",
@@ -2490,6 +2491,10 @@
         "compactHours": "{{count}}h",
         "compactDays": "{{count}}d"
       }
+    },
+    "exportGate": {
+      "preparingPdf": "Preparing PDF…",
+      "pdfFailed": "The PDF report could not be generated. Try again, or use the JSON export."
     }
   },
   "popups": {

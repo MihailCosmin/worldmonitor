@@ -2261,6 +2261,7 @@
           "summaryVerified": "Разблокировано и готово, когда будете готовы вы.",
           "channelsNote": "Предпочитаете Telegram, Slack, Discord или вебхук?",
           "pointers": {
+            "search": "Искать по всей панели",
             "widgets": "Создать пользовательский виджет",
             "analyst": "Спросить AI-аналитика",
             "mcpClients": "Настроить MCP",
@@ -2526,6 +2527,10 @@
         "compactHours": "{{count}}h",
         "compactDays": "{{count}}d"
       }
+    },
+    "exportGate": {
+      "preparingPdf": "Preparing PDF…",
+      "pdfFailed": "The PDF report could not be generated. Try again, or use the JSON export."
     }
   },
   "popups": {

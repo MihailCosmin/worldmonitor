@@ -111,7 +111,7 @@ const SEED_DOMAINS = {
   'intelligence:social-reddit': { key: 'seed-meta:intelligence:social-reddit', intervalMin: 270 }, // 180min relay loop (3h; dropped from 60min now that ScrapeCreators handles Reddit); intervalMin = maxStaleMin / 2 (540 / 2), matching api/health.js
   'intelligence:wsb-tickers': { key: 'seed-meta:intelligence:wsb-tickers', intervalMin: 270 }, // 180min relay loop (3h); intervalMin = maxStaleMin / 2 (540 / 2), matching api/health.js
   'trade:customs-revenue':    { key: 'seed-meta:trade:customs-revenue',    intervalMin: 720 },
-  'comtrade:bilateral-hs4':   { key: 'seed-meta:comtrade:bilateral-hs4',   intervalMin: 17280 }, // 24d gate in seed-comtrade-bilateral-hs4.mjs
+  'comtrade:bilateral-hs4':   { key: 'seed-meta:comtrade:bilateral-hs4',   intervalMin: 25200, minRecordCount: 110 }, // intervalMin*2 = health.js 35d budget for the monthly Railway seed; minRecordCount matches api/health.js + MIN_COUNTRY_COVERAGE
   'thermal:escalation':       { key: 'seed-meta:thermal:escalation',       intervalMin: 180 },
   'radiation:observations':   { key: 'seed-meta:radiation:observations',   intervalMin: 15 },
   'sanctions:pressure':       { key: 'seed-meta:sanctions:pressure',       intervalMin: 360 },
@@ -395,9 +395,14 @@ export default async function handler(req) {
     // `unavailable` means an optional adapter was never configured, matching
     // api/health.js's NOT_CONFIGURED treatment rather than a broken source.
     const sourceUnavailable = meta.sourceState === 'unavailable';
+    const sourceBlocked = domain === 'military:cross-strait-activity:japan-mod'
+      && meta.sourceState === 'blocked'
+      && recordCount != null
+      && recordCount > 0;
     const sourceError = typeof meta.sourceState === 'string'
       && meta.sourceState !== 'ok'
-      && !sourceUnavailable;
+      && !sourceUnavailable
+      && !sourceBlocked;
     const isError = meta.status === 'error' || sourceError;
     const probe = evaluateDataProbe(cfg.dataProbe, probeMap.get(domain));
     const sourceMismatch = Boolean(
@@ -422,6 +427,8 @@ export default async function handler(req) {
               ? 'coverage_partial'
               : stale
               ? 'stale'
+              : sourceBlocked
+                ? 'source_blocked'
               : 'ok',
       fetchedAt: meta.fetchedAt,
       recordCount: recordCount ?? meta.recordCount ?? null,

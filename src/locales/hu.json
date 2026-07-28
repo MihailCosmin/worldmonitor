@@ -2312,6 +2312,7 @@
           "summaryVerified": "Feloldva és készen áll, amikor Ön is az.",
           "channelsNote": "Inkább Telegramot, Slacket, Discordot vagy egy webhookot szeretne?",
           "pointers": {
+            "search": "Keresés a teljes irányítópulton",
             "widgets": "Egyéni widget létrehozása",
             "analyst": "Kérdezze meg az AI elemzőt",
             "mcpClients": "MCP beállítása",
@@ -2559,6 +2560,10 @@
         "compactHours": "{{count}}h",
         "compactDays": "{{count}}d"
       }
+    },
+    "exportGate": {
+      "preparingPdf": "Preparing PDF…",
+      "pdfFailed": "The PDF report could not be generated. Try again, or use the JSON export."
     }
   },
   "popups": {
