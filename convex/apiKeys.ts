@@ -16,8 +16,11 @@ const MAX_KEYS_PER_USER = 5;
  * and pass the SHA-256 hex hash + the first 8 chars (prefix) here.
  * The plaintext key is NEVER stored in Convex.
  *
- * Requires an active entitlement with apiAccess=true (API_STARTER+ plans).
- * Pro plans (tier 1) have apiAccess=false and cannot create keys.
+ * Any signed-in user may create a key — creating and viewing keys is not an
+ * entitlement gate. Whether a created key actually authenticates requests at
+ * the gateway is a separate, request-time check (server/gateway.ts, #4611)
+ * against the caller's apiAccess entitlement; this mutation only manages the
+ * key records themselves.
  */
 export const createApiKey = mutation({
   args: {
@@ -27,21 +30,6 @@ export const createApiKey = mutation({
   },
   handler: async (ctx, args) => {
     const userId = await requireUserId(ctx);
-
-    // Entitlement gate: only users with apiAccess may create API keys.
-    // This is catalog-driven — Pro (tier 1) has apiAccess=false;
-    // API_STARTER+ (tier 2+) have apiAccess=true.
-    const entitlement = await ctx.db
-      .query("entitlements")
-      .withIndex("by_userId", (q) => q.eq("userId", userId))
-      .first();
-    if (
-      !entitlement ||
-      entitlement.validUntil < Date.now() ||
-      !entitlement.features.apiAccess
-    ) {
-      throw new ConvexError("API_ACCESS_REQUIRED");
-    }
 
     if (!args.name.trim()) {
       throw new ConvexError("INVALID_NAME");

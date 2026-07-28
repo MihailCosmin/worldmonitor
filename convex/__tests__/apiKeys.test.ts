@@ -88,31 +88,31 @@ async function seedProEntitlement(
 // ---------------------------------------------------------------------------
 
 describe("createApiKey", () => {
-  test("rejects free-tier users (API_ACCESS_REQUIRED)", async () => {
+  // Creating/viewing keys is not an entitlement gate — any signed-in user may
+  // create one. Whether the resulting key actually authenticates requests at
+  // the gateway is a separate, request-time apiAccess check (server/gateway.ts,
+  // #4611); this mutation only manages the key records.
+  test("succeeds for free-tier users (no entitlement row at all)", async () => {
     const t = convexTest(schema, modules);
 
-    await expect(
-      t.withIdentity(FREE_USER).mutation(api.apiKeys.createApiKey, makeKeyArgs(1)),
-    ).rejects.toThrow(/API_ACCESS_REQUIRED/);
+    const result = await t.withIdentity(FREE_USER).mutation(api.apiKeys.createApiKey, makeKeyArgs(1));
+    expect(result).toMatchObject({ name: "test-key-1", keyPrefix: "wm_00001" });
   });
 
-  test("rejects pro-tier users without apiAccess", async () => {
+  test("succeeds for pro-tier users (apiAccess=false)", async () => {
     const t = convexTest(schema, modules);
     await seedProEntitlement(t, "user-pro");
 
-    // Pro plan has apiAccess=false — should be rejected
-    await expect(
-      t.withIdentity(PRO_USER).mutation(api.apiKeys.createApiKey, makeKeyArgs(1)),
-    ).rejects.toThrow(/API_ACCESS_REQUIRED/);
+    const result = await t.withIdentity(PRO_USER).mutation(api.apiKeys.createApiKey, makeKeyArgs(1));
+    expect(result).toMatchObject({ name: "test-key-1", keyPrefix: "wm_00001" });
   });
 
-  test("rejects users with expired entitlement", async () => {
+  test("succeeds for users with an expired entitlement", async () => {
     const t = convexTest(schema, modules);
     await seedApiEntitlement(t, "user-api", { validUntil: PAST });
 
-    await expect(
-      t.withIdentity(API_USER).mutation(api.apiKeys.createApiKey, makeKeyArgs(1)),
-    ).rejects.toThrow(/API_ACCESS_REQUIRED/);
+    const result = await t.withIdentity(API_USER).mutation(api.apiKeys.createApiKey, makeKeyArgs(1));
+    expect(result).toMatchObject({ name: "test-key-1", keyPrefix: "wm_00001" });
   });
 
   test("succeeds for API-tier user", async () => {

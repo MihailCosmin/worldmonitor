@@ -324,7 +324,6 @@ function buildSentryInitOptions(): Parameters<SentryNs['init']>[0] {
       /doesn't provide an export named/, // stale cached chunk after deploy references removed export
       /Possible side-effect in debug-evaluate/, // Chrome DevTools internal EvalError
       /ConvexError: CONFLICT/, // Expected OCC rejection on concurrent preference saves
-      /ConvexError: API_ACCESS_REQUIRED/, // Expected business error: free user opens API Keys tab; client handles gracefully (UnifiedSettings.ts:731-738) — WORLDMONITOR-NA
       /\[CONVEX [AQM]\(.+?\)\] Connection lost while action was in flight/, // Convex SDK transient WS disconnect
       /^Invalid start version: \d+:\d+:\d+, transitioning from \d+:\d+:\d+$/, // Convex SDK internal sync protocol error from `remote_query_set.js` (server republished query mid-transition or WS reconnect race) — WORLDMONITOR-Q5
       /Response did not contain `success` or `data`/, // DuckDuckGo browser internal tracker/content-block response — never emitted by our code

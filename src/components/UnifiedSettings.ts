@@ -371,9 +371,9 @@ export class UnifiedSettings {
     (this.overlay.querySelector('.unified-settings-tabs') as HTMLElement)?.addEventListener('keydown', (e: KeyboardEvent) => this.handleKeyDown(e));
     track('settings-open', { tab: tab ?? 'default' });
 
-    // Re-render API Keys panel when entitlements arrive (cold-load race:
-    // hasFeature('apiAccess') returns false until the Convex subscription
-    // delivers data, so a paid API Starter user sees the upgrade CTA briefly).
+    // Re-render API Keys panel when entitlements arrive — the panel itself no
+    // longer gates on apiAccess, but renderPlanLimitNotices() inside it still
+    // reads entitlement data, so it needs a refresh once that data lands.
     this.unsubscribeEntitlement?.();
     this.unsubscribeEntitlement = onEntitlementChange(() => {
       this.entitlementReady = true;
@@ -382,7 +382,7 @@ export class UnifiedSettings {
         setTrustedHtml(panel, trustedHtml(this.renderApiKeysContent(), "legacy direct innerHTML migration"));
         // Re-attach CTA and input handlers for the refreshed content
         this.attachApiKeysHandlers();
-        if (this.activeTab === 'api-keys' && getAuthState().user && hasFeature('apiAccess')) {
+        if (this.activeTab === 'api-keys' && getAuthState().user) {
           void this.loadApiKeys();
         }
       }
@@ -649,7 +649,7 @@ export class UnifiedSettings {
     if (this.activeTab === 'api-keys' || this.activeTab === 'mcp-clients') {
       void this.loadPlanLimitNotices();
     }
-    if (this.activeTab === 'api-keys' && getAuthState().user && hasFeature('apiAccess')) {
+    if (this.activeTab === 'api-keys' && getAuthState().user) {
       void this.loadApiKeys();
     }
     if (this.activeTab === 'mcp-clients' && getAuthState().user && hasFeature('mcpAccess')) {
@@ -667,7 +667,7 @@ export class UnifiedSettings {
       tab,
     );
 
-    if (tab === 'api-keys' && getAuthState().user && hasFeature('apiAccess')) {
+    if (tab === 'api-keys' && getAuthState().user) {
       void this.loadPlanLimitNotices();
       void this.loadApiKeys();
     }
@@ -1184,19 +1184,12 @@ export class UnifiedSettings {
       });
     }
 
-    // Gate CTA click (sign-in for anonymous, checkout for free)
+    // Gate CTA click (sign-in required to scope a key to an account)
     const gateBtn = this.overlay.querySelector<HTMLElement>('.api-keys-gate-btn');
     if (gateBtn) {
       gateBtn.addEventListener('click', () => {
-        if (!getAuthState().user) {
-          this.close();
-          import('@/services/clerk').then(m => m.openSignIn()).catch(() => {});
-        } else {
-          this.close();
-          import('@/services/checkout').then(m => import('@/config/products').then(p => m.startCheckout(p.DODO_PRODUCTS.API_STARTER_MONTHLY))).catch(() => {
-            window.open('https://worldmonitor.app/pro', '_blank', 'noopener,noreferrer');
-          });
-        }
+        this.close();
+        import('@/services/clerk').then(m => m.openSignIn()).catch(() => {});
       });
     }
   }
@@ -1211,16 +1204,6 @@ export class UnifiedSettings {
           <div class="settings-access-icon">${lockIcon}</div>
           <div class="settings-access-desc">Sign in to unlock API Keys</div>
           <button class="settings-access-cta api-keys-gate-btn">Sign In</button>
-        </div>`;
-    }
-
-    if (!hasFeature('apiAccess')) {
-      const upgradeIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="16 12 12 8 8 12"/><line x1="12" y1="16" x2="12" y2="8"/></svg>`;
-      return `
-        <div class="settings-access-state">
-          <div class="settings-access-icon">${upgradeIcon}</div>
-          <div class="settings-access-desc">Create and manage API keys to access WorldMonitor data programmatically.</div>
-          <button class="settings-access-cta api-keys-gate-btn">Upgrade to API Starter</button>
         </div>`;
     }
 
@@ -1279,8 +1262,6 @@ export class UnifiedSettings {
       const msg = err instanceof Error ? err.message : 'Failed to create key';
       this.apiKeysError = msg.includes('KEY_LIMIT_REACHED')
         ? 'Maximum of 5 active keys reached. Revoke an existing key first.'
-        : msg.includes('API_ACCESS_REQUIRED')
-        ? 'API keys require an API access subscription (API Starter or higher).'
         : msg;
       this.renderApiKeysError();
     } finally {
@@ -1383,11 +1364,10 @@ export class UnifiedSettings {
   // ---------------------------------------------------------------------------
   // Connected MCP clients tab (plan 2026-05-10-001 U9)
   //
-  // Distinct from the API Keys tab above (gated on `apiAccess`). This tab is
-  // gated on `mcpAccess` so Pro users (where `apiAccess === false`) see ONLY
-  // this tab. API Starter+ users (`apiAccess && mcpAccess`) see BOTH tabs;
-  // they manage independent surfaces (manual API keys vs auto-issued OAuth
-  // tokens for Claude Desktop / Cursor / etc).
+  // Distinct from the API Keys tab above (gated only on sign-in). This tab is
+  // gated on `mcpAccess` so Pro users see this tab's auto-issued OAuth tokens
+  // for Claude Desktop / Cursor / etc — an independent surface from manual
+  // API keys above, which any signed-in user can now create.
   // ---------------------------------------------------------------------------
 
   private renderMcpClientsContent(): string {
