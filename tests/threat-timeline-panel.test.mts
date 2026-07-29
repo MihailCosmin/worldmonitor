@@ -190,6 +190,7 @@ async function loadThreatTimelinePanelHarness() {
     `],
     ['runtime-stub', `
       export function isDesktopRuntime() { return false; }
+      export function isSelfHostedRuntime() { return false; }
       export function toApiUrl(path) { return path; }
     `],
     ['tauri-bridge-stub', `export function invokeTauri() { return Promise.reject(new Error('not wired in test')); }`],

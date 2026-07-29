@@ -8,6 +8,7 @@ import {
   isPanelEntitled,
 } from '@/config/panels';
 import { isProUser } from '@/services/widget-store';
+import { isSelfHostedRuntime } from '@/services/runtime';
 import { SITE_VARIANT } from '@/config/variant';
 import { t } from '@/services/i18n';
 import { createSettingsButton } from '@/components/settings-button';
@@ -25,6 +26,7 @@ import { escapeHtml } from '@/utils/sanitize';
 import type { PanelConfig } from '@/types';
 import { renderPreferences } from '@/services/preferences-content';
 import { renderNotificationsSettings, type NotificationsSettingsResult } from '@/services/notifications-settings';
+import { renderDataSourcesContent } from '@/services/data-sources-content';
 import { getAuthState, signIn } from '@/services/auth-state';
 import { track } from '@/services/analytics';
 import { isEntitled, hasFeature, onEntitlementChange, getEntitlementState } from '@/services/entitlements';
@@ -78,6 +80,7 @@ export class UnifiedSettings {
   private escapeHandler: (e: KeyboardEvent) => void;
   private prefsCleanup: (() => void) | null = null;
   private notifCleanup: (() => void) | null = null;
+  private dataSourcesCleanup: (() => void) | null = null;
   private pendingNotifs: NotificationsSettingsResult | null = null;
   private draftPanelSettings: Record<string, PanelConfig> = {};
   private panelsJustSaved = false;
@@ -462,6 +465,8 @@ export class UnifiedSettings {
     this.prefsCleanup = null;
     this.notifCleanup?.();
     this.notifCleanup = null;
+    this.dataSourcesCleanup?.();
+    this.dataSourcesCleanup = null;
     this.pendingNotifs = null;
     this.unsubscribeEntitlement?.();
     this.unsubscribeEntitlement = null;
@@ -492,6 +497,8 @@ export class UnifiedSettings {
     this.prefsCleanup = null;
     this.notifCleanup?.();
     this.notifCleanup = null;
+    this.dataSourcesCleanup?.();
+    this.dataSourcesCleanup = null;
     this.pendingNotifs = null;
     this.unsubscribeEntitlement?.();
     this.unsubscribeEntitlement = null;
@@ -534,6 +541,8 @@ export class UnifiedSettings {
     this.prefsCleanup = null;
     this.notifCleanup?.();
     this.notifCleanup = null;
+    this.dataSourcesCleanup?.();
+    this.dataSourcesCleanup = null;
     this.pendingNotifs = null;
 
     const isSignedIn = !this.config.isDesktopApp && (getAuthState().user !== null);
@@ -547,6 +556,11 @@ export class UnifiedSettings {
       ? renderNotificationsSettings({ isSignedIn })
       : null;
     const showMcpClientsTab = hasFeature('mcpAccess');
+    // Self-hosted web only — desktop already has this via its own
+    // runtime-config panel (native vault + startup nudge), and the hosted
+    // SaaS manages credentials server-side.
+    const showDataSourcesTab = isSelfHostedRuntime();
+    const dataSources = showDataSourcesTab ? renderDataSourcesContent() : null;
     const availableTabs: TabId[] = [
       'settings',
       'panels',
@@ -554,6 +568,7 @@ export class UnifiedSettings {
       ...(showNotificationsTab ? ['notifications' as const] : []),
       'api-keys',
       ...(showMcpClientsTab ? ['mcp-clients' as const] : []),
+      ...(showDataSourcesTab ? ['data-sources' as const] : []),
     ];
     this.activeTab = normalizeSettingsTab(this.activeTab, availableTabs);
     const tabClass = (id: TabId) => `unified-settings-tab${this.activeTab === id ? ' active' : ''}`;
@@ -571,6 +586,7 @@ export class UnifiedSettings {
           ${showNotificationsTab ? `<button class="${tabClass('notifications')}" tabindex="${this.activeTab === 'notifications' ? 0 : -1}" data-tab="notifications" role="tab" aria-selected="${this.activeTab === 'notifications'}" id="us-tab-notifications" aria-controls="us-tab-panel-notifications">${t('header.tabNotifications')}</button>` : ''}
           <button class="${tabClass('api-keys')}" tabindex="${this.activeTab === 'api-keys' ? 0 : -1}" data-tab="api-keys" role="tab" aria-selected="${this.activeTab === 'api-keys'}" id="us-tab-api-keys" aria-controls="us-tab-panel-api-keys">API Keys</button>
           ${showMcpClientsTab ? `<button class="${tabClass('mcp-clients')}" tabindex="${this.activeTab === 'mcp-clients' ? 0 : -1}" data-tab="mcp-clients" role="tab" aria-selected="${this.activeTab === 'mcp-clients'}" id="us-tab-mcp-clients" aria-controls="us-tab-panel-mcp-clients">MCP Clients</button>` : ''}
+          ${showDataSourcesTab ? `<button class="${tabClass('data-sources')}" tabindex="${this.activeTab === 'data-sources' ? 0 : -1}" data-tab="data-sources" role="tab" aria-selected="${this.activeTab === 'data-sources'}" id="us-tab-data-sources" aria-controls="us-tab-panel-data-sources">${t('header.tabDataSources')}</button>` : ''}
         </div>
         <div class="unified-settings-tab-panel${this.activeTab === 'settings' ? ' active' : ''}" data-panel-id="settings" id="us-tab-panel-settings" role="tabpanel" aria-labelledby="us-tab-settings">
           ${prefs.html}
@@ -617,12 +633,24 @@ export class UnifiedSettings {
           ${this.renderMcpClientsContent()}
         </div>
         ` : ''}
+        ${dataSources ? `
+        <div class="unified-settings-tab-panel${this.activeTab === 'data-sources' ? ' active' : ''}" data-panel-id="data-sources" id="us-tab-panel-data-sources" role="tabpanel" aria-labelledby="us-tab-data-sources">
+          ${dataSources.html}
+        </div>
+        ` : ''}
       </div>
     `, "legacy direct innerHTML migration"));
 
     const settingsPanel = this.overlay.querySelector('#us-tab-panel-settings');
     if (settingsPanel) {
       this.prefsCleanup = prefs.attach(settingsPanel as HTMLElement);
+    }
+
+    if (dataSources) {
+      const dataSourcesPanel = this.overlay.querySelector('#us-tab-panel-data-sources');
+      if (dataSourcesPanel) {
+        this.dataSourcesCleanup = dataSources.attach(dataSourcesPanel as HTMLElement);
+      }
     }
 
     // Defer notifications attach until the tab is first activated —

@@ -220,6 +220,7 @@ async function loadCountryDeepDivePanel(options = {}) {
     ['runtime-stub', `
       export function toApiUrl(path) { return path; }
       export function isDesktopRuntime() { return false; }
+      export function isSelfHostedRuntime() { return false; }
       export function getConfiguredWebApiBaseUrl() { return ''; }
     `],
     ['intelligence-client-stub', `

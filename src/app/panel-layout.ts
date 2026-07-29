@@ -1,5 +1,4 @@
 import type { AppContext, AppModule } from '@/app/app-context';
-import { isSelfHostedRuntime } from '@/services/runtime';
 import { normalizeExclusiveChoropleths } from '@/components/resilience-choropleth-utils';
 import { replayPendingCalls, clearAllPendingCalls } from '@/app/pending-panel-data';
 import {
@@ -2023,16 +2022,8 @@ export class PanelLayoutManager implements AppModule {
     this.lazyDefaultPanel('etf-flows', () => import('@/components/ETFFlowsPanel'), 'ETFFlowsPanel');
     this.lazyDefaultPanel('stablecoins', () => import('@/components/StablecoinPanel'), 'StablecoinPanel');
 
-    // Desktop always has this; self-hosted web gets it too (its own
-    // .env-configured data-source keys), gated on local sign-in inside the
-    // panel itself. The hosted SaaS never registers it — credentials are
-    // server-managed there, and there's no local-api-server.mjs to talk to.
-    // Desktop's compact startup "alert" nudge (Pro-upsell copy, N/M features
-    // available) doesn't fit self-hosted — it goes straight to the full list.
     if (this.ctx.isDesktopApp) {
       this.lazyImportedPanel('runtime-config', () => import('@/components/RuntimeConfigPanel'), 'RuntimeConfigPanel', (RuntimeConfigPanel) => new RuntimeConfigPanel({ mode: 'alert' }));
-    } else if (isSelfHostedRuntime()) {
-      this.lazyImportedPanel('runtime-config', () => import('@/components/RuntimeConfigPanel'), 'RuntimeConfigPanel', (RuntimeConfigPanel) => new RuntimeConfigPanel({ mode: 'full' }));
     }
 
     this.lazyDefaultPanel('insights', () => import('@/components/InsightsPanel'), 'InsightsPanel');

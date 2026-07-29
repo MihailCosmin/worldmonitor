@@ -19,7 +19,7 @@ async function loadPopulationExposurePanel() {
       if (key === 'components.populationExposure.radiusKm') return params.km + ' km radius';
       return key;
     }`],
-    ['runtime-stub', `export function isDesktopRuntime() { return false; }`],
+    ['runtime-stub', `export function isDesktopRuntime() { return false; } export function isSelfHostedRuntime() { return false; }`],
     ['tauri-bridge-stub', `export function invokeTauri() { return Promise.reject(new Error('not wired in test')); }`],
     ['analytics-stub', `export function trackPanelResized() {}`],
     ['ai-flow-settings-stub', `export function getAiFlowSettings() { return { badgeAnimation: false }; }`],

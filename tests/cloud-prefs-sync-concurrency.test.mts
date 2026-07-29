@@ -9,7 +9,7 @@ import { MiniStorage } from './helpers/mini-dom.mts';
 
 const root = resolve(import.meta.dirname, '..');
 const stubs: Record<string, string> = {
-  '@/services/runtime': 'export const isDesktopRuntime = () => false;',
+  '@/services/runtime': 'export const isDesktopRuntime = () => false; export const isSelfHostedRuntime = () => false;',
   '@/services/clerk': 'export const getClerkToken = async () => globalThis.__cloudPrefsToken;',
   '@/config/feeds': 'export const FEEDS = {};',
   '@/utils/dom-utils': [
