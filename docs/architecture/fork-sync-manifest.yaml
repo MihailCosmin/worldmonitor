@@ -42,10 +42,19 @@
 meta:
   upstream_remote: upstream
   upstream_repo: koala73/worldmonitor
-  last_sync_commit: "d9a2d1f23"           # our merge commit on this fork
-  last_sync_upstream_head: "3645a1e29"    # upstream/main SHA merged as of last sync
-  # `git log 3645a1e29..upstream/main --oneline` shows how far upstream has moved
-  # since. As of this manifest's last update that was 13 commits (274f67f33).
+  last_sync_commit: "PENDING"             # filled in once this sync's merge commit lands
+  last_sync_upstream_head: "df8467a2d"    # upstream/main SHA merged as of last sync
+  # `git log df8467a2d..upstream/main --oneline` shows how far upstream has moved
+  # since.
+  #
+  # Sync history:
+  #   - 3645a1e29 -> d9a2d1f23: the 86-commit sync (see commit_ranges.upstream-sync).
+  #   - b832237d4 -> df8467a2d: a 10-commit sync (SEC corporate-intelligence
+  #     feature, a repo-wide HTML-entity-decode fix, an apiKeys.ts auth-race
+  #     fix). Merge-base was b832237d4, NOT the previous last_sync_upstream_head
+  #     — don't assume the two are equal; always compute
+  #     `git merge-base <branch> upstream/main` fresh rather than trusting this
+  #     file's last-recorded value as the diff base.
   categories: [pro-removal, discord-removal, owner-branding-removal, feature-ungate, upstream-sync]
 
 # ---------------------------------------------------------------------------
@@ -169,6 +178,61 @@ commit_ranges:
       authenticates real API calls — that's the genuine metered API Starter+
       product, a bigger pricing decision than "let me manage my keys."
     high_risk_files: [src/components/UnifiedSettings.ts, convex/apiKeys.ts]
+
+  - category: upstream-sync
+    range: "b832237d4..df8467a2d"           # 10 commits, merge-base b832237d4
+    summary: >
+      Synced 10 upstream commits: a new SEC corporate-intelligence feature
+      (search-sec-filings, list-material-events — confirmed zero entitlement
+      checks anywhere in the handlers, genuinely free), a repo-wide HTML-
+      entity-decode fix (274f67f33, touched ~270 files, mostly benign string
+      fixes + an MCP tool-count bump 49->59 across all pro-test locales), and
+      an apiKeys.ts listApiKeys auth-race fix (resolveUserId instead of
+      requireUserId, returns [] during a transient unauthenticated window
+      instead of throwing — compatible with and unrelated to the apiAccess
+      paywall removal above). scripts/seed-ucdp-events.mjs's local loadEnvFile
+      (with the hardcoded eliehabib path already removed) was superseded by
+      upstream's own proper fix: a shared scripts/_seed-utils.mjs utility
+      applied across all 149 seeders, with a real checkout-root-anchored
+      design — adopted upstream's version wholesale.
+    conflicts_resolved:
+      - "public/pro/assets/* rename/delete conflicts — resolved by deleting; npm run build:pro regenerates"
+      - "public/pro/index.html, public/pro/welcome.html — resolved with --ours placeholder; npm run build:pro regenerates"
+      - "docs/api/{Economic,Intelligence,Market,SupplyChain,Trade}Service.openapi.json — resolved with upstream placeholder; make generate regenerates"
+      - >-
+        docs/mcp-overview.mdx + zh — upstream re-added a stale "Pro-gated"
+        claim on get_procurement_opportunities (already fixed once in D17);
+        kept our unstaled wording, adopted the new get_company_intelligence row
+      - "scripts/seed-ucdp-events.mjs — adopted upstream's shared-utility loadEnvFile refactor over our local one-off fix"
+    discovered_while_syncing: >
+      Auditing this sync's high-risk files surfaced 3 real, PRE-EXISTING
+      gating bugs unrelated to these 10 commits (confirmed via `ORIG_HEAD`
+      comparison before touching anything) — most likely missed during the
+      86-commit sync above. Fixed all 3 in the same pass:
+      (1) server/_shared/entitlement-check.ts's ENDPOINT_ENTITLEMENTS still
+      had the 4 stock-analysis entries tier-gated even though
+      src/shared/premium-paths.ts had already excluded them — free-tier
+      callers were still getting a real 403 on analyze-stock/backtest-stock/
+      get-stock-analysis-history/list-stored-stock-backtests. (2) Both
+      /api/intelligence/v1/get-country-intel-brief and
+      /api/intelligence/v1/deduct-situation were still listed in
+      PREMIUM_RPC_PATHS despite both already having a working direct-LLM
+      quota-based bypass (server/_shared/direct-llm-quota.ts) and a documented
+      DIRECT_LLM_PREMIUM_BYPASS_ALLOWLIST entry in
+      tests/premium-paths-guard.test.mts saying they should NOT be
+      premium-routed — removed both from PREMIUM_RPC_PATHS (and
+      get-country-intel-brief from ENDPOINT_ENTITLEMENTS too). (3)
+      src/services/stock-analysis.ts declared its premiumFetch-wrapping fetch
+      function as a separate named const (analyzeStockFetch) before passing it
+      to `new MarketServiceClient(...)`, which broke
+      tests/premium-paths-guard.test.mts's AST-based proof (it binds the
+      OUTERMOST variable declaration containing the marking call as the
+      "marked client," landing on the fetch-function variable instead of the
+      RPC client) — inlined the fetch wrapper directly into the client
+      constructor instead, matching the established working pattern in
+      src/services/summarization.ts. The underlying request wiring was
+      already correct in all 3 cases; only the registry entries / AST shape
+      were stale.
 
 # ---------------------------------------------------------------------------
 # 2. High-risk files — hand-review on every sync regardless of conflict markers.
@@ -339,3 +403,54 @@ known_pre_existing_gaps:
       hardcodes `/api/market/v1/analyze-stock` as its example premium path —
       stale, since this fork made stock analysis free. Confirmed pre-existing
       on main, unrelated to any sync.
+  - test: tests/premium-paths-guard.test.mts
+    issue: >
+      One subtest ("every direct-LLM bypass also proves how its 401s stay out
+      of session recovery") cannot verify
+      /api/intelligence/v1/get-country-intel-brief: its caller
+      (src/app/country-intel.ts) makes a bare premiumFetch(url, {forcePremium:
+      true}) call with no RPC-client wrapper, and the test's AST proof only
+      knows how to bind a "marked client variable" and count
+      `client.rpcMethod(...)` calls. Manually confirmed forcePremium: true IS
+      set correctly at the call site (src/app/country-intel.ts:~930) — this is
+      a test-coverage gap, not an actual wiring bug. Fixing it properly means
+      extending the test's AST logic to also recognize a bare premiumFetch
+      call bound directly to a route (no client indirection), which is a
+      small feature addition to the test, not a merge-conflict resolution.
+  - cluster: "endpoint-not-in-PREMIUM_RPC_PATHS dedicated tests"
+    tests: [tests/get-regime-history.test.mts, tests/get-regional-snapshot.test.mts, tests/global-procurement-ui-guard.test.mts, tests/multi-sector-cost-shock.test.mjs, tests/regional-snapshot-weekly-brief.test.mjs, tests/resilience-map-layer.test.mts, tests/resilience-runtime-manifest.test.mts, tests/supply-chain-sprint2.test.mjs, tests/openapi-security-contract.test.mjs, tests/premium-stock-gateway.test.mts]
+    issue: >
+      A larger, separate body of pre-existing gating debt discovered while
+      auditing the b832237d4..df8467a2d sync (2026-07-29) — confirmed via
+      ORIG_HEAD comparison to be unrelated to that sync. These dedicated
+      per-endpoint tests each assert a specific endpoint (get-regime-history,
+      get-regional-snapshot, get-bypass-options, get-country-cost-shock,
+      get-sector-dependency, get-resilience-score, get-resilience-ranking,
+      multi-sector-cost-shock, global procurement, and others) should NOT be
+      in PREMIUM_RPC_PATHS / ENDPOINT_ENTITLEMENTS, but they still are.
+      Distinct from the 3 bugs already fixed in this sync's commit_ranges
+      entry: those 3 were leftover registry entries for endpoints ALREADY
+      excluded from ONE of the two registries (an inconsistency between them).
+      This cluster is endpoints present and CONSISTENT in both registries,
+      but that per-endpoint tests say shouldn't be gated at all — i.e. this
+      may be a larger, not-yet-completed slice of remove_pro.md's D8/D9
+      ungating mandate (regional/resilience/supply-chain reads). NOT fixed as
+      part of this sync — out of scope for "sync N commits," needs its own
+      dedicated pass to verify each endpoint's intended status before
+      touching the registries again. Do not assume premium-paths.ts's ~28
+      entries are uniformly "fine as-is" on a future sync without checking
+      this cluster first.
+  - tests: [tests/bootstrap-r2-reader.test.mjs, tests/dashboard-critical-css.test.mjs, tests/dockerfile-digest-notifications-imports.test.mjs, tests/oref-breaking.test.mjs, tests/panel-layout-dynamic-import-guard.test.mts, tests/responsive-zone-listener.test.mjs]
+    issue: >
+      Confirmed pre-existing on main via repeated ORIG_HEAD/worktree
+      comparisons across multiple syncs — none touch Pro/Premium/Discord/
+      branding surfaces (R2 credential mocking, critical-CSS graph, Dockerfile
+      COPY-closure audit, OREF siren wiring, dynamic-import guard, panel
+      responsive-zone listener cleanup). Not investigated further; unrelated
+      to fork-specific divergence.
+  - tests: [tests/renewable-energy-last-known-good.test.mts, tests/seed-env-hermeticity.test.mjs]
+    issue: >
+      Flaky under `--test-concurrency=16`, not a real regression — both pass
+      100% when run standalone (confirmed by direct repeat runs). Likely
+      resource/timing contention between concurrently-running test files
+      rather than a code defect.

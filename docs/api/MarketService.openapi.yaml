@@ -812,8 +812,12 @@ paths:
             tags:
                 - MarketService
             summary: AnalyzeStock
-            description: AnalyzeStock retrieves a stock analysis report with technicals, news, and AI synthesis. Free for all users.
+            description: AnalyzeStock retrieves a stock analysis report with technicals, news, and AI synthesis. Free for all users. PRO-gated. Requires entitlement tier >= 1.
             operationId: AnalyzeStock
+            security:
+                - WorldMonitorKey: []
+                - ApiKeyHeader: []
+                - BearerAuth: []
             parameters:
                 - name: symbol
                   in: query
@@ -877,7 +881,7 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/UnauthorizedError'
                 "403":
-                    description: API access requires an active subscription (the API key's subscription is inactive or expired).
+                    description: PRO entitlement access denied.
                     content:
                         application/json:
                             schema:
@@ -920,8 +924,12 @@ paths:
             tags:
                 - MarketService
             summary: GetStockAnalysisHistory
-            description: GetStockAnalysisHistory retrieves shared stock analysis history from the backend store. Free for all users.
+            description: GetStockAnalysisHistory retrieves shared stock analysis history from the backend store. Free for all users. PRO-gated. Requires entitlement tier >= 1.
             operationId: GetStockAnalysisHistory
+            security:
+                - WorldMonitorKey: []
+                - ApiKeyHeader: []
+                - BearerAuth: []
             parameters:
                 - name: symbols
                   in: query
@@ -994,7 +1002,7 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/UnauthorizedError'
                 "403":
-                    description: API access requires an active subscription (the API key's subscription is inactive or expired).
+                    description: PRO entitlement access denied.
                     content:
                         application/json:
                             schema:
@@ -1037,8 +1045,12 @@ paths:
             tags:
                 - MarketService
             summary: BacktestStock
-            description: BacktestStock replays stock-analysis signals over recent price history. Free for all users.
+            description: BacktestStock replays stock-analysis signals over recent price history. Free for all users. PRO-gated. Requires entitlement tier >= 1.
             operationId: BacktestStock
+            security:
+                - WorldMonitorKey: []
+                - ApiKeyHeader: []
+                - BearerAuth: []
             parameters:
                 - name: symbol
                   in: query
@@ -1098,7 +1110,7 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/UnauthorizedError'
                 "403":
-                    description: API access requires an active subscription (the API key's subscription is inactive or expired).
+                    description: PRO entitlement access denied.
                     content:
                         application/json:
                             schema:
@@ -1141,8 +1153,12 @@ paths:
             tags:
                 - MarketService
             summary: ListStoredStockBacktests
-            description: ListStoredStockBacktests retrieves stored backtest snapshots from the backend store. Free for all users.
+            description: ListStoredStockBacktests retrieves stored backtest snapshots from the backend store. Free for all users. PRO-gated. Requires entitlement tier >= 1.
             operationId: ListStoredStockBacktests
+            security:
+                - WorldMonitorKey: []
+                - ApiKeyHeader: []
+                - BearerAuth: []
             parameters:
                 - name: symbols
                   in: query
@@ -1201,7 +1217,7 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/UnauthorizedError'
                 "403":
-                    description: API access requires an active subscription (the API key's subscription is inactive or expired).
+                    description: PRO entitlement access denied.
                     content:
                         application/json:
                             schema:
@@ -1707,7 +1723,7 @@ paths:
                                 "fromDate": "2026-01-15"
                                 "toDate": "2026-01-15"
                                 "total": 1
-                                "unavailable": true
+                                "unavailable": false
                             schema:
                                 $ref: '#/components/schemas/ListEarningsCalendarResponse'
                 "400":
@@ -1792,7 +1808,7 @@ paths:
                                       "dealerLong": "1717200000000"
                                       "dealerShort": "1717200000000"
                                 "reportDate": "2026-01-15"
-                                "unavailable": true
+                                "unavailable": false
                             schema:
                                 $ref: '#/components/schemas/GetCotPositioningResponse'
                 "400":
@@ -1967,7 +1983,7 @@ paths:
                                       "pctAbove200d": 1.5
                                       "pctAbove20d": 1.5
                                       "pctAbove50d": 1.5
-                                "unavailable": true
+                                "unavailable": false
                             schema:
                                 $ref: '#/components/schemas/GetMarketBreadthHistoryResponse'
                 "400":
@@ -2180,7 +2196,7 @@ paths:
                                       "dayNotional": "example"
                                 "fetchedAt": "2026-01-15T12:00:00Z"
                                 "ts": "1717200000000"
-                                "unavailable": true
+                                "unavailable": false
                             schema:
                                 $ref: '#/components/schemas/GetHyperliquidFlowResponse'
                 "400":
@@ -2248,6 +2264,10 @@ components:
             in: header
             name: X-Api-Key
             description: Alias header for the WorldMonitor API key (X-WorldMonitor-Key).
+        BearerAuth:
+            type: http
+            scheme: bearer
+            description: 'Bearer token: a Clerk-issued JWT for browser session flows, passed as Authorization: Bearer <token>.'
     schemas:
         JmespathProjectionError:
             description: Returned when a REST jmespath projection is invalid or exceeds the expression/output byte limits.

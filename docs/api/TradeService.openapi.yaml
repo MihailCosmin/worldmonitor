@@ -59,7 +59,7 @@ paths:
                                       "id": "example-id"
                                       "measureType": "all"
                                       "notifiedAt": "2026-01-15T12:00:00Z"
-                                "upstreamUnavailable": true
+                                "upstreamUnavailable": false
                             schema:
                                 $ref: '#/components/schemas/GetTradeRestrictionsResponse'
                 "400":
@@ -120,8 +120,12 @@ paths:
             tags:
                 - TradeService
             summary: GetTariffTrends
-            description: Get tariff rate timeseries for a country pair.
+            description: Get tariff rate timeseries for a country pair. PRO-gated. Requires entitlement tier >= 1.
             operationId: GetTariffTrends
+            security:
+                - WorldMonitorKey: []
+                - ApiKeyHeader: []
+                - BearerAuth: []
             parameters:
                 - name: reporting_country
                   in: query
@@ -179,7 +183,7 @@ paths:
                                     "tariffRate": 75.25
                                     "updatedAt": "2026-01-15"
                                 "fetchedAt": "2026-01-15T12:00:00Z"
-                                "upstreamUnavailable": true
+                                "upstreamUnavailable": false
                             schema:
                                 $ref: '#/components/schemas/GetTariffTrendsResponse'
                 "400":
@@ -197,7 +201,7 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/UnauthorizedError'
                 "403":
-                    description: API access requires an active subscription (the API key's subscription is inactive or expired).
+                    description: PRO entitlement access denied.
                     content:
                         application/json:
                             schema:
@@ -286,7 +290,7 @@ paths:
                                       "partnerCountry": "156"
                                       "productSector": "diesel"
                                       "reportingCountry": "840"
-                                "upstreamUnavailable": true
+                                "upstreamUnavailable": false
                             schema:
                                 $ref: '#/components/schemas/GetTradeFlowsResponse'
                 "400":
@@ -402,7 +406,7 @@ paths:
                                       "notifyingCountry": "US"
                                       "objective": "example"
                                 "fetchedAt": "2026-01-15T12:00:00Z"
-                                "upstreamUnavailable": true
+                                "upstreamUnavailable": false
                             schema:
                                 $ref: '#/components/schemas/GetTradeBarriersResponse'
                 "400":
@@ -487,7 +491,7 @@ paths:
                                       "fiscalYear": 1
                                       "fytdAmountBillions": 1.5
                                       "monthlyAmountBillions": 1.5
-                                "upstreamUnavailable": true
+                                "upstreamUnavailable": false
                             schema:
                                 $ref: '#/components/schemas/GetCustomsRevenueResponse'
                 "400":
@@ -548,8 +552,12 @@ paths:
             tags:
                 - TradeService
             summary: ListComtradeFlows
-            description: List UN Comtrade strategic commodity flows with anomaly detection.
+            description: List UN Comtrade strategic commodity flows with anomaly detection. PRO-gated. Requires entitlement tier >= 1.
             operationId: ListComtradeFlows
+            security:
+                - WorldMonitorKey: []
+                - ApiKeyHeader: []
+                - BearerAuth: []
             parameters:
                 - name: reporter_code
                   in: query
@@ -594,7 +602,7 @@ paths:
                                       "isAnomaly": true
                                       "netWeightKg": 1.5
                                       "partnerCode": "example"
-                                "upstreamUnavailable": true
+                                "upstreamUnavailable": false
                             schema:
                                 $ref: '#/components/schemas/ListComtradeFlowsResponse'
                 "400":
@@ -612,7 +620,7 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/UnauthorizedError'
                 "403":
-                    description: API access requires an active subscription (the API key's subscription is inactive or expired).
+                    description: PRO entitlement access denied.
                     content:
                         application/json:
                             schema:
@@ -662,6 +670,10 @@ components:
             in: header
             name: X-Api-Key
             description: Alias header for the WorldMonitor API key (X-WorldMonitor-Key).
+        BearerAuth:
+            type: http
+            scheme: bearer
+            description: 'Bearer token: a Clerk-issued JWT for browser session flows, passed as Authorization: Bearer <token>.'
     schemas:
         JmespathProjectionError:
             description: Returned when a REST jmespath projection is invalid or exceeds the expression/output byte limits.

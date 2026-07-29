@@ -13,8 +13,12 @@ paths:
             tags:
                 - ResilienceService
             summary: GetResilienceScore
-            description: GetResilienceScore returns the Country Resilience Index score, domain breakdown, and dimension-level confidence for a single country. Free for all users.
+            description: GetResilienceScore returns the Country Resilience Index score, domain breakdown, and dimension-level confidence for a single country. Free for all users. PRO-gated. Requires an active Pro subscription.
             operationId: GetResilienceScore
+            security:
+                - WorldMonitorKey: []
+                - ApiKeyHeader: []
+                - BearerAuth: []
             parameters:
                 - name: countryCode
                   in: query
@@ -70,7 +74,7 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/UnauthorizedError'
                 "403":
-                    description: API access requires an active subscription (the API key's subscription is inactive or expired).
+                    description: Pro subscription required.
                     content:
                         application/json:
                             schema:
@@ -113,8 +117,12 @@ paths:
             tags:
                 - ResilienceService
             summary: GetResilienceRanking
-            description: GetResilienceRanking returns the full Country Resilience Index ranking across the public rankable universe. Free for all users.
+            description: GetResilienceRanking returns the full Country Resilience Index ranking across the public rankable universe. Free for all users. PRO-gated. Requires an active Pro subscription.
             operationId: GetResilienceRanking
+            security:
+                - WorldMonitorKey: []
+                - ApiKeyHeader: []
+                - BearerAuth: []
             parameters:
                 - name: jmespath
                   in: query
@@ -162,7 +170,7 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/UnauthorizedError'
                 "403":
-                    description: API access requires an active subscription (the API key's subscription is inactive or expired).
+                    description: Pro subscription required.
                     content:
                         application/json:
                             schema:
@@ -291,6 +299,10 @@ components:
             in: header
             name: X-Api-Key
             description: Alias header for the WorldMonitor API key (X-WorldMonitor-Key).
+        BearerAuth:
+            type: http
+            scheme: bearer
+            description: 'Bearer token: a Clerk-issued JWT for browser session flows, passed as Authorization: Bearer <token>.'
     schemas:
         JmespathProjectionError:
             description: Returned when a REST jmespath projection is invalid or exceeds the expression/output byte limits.

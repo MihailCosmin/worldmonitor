@@ -39,7 +39,7 @@ paths:
                                             "value": 1.5
                                       "indexId": "example-id"
                                       "name": "WorldMonitor Analyst"
-                                "upstreamUnavailable": true
+                                "upstreamUnavailable": false
                             schema:
                                 $ref: '#/components/schemas/GetShippingRatesResponse'
                 "400":
@@ -128,7 +128,7 @@ paths:
                                       "congestionLevel": "example"
                                       "description": "Example WorldMonitor observation."
                                 "fetchedAt": "2026-01-15T12:00:00Z"
-                                "upstreamUnavailable": true
+                                "upstreamUnavailable": false
                             schema:
                                 $ref: '#/components/schemas/GetChokepointStatusResponse'
                 "400":
@@ -312,7 +312,7 @@ paths:
                                             "countryCode": "US"
                                             "productionTonnes": 1.5
                                             "sharePct": 1.5
-                                "upstreamUnavailable": true
+                                "upstreamUnavailable": false
                             schema:
                                 $ref: '#/components/schemas/GetCriticalMineralsResponse'
                 "400":
@@ -400,7 +400,7 @@ paths:
                                 "fetchedAt": 1717200000000
                                 "stressLevel": "example"
                                 "stressScore": 42.5
-                                "upstreamUnavailable": true
+                                "upstreamUnavailable": false
                             schema:
                                 $ref: '#/components/schemas/GetShippingStressResponse'
                 "400":
@@ -461,8 +461,12 @@ paths:
             tags:
                 - SupplyChainService
             summary: GetCountryChokepointIndex
-            description: GetCountryChokepointIndex returns per-chokepoint exposure scores for a country.
+            description: GetCountryChokepointIndex returns per-chokepoint exposure scores for a country. PRO-gated. Requires entitlement tier >= 1.
             operationId: GetCountryChokepointIndex
+            security:
+                - WorldMonitorKey: []
+                - ApiKeyHeader: []
+                - BearerAuth: []
             parameters:
                 - name: iso2
                   in: query
@@ -520,7 +524,7 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/UnauthorizedError'
                 "403":
-                    description: API access requires an active subscription (the API key's subscription is inactive or expired).
+                    description: PRO entitlement access denied.
                     content:
                         application/json:
                             schema:
@@ -563,8 +567,12 @@ paths:
             tags:
                 - SupplyChainService
             summary: GetBypassOptions
-            description: GetBypassOptions returns ranked bypass corridors for a chokepoint.
+            description: GetBypassOptions returns ranked bypass corridors for a chokepoint. PRO-gated. Requires entitlement tier >= 1.
             operationId: GetBypassOptions
+            security:
+                - WorldMonitorKey: []
+                - ApiKeyHeader: []
+                - BearerAuth: []
             parameters:
                 - name: chokepointId
                   in: query
@@ -629,7 +637,7 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/UnauthorizedError'
                 "403":
-                    description: API access requires an active subscription (the API key's subscription is inactive or expired).
+                    description: PRO entitlement access denied.
                     content:
                         application/json:
                             schema:
@@ -672,8 +680,12 @@ paths:
             tags:
                 - SupplyChainService
             summary: GetCountryCostShock
-            description: GetCountryCostShock returns cost shock and war risk data for a country+chokepoint. Free for all users.
+            description: GetCountryCostShock returns cost shock and war risk data for a country+chokepoint. Free for all users. PRO-gated. Requires entitlement tier >= 1.
             operationId: GetCountryCostShock
+            security:
+                - WorldMonitorKey: []
+                - ApiKeyHeader: []
+                - BearerAuth: []
             parameters:
                 - name: iso2
                   in: query
@@ -733,7 +745,7 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/UnauthorizedError'
                 "403":
-                    description: API access requires an active subscription (the API key's subscription is inactive or expired).
+                    description: PRO entitlement access denied.
                     content:
                         application/json:
                             schema:
@@ -776,8 +788,12 @@ paths:
             tags:
                 - SupplyChainService
             summary: GetCountryProducts
-            description: GetCountryProducts returns the seeded bilateral-HS4 import basket for a country.
+            description: GetCountryProducts returns the seeded bilateral-HS4 import basket for a country. PRO-gated. Requires entitlement tier >= 1.
             operationId: GetCountryProducts
+            security:
+                - WorldMonitorKey: []
+                - ApiKeyHeader: []
+                - BearerAuth: []
             parameters:
                 - name: iso2
                   in: query
@@ -830,7 +846,7 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/UnauthorizedError'
                 "403":
-                    description: API access requires an active subscription (the API key's subscription is inactive or expired).
+                    description: PRO entitlement access denied.
                     content:
                         application/json:
                             schema:
@@ -875,8 +891,12 @@ paths:
             summary: GetMultiSectorCostShock
             description: |-
                 GetMultiSectorCostShock returns per-sector cost-shock estimates for a
-                 country+chokepoint+closure-window.
+                 country+chokepoint+closure-window. PRO-gated. Requires entitlement tier >= 1.
             operationId: GetMultiSectorCostShock
+            security:
+                - WorldMonitorKey: []
+                - ApiKeyHeader: []
+                - BearerAuth: []
             parameters:
                 - name: iso2
                   in: query
@@ -942,7 +962,7 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/UnauthorizedError'
                 "403":
-                    description: API access requires an active subscription (the API key's subscription is inactive or expired).
+                    description: PRO entitlement access denied.
                     content:
                         application/json:
                             schema:
@@ -985,8 +1005,12 @@ paths:
             tags:
                 - SupplyChainService
             summary: GetSectorDependency
-            description: GetSectorDependency returns dependency flags and risk profile for a country+HS2 sector.
+            description: GetSectorDependency returns dependency flags and risk profile for a country+HS2 sector. PRO-gated. Requires entitlement tier >= 1.
             operationId: GetSectorDependency
+            security:
+                - WorldMonitorKey: []
+                - ApiKeyHeader: []
+                - BearerAuth: []
             parameters:
                 - name: iso2
                   in: query
@@ -1040,7 +1064,7 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/UnauthorizedError'
                 "403":
-                    description: API access requires an active subscription (the API key's subscription is inactive or expired).
+                    description: PRO entitlement access denied.
                     content:
                         application/json:
                             schema:
@@ -1088,8 +1112,12 @@ paths:
                  bypass options with geometry, war risk, and static transit/freight estimates for
                  a country pair + HS2 + cargo type. Free for all users (Route Explorer). Reuses
                  the route-intelligence vendor endpoint's compute function directly rather than
-                 proxying its gated HTTP route, and adds fields needed by the Route Explorer UI.
+                 proxying its gated HTTP route, and adds fields needed by the Route Explorer UI. PRO-gated. Requires entitlement tier >= 1.
             operationId: GetRouteExplorerLane
+            security:
+                - WorldMonitorKey: []
+                - ApiKeyHeader: []
+                - BearerAuth: []
             parameters:
                 - name: fromIso2
                   in: query
@@ -1169,7 +1197,7 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/UnauthorizedError'
                 "403":
-                    description: API access requires an active subscription (the API key's subscription is inactive or expired).
+                    description: PRO entitlement access denied.
                     content:
                         application/json:
                             schema:
@@ -1212,8 +1240,12 @@ paths:
             tags:
                 - SupplyChainService
             summary: GetRouteImpact
-            description: 'GetRouteImpact returns route-level trade exposure: lane value, primary exporter concentration, strategic products, resilience score, dependency flags, and Comtrade provenance. Free for all users.'
+            description: 'GetRouteImpact returns route-level trade exposure: lane value, primary exporter concentration, strategic products, resilience score, dependency flags, and Comtrade provenance. Free for all users. PRO-gated. Requires entitlement tier >= 1.'
             operationId: GetRouteImpact
+            security:
+                - WorldMonitorKey: []
+                - ApiKeyHeader: []
+                - BearerAuth: []
             parameters:
                 - name: fromIso2
                   in: query
@@ -1275,7 +1307,7 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/UnauthorizedError'
                 "403":
-                    description: API access requires an active subscription (the API key's subscription is inactive or expired).
+                    description: PRO entitlement access denied.
                     content:
                         application/json:
                             schema:
@@ -1364,7 +1396,7 @@ paths:
                                               "date": "2026-01-15"
                                               "text": "example"
                                               "url": "https://example.com/worldmonitor"
-                                "upstreamUnavailable": true
+                                "upstreamUnavailable": false
                             schema:
                                 $ref: '#/components/schemas/ListPipelinesResponse'
                 "400":
@@ -1474,7 +1506,7 @@ paths:
                                       "fieldChanged": "example"
                                       "newValue": "example"
                                       "previousValue": "example"
-                                "unavailable": true
+                                "unavailable": false
                             schema:
                                 $ref: '#/components/schemas/GetPipelineDetailResponse'
                 "400":
@@ -1580,7 +1612,7 @@ paths:
                                           "fillDisclosed": true
                                           "fillSource": "example"
                                 "fetchedAt": "2026-01-15T12:00:00Z"
-                                "upstreamUnavailable": true
+                                "upstreamUnavailable": false
                             schema:
                                 $ref: '#/components/schemas/ListStorageFacilitiesResponse'
                 "400":
@@ -1685,7 +1717,7 @@ paths:
                                       "fieldChanged": "example"
                                       "newValue": "example"
                                       "previousValue": "example"
-                                "unavailable": true
+                                "unavailable": false
                             schema:
                                 $ref: '#/components/schemas/GetStorageFacilityDetailResponse'
                 "400":
@@ -1808,7 +1840,7 @@ paths:
                                           "lastEvidenceUpdate": "2026-01-15"
                                       "firstSeen": "example"
                                       "id": "example-id"
-                                "upstreamUnavailable": true
+                                "upstreamUnavailable": false
                             schema:
                                 $ref: '#/components/schemas/ListFuelShortagesResponse'
                 "400":
@@ -1913,7 +1945,7 @@ paths:
                                         "lastEvidenceUpdate": "2026-01-15"
                                     "firstSeen": "example"
                                     "id": "example-id"
-                                "unavailable": true
+                                "unavailable": false
                             schema:
                                 $ref: '#/components/schemas/GetFuelShortageDetailResponse'
                 "400":
@@ -2027,7 +2059,7 @@ paths:
                                       "causeChain":
                                           - "example"
                                 "fetchedAt": "2026-01-15T12:00:00Z"
-                                "upstreamUnavailable": true
+                                "upstreamUnavailable": false
                             schema:
                                 $ref: '#/components/schemas/ListEnergyDisruptionsResponse'
                 "400":
@@ -2178,6 +2210,10 @@ components:
             in: header
             name: X-Api-Key
             description: Alias header for the WorldMonitor API key (X-WorldMonitor-Key).
+        BearerAuth:
+            type: http
+            scheme: bearer
+            description: 'Bearer token: a Clerk-issued JWT for browser session flows, passed as Authorization: Bearer <token>.'
     schemas:
         ChinaCorridorControlTowerResponse:
             type: "object"
@@ -3682,6 +3718,7 @@ components:
                     items:
                         type: string
                 directionalDwt:
+                    deprecated: true
                     type: array
                     items:
                         $ref: '#/components/schemas/DirectionalDwt'
