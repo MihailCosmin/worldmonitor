@@ -10,6 +10,7 @@ import { escapeHtml } from '@/utils/sanitize';
 import { trackLanguageChange } from '@/services/analytics';
 import { exportSettings, importSettings, type ImportResult } from '@/utils/settings-persistence';
 import { getSyncState, getLastSyncAt, syncNow, isCloudSyncEnabled } from '@/utils/cloud-prefs-sync';
+import { isSelfHostedRuntime } from '@/services/runtime';
 
 const SYNC_STATE_LABELS: Record<string, string> = {
   synced: 'Synced', pending: 'Pending', syncing: 'Syncing\u2026',
@@ -226,7 +227,14 @@ export function renderPreferences(host: PreferencesHost): PreferencesResult {
     html += toggleRowHtml('us-cloud', t('components.insights.aiFlowCloudLabel'), t('components.insights.aiFlowCloudDesc'), settings.cloudLlm);
     html += toggleRowHtml('us-browser', t('components.insights.aiFlowBrowserLabel'), t('components.insights.aiFlowBrowserDesc'), settings.browserModel);
     html += `<div class="ai-flow-toggle-warn" style="display:${settings.browserModel ? 'block' : 'none'}">${t('components.insights.aiFlowBrowserWarn')}</div>`;
-    html += `
+    html += isSelfHostedRuntime()
+      ? `
+      <div class="ai-flow-cta">
+        <div class="ai-flow-cta-title">${t('components.insights.aiFlowOllamaCta')}</div>
+        <div class="ai-flow-cta-desc">${t('components.insights.aiFlowOllamaCtaDescSelfHosted')}</div>
+      </div>
+    `
+      : `
       <div class="ai-flow-cta">
         <div class="ai-flow-cta-title">${t('components.insights.aiFlowOllamaCta')}</div>
         <div class="ai-flow-cta-desc">${t('components.insights.aiFlowOllamaCtaDesc')}</div>

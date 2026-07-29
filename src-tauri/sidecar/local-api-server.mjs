@@ -303,6 +303,14 @@ const ALLOWED_ENV_KEYS = new Set([
   'AVIATIONSTACK_API', 'ICAO_API_KEY', 'UCDP_ACCESS_TOKEN', DESKTOP_AUTH_SECRET_ENV,
 ]);
 
+// Mirrors src/services/settings-constants.ts's PLAINTEXT_KEYS exactly — these
+// are config values (URLs, a model tag), not secrets, so /api/local-env-status
+// can safely return their actual value instead of presence-only. Every other
+// ALLOWED_ENV_KEYS entry is a real credential and must never appear here.
+const PLAINTEXT_ENV_KEYS = new Set([
+  'OLLAMA_API_URL', 'OLLAMA_MODEL', 'WS_RELAY_URL', 'VITE_OPENSKY_RELAY_URL',
+]);
+
 // ── Docker-only secret persistence (Redis) ──────────────────────────────────
 // In-memory `process.env` mutation (below) takes effect immediately but is
 // lost on container restart — there's no "recreate this .env value" step
@@ -1807,16 +1815,22 @@ async function dispatch(requestUrl, req, routes, context) {
   // Cheap, read-only probe: lets the self-hosted web frontend detect that
   // this backend supports local env editing at all (the hosted SaaS has no
   // such route, so a fetch to this path there simply 404s), and shows which
-  // ALLOWED_ENV_KEYS are already configured — presence only, never the
-  // plaintext value, matching the desktop vault's "status not value"
-  // contract in src/services/runtime-config.ts.
+  // ALLOWED_ENV_KEYS are already configured. Real credentials stay presence
+  // only, matching the desktop vault's "status not value" contract in
+  // src/services/runtime-config.ts — but PLAINTEXT_ENV_KEYS aren't secrets
+  // (a server URL, a model tag), so their actual value is included too. Without
+  // this, the UI can never show which Ollama model is actually configured —
+  // it can only say "something is set" and would otherwise have to guess.
   if (requestUrl.pathname === '/api/local-env-status') {
     if (req.method !== 'GET') return json({ error: 'GET required' }, 405);
     const keys = {};
+    const values = {};
     for (const key of ALLOWED_ENV_KEYS) {
-      keys[key] = Boolean(process.env[key]);
+      const value = process.env[key];
+      keys[key] = Boolean(value);
+      if (value && PLAINTEXT_ENV_KEYS.has(key)) values[key] = value;
     }
-    return json({ ok: true, mode: context.mode, keys });
+    return json({ ok: true, mode: context.mode, keys, values });
   }
 
   if (requestUrl.pathname === '/api/local-validate-secret') {

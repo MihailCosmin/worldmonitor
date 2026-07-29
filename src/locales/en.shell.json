@@ -32,6 +32,8 @@
     "tabPanels": "Panels",
     "tabSources": "Sources",
     "tabNotifications": "Notifications",
+    "tabDataSources": "Data Sources",
+    "tabLog": "Log",
     "languageLabel": "Language",
     "sourceRegionAll": "All",
     "sourceRegionWorldwide": "Worldwide",
@@ -260,7 +262,9 @@
   "auth": {
     "signIn": "Sign In",
     "createAccount": "Create account",
-    "settings": "Settings"
+    "settings": "Settings",
+    "localUser": "Local User",
+    "localUserSignOutHint": "Signed in locally. Click to sign out."
   },
   "mcp": {
     "connectPanel": "Connect MCP",
@@ -598,7 +602,7 @@
       "title": "Hormuz Trade Tracker"
     },
     "insights": {
-      "infoTooltip": "<strong>AI-Powered Analysis</strong><br>• <strong>World Brief</strong>: AI summary (Groq/OpenRouter)<br>• <strong>Sentiment</strong>: News tone analysis<br>• <strong>Velocity</strong>: Fast-moving stories<br>• <strong>Focal Points</strong>: Correlates news entities with map signals (military, protests, outages)<br><em>Desktop only • Powered by Llama 3.3 + Focal Point Detection</em>"
+      "infoTooltip": "<strong>AI-Powered Analysis</strong><br>• <strong>World Brief</strong>: AI summary via your configured provider (Ollama, Groq, or OpenRouter)<br>• <strong>Sentiment</strong>: News tone analysis<br>• <strong>Velocity</strong>: Fast-moving stories<br>• <strong>Focal Points</strong>: Correlates news entities with map signals (military, protests, outages)<br><em>Settings → Log shows which provider served the last summary</em>"
     },
     "intelligenceFindings": {
       "title": "Intelligence Findings"
@@ -751,10 +755,12 @@
   },
   "modals": {
     "runtimeConfig": {
-      "title": "Desktop Configuration",
+      "title": "Data Source Configuration",
+      "signInToEdit": "Sign in to view and edit your data-source API keys",
       "placeholder": {
         "setSecret": "Set secret",
-        "staged": "Staged (save with OK)"
+        "staged": "Staged (save with OK)",
+        "configured": "Saved — enter a new value to change it"
       },
       "reserveEarlyAccess": "Reserve Your Early Access",
       "skipSetup": "Skip the setup — a single World Monitor license unlocks everything. Join the waitlist for early access.",
@@ -771,7 +777,9 @@
         "available": "features available",
         "desktop": "Desktop mode",
         "secrets": "local secrets configured",
-        "web": "Web mode (read-only, server-managed credentials)"
+        "web": "Web mode (read-only, server-managed credentials)",
+        "selfHostedSignedIn": "Self-hosted mode",
+        "selfHostedSignedOut": "Self-hosted mode — sign in to edit"
       }
     },
     "settingsWindow": {

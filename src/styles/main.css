@@ -21313,6 +21313,303 @@ body.has-breaking-alert .panels-grid {
 }
 
 /* ============================================
+   Data Sources settings tab (self-hosted web) —
+   mirrors the .runtime-* desktop panel styling above.
+   ============================================ */
+
+.data-sources-summary {
+  font-size: 11px;
+  color: var(--accent);
+  margin-bottom: 10px;
+}
+
+.data-sources-signin-cta {
+  margin-bottom: 10px;
+}
+
+.data-sources-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.data-source-feature {
+  border: 1px solid var(--overlay-medium);
+  border-radius: 8px;
+  padding: 10px;
+  background: var(--darken-light);
+}
+
+.data-source-feature-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.data-source-feature-header label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.data-source-fallback {
+  margin: 6px 0;
+  font-size: 11px;
+  color: var(--semantic-elevated);
+}
+
+.data-source-pill {
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 999px;
+  border: 1px solid var(--overlay-heavy);
+}
+
+.data-source-pill.ok,
+.data-source-secret-status.ok {
+  color: var(--status-live);
+}
+
+.data-source-pill.warn,
+.data-source-secret-status.warn {
+  color: var(--semantic-elevated);
+}
+
+.data-source-secrets {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.data-source-secret-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-areas:
+    'key status'
+    'meta meta'
+    'input input'
+    'hint hint';
+  gap: 4px 8px;
+  align-items: center;
+}
+
+.data-source-secret-row code {
+  font-size: 10px;
+}
+
+.data-source-secret-status {
+  grid-area: status;
+  font-size: 10px;
+}
+
+.data-source-secret-meta {
+  grid-area: meta;
+  font-size: 10px;
+  color: var(--text-secondary);
+}
+
+.data-source-input-wrapper {
+  grid-area: input;
+  position: relative;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.data-source-input-wrapper input,
+.data-source-input-wrapper select {
+  flex: 1;
+  min-width: 0;
+  background: var(--overlay-medium);
+  border: 1px solid var(--overlay-medium);
+  border-radius: 6px;
+  color: var(--accent);
+  padding: 6px 8px;
+  font-size: 11px;
+}
+
+.data-source-input-wrapper select {
+  cursor: pointer;
+}
+
+.data-source-input-wrapper.has-suffix input,
+.data-source-input-wrapper.has-suffix select {
+  padding-right: 8px;
+}
+
+.data-source-secret-link {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--accent);
+  background: rgba(96, 165, 250, 0.1);
+  border: 1px solid rgba(96, 165, 250, 0.25);
+  border-radius: 3px;
+  padding: 6px 8px;
+  text-decoration: none;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.data-source-secret-link:hover {
+  background: rgba(96, 165, 250, 0.2);
+  border-color: var(--accent);
+}
+
+.data-source-save-btn,
+.data-source-test-btn {
+  font: inherit;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  border-radius: 6px;
+  padding: 6px 10px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.data-source-save-btn {
+  border: 1px solid var(--status-live);
+  background: var(--status-live);
+  color: #0a0e14;
+}
+
+.data-source-save-btn:hover {
+  background: #6ee89a;
+  border-color: #6ee89a;
+}
+
+.data-source-test-btn {
+  border: 1px solid var(--overlay-heavy);
+  background: transparent;
+  color: var(--text-secondary);
+}
+
+.data-source-test-btn:hover {
+  color: var(--text);
+  border-color: var(--accent);
+}
+
+.data-source-save-btn:disabled,
+.data-source-test-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.data-source-secret-hint {
+  grid-area: hint;
+  font-size: 10px;
+  color: var(--semantic-elevated);
+}
+
+.data-source-secret-hint.data-source-hint-ok {
+  color: var(--status-live);
+}
+
+/* ============================================
+   Log settings tab (panel/layer/source health)
+   ============================================ */
+
+.log-tab-content {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.log-tab-section-title {
+  margin: 0 0 8px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.log-tab-section-count {
+  font-size: 10px;
+  font-weight: 400;
+  color: var(--text-secondary);
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.log-tab-category {
+  margin-bottom: 10px;
+}
+
+.log-tab-category-title {
+  margin: 0 0 4px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-secondary);
+}
+
+.log-tab-row {
+  display: grid;
+  grid-template-columns: 90px 1fr 2fr;
+  gap: 8px;
+  align-items: center;
+  padding: 4px 0;
+  font-size: 11px;
+  border-bottom: 1px solid var(--overlay-medium);
+}
+
+.log-tab-row:last-child {
+  border-bottom: none;
+}
+
+.log-tab-pill {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 2px 6px;
+  border-radius: 999px;
+  border: 1px solid var(--overlay-heavy);
+  text-align: center;
+  white-space: nowrap;
+}
+
+.log-tab-pill-ok {
+  color: var(--status-live);
+}
+
+.log-tab-pill-degraded {
+  color: var(--semantic-elevated);
+}
+
+.log-tab-pill-error {
+  color: var(--semantic-critical);
+}
+
+.log-tab-pill-static,
+.log-tab-pill-unknown {
+  color: var(--text-secondary);
+}
+
+.log-tab-row-label {
+  font-weight: 600;
+}
+
+.log-tab-row-detail {
+  font-size: 10px;
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ============================================
    Country Brief Page (full-page overlay)
    ============================================ */
 

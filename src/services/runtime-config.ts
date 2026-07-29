@@ -68,9 +68,11 @@ export interface RuntimeFeatureDefinition {
 }
 
 export interface RuntimeSecretState {
-  /** Values are retained only for browser environment variables. Desktop
-   * vault entries and self-hosted 'local-server' entries intentionally
-   * expose presence/status without returning plaintext. */
+  /** Real credentials never carry a value here for 'vault' or 'local-server'
+   * sources — those intentionally expose presence/status only. The one
+   * exception: self-hosted 'local-server' entries for PLAINTEXT_KEYS (a URL,
+   * a model tag — not secrets) DO carry their actual value, straight from
+   * /api/local-env-status; see loadSelfHostedSecretStatus(). */
   value?: string;
   source: 'env' | 'vault' | 'local-server';
 }
@@ -628,8 +630,11 @@ export async function loadDesktopSecrets(): Promise<void> {
  * Self-hosted-web counterpart to loadDesktopSecrets() — probes
  * local-api-server.mjs's /api/local-env-status. On the hosted SaaS this
  * route doesn't exist (404), which this treats the same as "no backend
- * support" rather than an error worth warning about. Presence-only, same
- * as the desktop vault — no plaintext value ever comes back over the wire.
+ * support" rather than an error worth warning about. Presence-only for real
+ * credentials, same as the desktop vault — but the server also returns
+ * actual values for PLAINTEXT_KEYS (a URL, a model tag — not secrets), so
+ * e.g. the configured OLLAMA_MODEL can actually be shown/pre-selected
+ * instead of the UI only ever knowing "something is set."
  */
 export async function loadSelfHostedSecretStatus(): Promise<void> {
   if (!isSelfHostedRuntime()) return;
@@ -637,14 +642,18 @@ export async function loadSelfHostedSecretStatus(): Promise<void> {
   try {
     const resp = await fetch('/api/local-env-status');
     if (!resp.ok) return;
-    const payload = await resp.json() as { ok?: boolean; keys?: Record<string, boolean> };
+    const payload = await resp.json() as { ok?: boolean; keys?: Record<string, boolean>; values?: Record<string, string> };
     const keys = payload?.keys ?? {};
+    const values = payload?.values ?? {};
 
     for (const [key, state] of Object.entries(runtimeConfig.secrets)) {
       if (state.source === 'local-server') delete runtimeConfig.secrets[key as RuntimeSecretKey];
     }
     for (const [key, present] of Object.entries(keys)) {
-      if (present) runtimeConfig.secrets[key as RuntimeSecretKey] = { source: 'local-server' };
+      if (present) {
+        const value = values[key];
+        runtimeConfig.secrets[key as RuntimeSecretKey] = value ? { source: 'local-server', value } : { source: 'local-server' };
+      }
     }
 
     notifyConfigChanged();

@@ -96,6 +96,7 @@ verbose-mode.json
 skills-lock.json
 tmp/
 .context/
+.wm-dev-local-secrets.json
 
 # Local planning documents (not for public repo)
 docs/plans/

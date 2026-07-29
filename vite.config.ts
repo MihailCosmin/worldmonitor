@@ -3,6 +3,7 @@ import { VitePWA } from 'vite-plugin-pwa';
 import type { OutputBundle } from 'rollup';
 import { resolve, dirname, extname } from 'path';
 import { mkdir, readFile, writeFile } from 'fs/promises';
+import type { IncomingMessage, ServerResponse } from 'http';
 import { brotliCompress } from 'zlib';
 import { promisify } from 'util';
 import pkg from './package.json';
@@ -757,6 +758,190 @@ function rssProxyPlugin(): Plugin {
   };
 }
 
+// Mirrors src-tauri/sidecar/local-api-server.mjs's ALLOWED_ENV_KEYS. Kept as
+// a separate, duplicated list rather than a shared import: that file is
+// intentionally self-contained (bundled standalone into the Tauri sidecar
+// binary and the Docker image), so it can't cleanly import from a dev-only
+// Vite config. This dev-only copy just needs to stay roughly in sync.
+const LOCAL_ENV_DEV_ALLOWED_KEYS = new Set([
+  'GROQ_API_KEY', 'OPENROUTER_API_KEY', 'EXA_API_KEYS', 'BRAVE_API_KEYS', 'SERPAPI_API_KEYS', 'FRED_API_KEY', 'EIA_API_KEY',
+  'CLOUDFLARE_API_TOKEN', 'ACLED_ACCESS_TOKEN', 'URLHAUS_AUTH_KEY',
+  'OTX_API_KEY', 'ABUSEIPDB_API_KEY', 'WINGBITS_API_KEY', 'WS_RELAY_URL',
+  'VITE_OPENSKY_RELAY_URL', 'OPENSKY_CLIENT_ID', 'OPENSKY_CLIENT_SECRET',
+  'AISSTREAM_API_KEY', 'VITE_WS_RELAY_URL', 'FINNHUB_API_KEY', 'NASA_FIRMS_API_KEY',
+  'OLLAMA_API_URL', 'OLLAMA_MODEL', 'WORLDMONITOR_API_KEY', 'WTO_API_KEY',
+  'AVIATIONSTACK_API', 'ICAO_API_KEY', 'UCDP_ACCESS_TOKEN',
+]);
+
+// Mirrors local-api-server.mjs's PLAINTEXT_ENV_KEYS — config values (URLs, a
+// model tag), not secrets, so /api/local-env-status can return their actual
+// value instead of presence-only.
+const LOCAL_ENV_DEV_PLAINTEXT_KEYS = new Set([
+  'OLLAMA_API_URL', 'OLLAMA_MODEL', 'WS_RELAY_URL', 'VITE_OPENSKY_RELAY_URL',
+]);
+
+const LOCAL_ENV_DEV_FILE = resolve(__dirname, '.wm-dev-local-secrets.json');
+
+async function loadLocalEnvDevFile(): Promise<Record<string, string>> {
+  try {
+    const raw = await readFile(LOCAL_ENV_DEV_FILE, 'utf8');
+    const parsed = JSON.parse(raw);
+    return (parsed && typeof parsed === 'object') ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+async function saveLocalEnvDevFile(data: Record<string, string>): Promise<void> {
+  await writeFile(LOCAL_ENV_DEV_FILE, JSON.stringify(data, null, 2), 'utf8');
+}
+
+async function readJsonBody(req: IncomingMessage): Promise<any> {
+  const chunks: Buffer[] = [];
+  for await (const chunk of req) chunks.push(chunk as Buffer);
+  const raw = Buffer.concat(chunks).toString('utf8');
+  return raw ? JSON.parse(raw) : {};
+}
+
+function sendJson(res: ServerResponse, status: number, body: unknown): void {
+  res.statusCode = status;
+  res.setHeader('Content-Type', 'application/json');
+  res.end(JSON.stringify(body));
+}
+
+/**
+ * Fills the gap left by `npm run dev` having no local-api-server.mjs sidecar
+ * running: without this, fetch('/api/local-env-update') etc. hit no
+ * middleware at all and fall through to Vite's SPA fallback, which returns
+ * 200 + index.html — the write silently "succeeds" from the caller's
+ * perspective while nothing is actually persisted (#data-loss). This plugin
+ * gives the Data Sources settings tab a real backend in plain dev mode,
+ * persisted to a local, gitignored JSON file so it survives dev-server
+ * restarts (not just HMR) — the same practical guarantee Docker+Redis gives
+ * in a real self-hosted deployment.
+ */
+function localEnvDevPlugin(): Plugin {
+  return {
+    name: 'local-env-dev',
+    async configureServer(server) {
+      const persisted = await loadLocalEnvDevFile();
+      for (const [key, value] of Object.entries(persisted)) {
+        if (LOCAL_ENV_DEV_ALLOWED_KEYS.has(key)) process.env[key] = value;
+      }
+
+      server.middlewares.use(async (req, res, next) => {
+        const url = req.url ?? '';
+        if (!url.startsWith('/api/local-env-') && !url.startsWith('/api/local-validate-secret')) {
+          return next();
+        }
+
+        if (url.startsWith('/api/local-env-status')) {
+          const keys: Record<string, boolean> = {};
+          const values: Record<string, string> = {};
+          for (const key of LOCAL_ENV_DEV_ALLOWED_KEYS) {
+            const value = process.env[key];
+            keys[key] = Boolean(value);
+            if (value && LOCAL_ENV_DEV_PLAINTEXT_KEYS.has(key)) values[key] = value;
+          }
+          return sendJson(res, 200, { ok: true, mode: 'vite-dev', keys, values });
+        }
+
+        if (url.startsWith('/api/local-env-update-batch')) {
+          if (req.method !== 'POST') return sendJson(res, 405, { error: 'POST required' });
+          try {
+            const body = await readJsonBody(req);
+            const entries = Array.isArray(body?.entries) ? body.entries : [];
+            const results: Array<{ key: string; ok: boolean; error?: string }> = [];
+            const current = await loadLocalEnvDevFile();
+            for (const { key, value } of entries) {
+              if (typeof key !== 'string' || !LOCAL_ENV_DEV_ALLOWED_KEYS.has(key)) {
+                results.push({ key, ok: false, error: 'not in allowlist' });
+                continue;
+              }
+              if (value == null || value === '') {
+                delete process.env[key];
+                delete current[key];
+              } else {
+                process.env[key] = String(value);
+                current[key] = String(value);
+              }
+              results.push({ key, ok: true });
+            }
+            await saveLocalEnvDevFile(current);
+            return sendJson(res, 200, { ok: true, results });
+          } catch {
+            return sendJson(res, 400, { error: 'invalid JSON' });
+          }
+        }
+
+        if (url.startsWith('/api/local-env-update')) {
+          if (req.method !== 'POST') return sendJson(res, 405, { error: 'POST required' });
+          try {
+            const { key, value } = await readJsonBody(req);
+            if (typeof key !== 'string' || !LOCAL_ENV_DEV_ALLOWED_KEYS.has(key)) {
+              return sendJson(res, 403, { error: 'key not in allowlist' });
+            }
+            const current = await loadLocalEnvDevFile();
+            if (value == null || value === '') {
+              delete process.env[key];
+              delete current[key];
+            } else {
+              process.env[key] = String(value);
+              current[key] = String(value);
+            }
+            await saveLocalEnvDevFile(current);
+            return sendJson(res, 200, { ok: true, key });
+          } catch {
+            return sendJson(res, 400, { error: 'expected { key, value }' });
+          }
+        }
+
+        if (url.startsWith('/api/local-validate-secret')) {
+          if (req.method !== 'POST') return sendJson(res, 405, { error: 'POST required' });
+          try {
+            const { key, value } = await readJsonBody(req);
+            if (typeof key !== 'string' || !LOCAL_ENV_DEV_ALLOWED_KEYS.has(key)) {
+              return sendJson(res, 403, { error: 'key not in allowlist' });
+            }
+            const trimmed = String(value ?? '').trim();
+            if (!trimmed) return sendJson(res, 422, { valid: false, message: 'Value is required' });
+
+            if (key === 'OLLAMA_API_URL') {
+              try {
+                const parsed = new URL(trimmed);
+                if (!['http:', 'https:'].includes(parsed.protocol)) {
+                  return sendJson(res, 422, { valid: false, message: 'Must be an http(s) URL' });
+                }
+                const probe = async (path: string) => fetch(new URL(path, trimmed).toString(), {
+                  method: 'GET',
+                  signal: AbortSignal.timeout(8000),
+                });
+                let response = await probe('/v1/models').catch(() => null);
+                if (!response?.ok) response = await probe('/api/tags').catch(() => null);
+                if (!response?.ok) {
+                  return sendJson(res, 422, { valid: false, message: `Ollama probe failed${response ? ` (${response.status})` : ''}` });
+                }
+                return sendJson(res, 200, { valid: true, message: 'Ollama endpoint verified' });
+              } catch {
+                return sendJson(res, 422, { valid: false, message: 'Invalid URL' });
+              }
+            }
+
+            // Other providers aren't probed in plain `npm run dev` (no
+            // sidecar) — accept the value as saved without a live check
+            // rather than failing closed for keys we don't verify here.
+            return sendJson(res, 200, { valid: true, message: 'Saved' });
+          } catch {
+            return sendJson(res, 400, { error: 'expected { key, value }' });
+          }
+        }
+
+        return next();
+      });
+    },
+  };
+}
+
 function youtubeLivePlugin(): Plugin {
   return {
     name: 'youtube-live',
@@ -909,6 +1094,7 @@ export default defineConfig(({ mode }) => {
       !isDesktopBuild && activeVariant === 'full' && variantDashboardHtmlPlugin(),
       polymarketPlugin(),
       rssProxyPlugin(),
+      localEnvDevPlugin(),
       youtubeLivePlugin(),
       gpsjamDevPlugin(),
       sebufApiPlugin(),

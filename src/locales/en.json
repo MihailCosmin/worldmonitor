@@ -676,7 +676,10 @@
       },
       "placeholder": {
         "setSecret": "Set secret",
-        "staged": "Staged (save with OK)"
+        "staged": "Staged (save with OK)",
+        "configured": "Saved — enter a new value to change it",
+        "selectModel": "Select a model…",
+        "modelConfiguredHidden": "Saved — select to change"
       },
       "help": {
         "URLHAUS_AUTH_KEY": "Used for both URLhaus and ThreatFox APIs.",
@@ -1424,7 +1427,7 @@
       "rankingStories": "Ranking important stories...",
       "analyzingSentiment": "Analyzing sentiment...",
       "generatingBrief": "Generating world brief...",
-      "infoTooltip": "<strong>AI-Powered Analysis</strong><br>• <strong>World Brief</strong>: AI summary (Groq/OpenRouter)<br>• <strong>Sentiment</strong>: News tone analysis<br>• <strong>Velocity</strong>: Fast-moving stories<br>• <strong>Focal Points</strong>: Correlates news entities with map signals (military, protests, outages)<br><em>Desktop only • Powered by Llama 3.3 + Focal Point Detection</em>",
+      "infoTooltip": "<strong>AI-Powered Analysis</strong><br>• <strong>World Brief</strong>: AI summary via your configured provider (Ollama, Groq, or OpenRouter)<br>• <strong>Sentiment</strong>: News tone analysis<br>• <strong>Velocity</strong>: Fast-moving stories<br>• <strong>Focal Points</strong>: Correlates news entities with map signals (military, protests, outages)<br><em>Settings → Log shows which provider served the last summary</em>",
       "streamQualityLabel": "Video Quality",
       "streamQualityDesc": "Set quality for all live streams (lower saves bandwidth)",
       "globeRenderScaleOptions": {
@@ -1443,6 +1446,7 @@
       "aiFlowBrowserWarn": "Downloads ~250 MB of model data to your browser",
       "aiFlowOllamaCta": "Want fully local AI?",
       "aiFlowOllamaCtaDesc": "Download the desktop app for Ollama support",
+      "aiFlowOllamaCtaDescSelfHosted": "Set OLLAMA_API_URL and OLLAMA_MODEL in the Data Sources tab to use your own Ollama server.",
       "aiFlowDownloadDesktop": "Download Desktop App →",
       "aiFlowStatusActive": "Cloud AI active",
       "aiFlowStatusCloudAndBrowser": "Cloud AI + Browser model active",
