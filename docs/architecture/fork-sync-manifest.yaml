@@ -28,6 +28,20 @@
 # `evaluated_upstream_commits.keep` below). There is no shortcut around actually
 # reading each high-risk file's diff.
 #
+# Tooling that reads this file (so the steps above are commands, not manual
+# toil):
+#   - `npm run fork-sync:check`  — BEFORE merging. Computes the real merge-base
+#     fresh (never trusts meta.last_sync_upstream_head as the diff base), lists
+#     incoming commits, flags any that touch high_risk_files, and cross-checks
+#     commit SHAs / subject keywords against evaluated_upstream_commits.
+#   - `npm run fork-sync:verify` — AFTER resolving conflicts. Runs
+#     protected_invariant_tests and classifies every failing file against
+#     known_pre_existing_gaps, so "is this pre-existing" doesn't require a
+#     fresh git-worktree/ORIG_HEAD comparison every single sync. Add
+#     `:full` to run the whole test:data suite instead of just the
+#     gating-focused subset.
+#   Neither script touches git state — read-only analysis and test runs only.
+#
 # Companion docs:
 #   - remove_pro.md                                — full task-by-task Pro/Premium
 #     removal audit (D1-D17, F1-F18, R1-R6, S1-S3, C1-C3), with file:line refs.
@@ -42,9 +56,9 @@
 meta:
   upstream_remote: upstream
   upstream_repo: koala73/worldmonitor
-  last_sync_commit: "a345d7f1a"           # our merge commit for this sync
-  last_sync_upstream_head: "df8467a2d"    # upstream/main SHA merged as of last sync
-  # `git log df8467a2d..upstream/main --oneline` shows how far upstream has moved
+  last_sync_commit: "02239675e"           # our merge commit for this sync
+  last_sync_upstream_head: "aa74d8947"    # upstream/main SHA merged as of last sync
+  # `git log aa74d8947..upstream/main --oneline` shows how far upstream has moved
   # since.
   #
   # Sync history:
@@ -54,7 +68,14 @@ meta:
   #     fix). Merge-base was b832237d4, NOT the previous last_sync_upstream_head
   #     — don't assume the two are equal; always compute
   #     `git merge-base <branch> upstream/main` fresh rather than trusting this
-  #     file's last-recorded value as the diff base.
+  #     file's last-recorded value as the diff base (scripts/fork-sync-check.mjs
+  #     does this automatically now).
+  #   - df8467a2d -> aa74d8947: a 5-commit sync (wm-session cookie-persistence
+  #     recovery fix, intel-history untrusted-text/retraction handling, China
+  #     cross-strait activity work). Zero conflicts, zero high-risk-file
+  #     touches, zero new test failures beyond already-documented gaps —
+  #     confirmed by scripts/fork-sync-check.mjs and
+  #     scripts/fork-sync-verify.mjs, no manual worktree comparison needed.
   categories: [pro-removal, discord-removal, owner-branding-removal, feature-ungate, upstream-sync]
 
 # ---------------------------------------------------------------------------
@@ -233,6 +254,28 @@ commit_ranges:
       src/services/summarization.ts. The underlying request wiring was
       already correct in all 3 cases; only the registry entries / AST shape
       were stale.
+
+  - category: upstream-sync
+    range: "df8467a2d..aa74d8947"          # 5 commits
+    summary: >
+      Synced 5 upstream commits: wm-session cookie-persistence recovery
+      (fix(session) #5798 — recovers when a browser cannot persist cookies at
+      all, unrelated to gating), intel-history untrusted-text handling and a
+      new retraction CLI (docs/architecture/intel-history-untrusted-text.md,
+      scripts/retract-intel-history.mjs — a prompt-injection defense note plus
+      operational tooling, not a gating change), and China cross-strait
+      activity data-quality work. Zero merge conflicts. Zero of this fork's
+      high_risk_files touched. Zero eliehabib/branding mentions introduced
+      (verified by grepping the full commit-range diff). The one
+      docs/mcp-overview.mdx (+zh) touch added a genuinely new content-safety
+      note next to an ALREADY-accurate "Pro-gated" claim about
+      search_intel_history (confirmed still genuinely gated per
+      premium-paths.ts — not the same stale-claim pattern as the
+      get_procurement_opportunities fix from the previous sync). Verified via
+      scripts/fork-sync-check.mjs and scripts/fork-sync-verify.mjs — first
+      sync where neither a manual high-risk-file read-through nor a
+      git-worktree pre-existing-failure comparison was needed; the tooling's
+      output was sufficient on its own.
 
 # ---------------------------------------------------------------------------
 # 2. High-risk files — hand-review on every sync regardless of conflict markers.
