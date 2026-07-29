@@ -29,7 +29,9 @@ import {
 } from '@/services/summarize-gate';
 import { hasPremiumAccess } from '@/services/panel-gating';
 import {
+  classifySummarizationChainOutcome,
   createSummarizationAttemptState,
+  describeSummarizationChainOutcome,
   logChainOutcome,
   markSummarizationAttempt,
   markSummarizationShortCircuited,
@@ -37,6 +39,7 @@ import {
   type AttemptedSummarizationProvider,
   type SummarizationAttemptState,
 } from './summarization-outcome';
+import { componentHealth } from '@/services/component-health';
 
 export type SummarizationProvider = AttemptedSummarizationProvider | 'cache';
 
@@ -59,6 +62,15 @@ export interface SummarizeOptions {
    * headline-only behavior (R6). Bodies are pre-sanitised server-side.
    */
   bodies?: string[];
+  /**
+   * Settings > Log component-health id (e.g. 'panel:insights') for the
+   * caller driving this summarization attempt. When supplied, the chain's
+   * classified outcome (see summarization-outcome.ts) is recorded there —
+   * this is what lets the Log tab distinguish "no AI provider configured"
+   * from "provider failed" from "circuit breaker open" instead of a single
+   * generic unavailable state.
+   */
+  componentId?: string;
 }
 
 // ── Sebuf client (replaces direct fetch to /api/{provider}-summarize) ──
@@ -304,8 +316,13 @@ export async function generateSummary(
 
       if (result) {
         trackLLMUsage(result.provider, result.model, result.cached);
+        if (options?.componentId) componentHealth.recordSuccess(options.componentId, `via ${result.provider}`);
       } else {
         trackLLMFailure(attemptState.lastAttemptedProvider);
+        if (options?.componentId) {
+          const { message } = describeSummarizationChainOutcome('', classifySummarizationChainOutcome(attemptState));
+          componentHealth.recordError(options.componentId, message.trim());
+        }
       }
 
       return result;

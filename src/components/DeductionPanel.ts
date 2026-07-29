@@ -16,7 +16,7 @@ import { extractDeductionProbability } from './deduction-probability';
 import { IntelligenceServiceClient } from '@/services/generated-rpc-clients';
 
 const deductSituationFetch = (input: RequestInfo | URL, init?: RequestInit): Promise<Response> =>
-  premiumFetch(input, { ...(init ?? {}), forcePremium: true });
+  premiumFetch(input, { ...(init ?? {}), forcePremium: true, componentId: 'panel:deduction' });
 
 // Deduct Situation is public for signed-in users, but still needs a Clerk
 // bearer on web so the gateway can bind direct-LLM quota to the real user.

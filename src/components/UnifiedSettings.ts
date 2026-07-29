@@ -27,6 +27,7 @@ import type { PanelConfig } from '@/types';
 import { renderPreferences } from '@/services/preferences-content';
 import { renderNotificationsSettings, type NotificationsSettingsResult } from '@/services/notifications-settings';
 import { renderDataSourcesContent } from '@/services/data-sources-content';
+import { renderLogTabContent } from '@/services/log-tab-content';
 import { getAuthState, signIn } from '@/services/auth-state';
 import { track } from '@/services/analytics';
 import { isEntitled, hasFeature, onEntitlementChange, getEntitlementState } from '@/services/entitlements';
@@ -81,6 +82,7 @@ export class UnifiedSettings {
   private prefsCleanup: (() => void) | null = null;
   private notifCleanup: (() => void) | null = null;
   private dataSourcesCleanup: (() => void) | null = null;
+  private logTabCleanup: (() => void) | null = null;
   private pendingNotifs: NotificationsSettingsResult | null = null;
   private draftPanelSettings: Record<string, PanelConfig> = {};
   private panelsJustSaved = false;
@@ -467,6 +469,8 @@ export class UnifiedSettings {
     this.notifCleanup = null;
     this.dataSourcesCleanup?.();
     this.dataSourcesCleanup = null;
+    this.logTabCleanup?.();
+    this.logTabCleanup = null;
     this.pendingNotifs = null;
     this.unsubscribeEntitlement?.();
     this.unsubscribeEntitlement = null;
@@ -499,6 +503,8 @@ export class UnifiedSettings {
     this.notifCleanup = null;
     this.dataSourcesCleanup?.();
     this.dataSourcesCleanup = null;
+    this.logTabCleanup?.();
+    this.logTabCleanup = null;
     this.pendingNotifs = null;
     this.unsubscribeEntitlement?.();
     this.unsubscribeEntitlement = null;
@@ -543,6 +549,8 @@ export class UnifiedSettings {
     this.notifCleanup = null;
     this.dataSourcesCleanup?.();
     this.dataSourcesCleanup = null;
+    this.logTabCleanup?.();
+    this.logTabCleanup = null;
     this.pendingNotifs = null;
 
     const isSignedIn = !this.config.isDesktopApp && (getAuthState().user !== null);
@@ -569,6 +577,7 @@ export class UnifiedSettings {
       'api-keys',
       ...(showMcpClientsTab ? ['mcp-clients' as const] : []),
       ...(showDataSourcesTab ? ['data-sources' as const] : []),
+      'log',
     ];
     this.activeTab = normalizeSettingsTab(this.activeTab, availableTabs);
     const tabClass = (id: TabId) => `unified-settings-tab${this.activeTab === id ? ' active' : ''}`;
@@ -587,6 +596,7 @@ export class UnifiedSettings {
           <button class="${tabClass('api-keys')}" tabindex="${this.activeTab === 'api-keys' ? 0 : -1}" data-tab="api-keys" role="tab" aria-selected="${this.activeTab === 'api-keys'}" id="us-tab-api-keys" aria-controls="us-tab-panel-api-keys">API Keys</button>
           ${showMcpClientsTab ? `<button class="${tabClass('mcp-clients')}" tabindex="${this.activeTab === 'mcp-clients' ? 0 : -1}" data-tab="mcp-clients" role="tab" aria-selected="${this.activeTab === 'mcp-clients'}" id="us-tab-mcp-clients" aria-controls="us-tab-panel-mcp-clients">MCP Clients</button>` : ''}
           ${showDataSourcesTab ? `<button class="${tabClass('data-sources')}" tabindex="${this.activeTab === 'data-sources' ? 0 : -1}" data-tab="data-sources" role="tab" aria-selected="${this.activeTab === 'data-sources'}" id="us-tab-data-sources" aria-controls="us-tab-panel-data-sources">${t('header.tabDataSources')}</button>` : ''}
+          <button class="${tabClass('log')}" tabindex="${this.activeTab === 'log' ? 0 : -1}" data-tab="log" role="tab" aria-selected="${this.activeTab === 'log'}" id="us-tab-log" aria-controls="us-tab-panel-log">${t('header.tabLog')}</button>
         </div>
         <div class="unified-settings-tab-panel${this.activeTab === 'settings' ? ' active' : ''}" data-panel-id="settings" id="us-tab-panel-settings" role="tabpanel" aria-labelledby="us-tab-settings">
           ${prefs.html}
@@ -638,6 +648,8 @@ export class UnifiedSettings {
           ${dataSources.html}
         </div>
         ` : ''}
+        <div class="unified-settings-tab-panel${this.activeTab === 'log' ? ' active' : ''}" data-panel-id="log" id="us-tab-panel-log" role="tabpanel" aria-labelledby="us-tab-log">
+        </div>
       </div>
     `, "legacy direct innerHTML migration"));
 
@@ -658,6 +670,11 @@ export class UnifiedSettings {
     // open even if they never visit this tab.
     this.pendingNotifs = notifs;
     if (this.activeTab === 'notifications') this.attachNotificationsTab();
+
+    // Log tab content is built lazily too — aggregating ~150 panels + 56
+    // layers + all data sources on every Settings open (even when the user
+    // never visits this tab) would be wasteful.
+    if (this.activeTab === 'log') this.attachLogTab();
 
     const closeBtn = this.overlay.querySelector<HTMLButtonElement>('.unified-settings-close');
     if (closeBtn) {
@@ -713,6 +730,19 @@ export class UnifiedSettings {
     if (tab === 'notifications') {
       this.attachNotificationsTab();
     }
+
+    if (tab === 'log') {
+      this.attachLogTab();
+    }
+  }
+
+  private attachLogTab(): void {
+    if (this.logTabCleanup) return;
+    const logPanel = this.overlay.querySelector('#us-tab-panel-log');
+    if (!logPanel) return;
+    const logContent = renderLogTabContent();
+    setTrustedHtml(logPanel, trustedHtml(logContent.html, "legacy direct innerHTML migration"));
+    this.logTabCleanup = logContent.attach(logPanel as HTMLElement);
   }
 
   private attachNotificationsTab(): void {

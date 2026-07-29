@@ -88,6 +88,7 @@ import { fetchGpsInterference } from '@/services/gps-interference';
 import { fetchSatelliteTLEs, initSatRecs, propagatePositions, startPropagationLoop } from '@/services/satellites';
 import type { SatRecEntry } from '@/services/satellites';
 import { dataFreshness, type DataSourceId } from '@/services/data-freshness';
+import { componentHealth } from '@/services/component-health';
 import type { CorrelationSignal } from '@/services/correlation';
 import { fetchConflictEvents, fetchUcdpClassifications, fetchHapiSummary, fetchUcdpEvents, deduplicateAgainstAcled, deduplicateUcdpProjectionAggregates, fetchIranEvents } from '@/services/conflict';
 import { fetchUnhcrPopulation } from '@/services/displacement';
@@ -349,6 +350,46 @@ const HYDRATION_TIER_FOUR = new Set([
   'crossSourceSignals',
 ]);
 const HYDRATION_TIERS: HydrationTier[] = [1, 2, 3, 4];
+
+/**
+ * Maps `runGuarded` task names to a Settings > Log component-health id
+ * ('panel:<ALL_PANELS key>' or 'layer:<MapLayers key>'). Best-effort: many
+ * tasks already have richer per-source tracking via data-freshness.ts's
+ * PANEL_FRESHNESS_SOURCES, which the Log tab prefers when both exist — a
+ * task recorded here for an already-tracked panel is redundant but
+ * harmless, never conflicting. Tasks not in this table fall back to
+ * `panel:<name>` as a best guess; an id that doesn't match any real panel
+ * or layer key is simply never displayed (an inert orphan, not an error).
+ */
+const TASK_NAME_TO_COMPONENT_ID: Record<string, string> = {
+  news: 'panel:live-news',
+  predictions: 'panel:polymarket',
+  forecasts: 'panel:forecast',
+  'simulation-outcome': 'panel:forecast',
+  pizzint: 'panel:intel',
+  'global-tenders': 'panel:global-procurement',
+  tradePolicy: 'panel:trade-policy',
+  supplyChain: 'panel:supply-chain',
+  economicStress: 'panel:economic',
+  firms: 'panel:satellite-fires',
+  ais: 'layer:ais',
+  flights: 'layer:flights',
+  cables: 'layer:cables',
+  cableHealth: 'layer:cables',
+  cyberThreats: 'layer:cyberThreats',
+  techEvents: 'layer:techEvents',
+  satellites: 'layer:satellites',
+  webcams: 'panel:live-webcams',
+  sanctions: 'layer:sanctions',
+  resilienceRanking: 'layer:resilienceScore',
+  radiation: 'layer:radiationWatch',
+  intelligence: 'panel:strategic-risk',
+  natural: 'layer:natural',
+};
+
+function resolveTaskComponentId(taskName: string): string {
+  return TASK_NAME_TO_COMPONENT_ID[taskName] ?? `panel:${taskName}`;
+}
 
 export class DataLoaderManager implements AppModule {
   private ctx: AppContext;
@@ -732,8 +773,10 @@ export class DataLoaderManager implements AppModule {
       this.ctx.inFlight.add(name);
       try {
         await fn();
+        componentHealth.recordSuccess(resolveTaskComponentId(name));
       } catch (e) {
         if (!this.ctx.isDestroyed) console.error(`[App] ${name} failed:`, e);
+        componentHealth.recordError(resolveTaskComponentId(name), e instanceof Error ? e.message : String(e));
       } finally {
         this.ctx.inFlight.delete(name);
       }
@@ -1018,6 +1061,10 @@ export class DataLoaderManager implements AppModule {
           await this.loadResilienceRanking();
           break;
       }
+      componentHealth.recordSuccess(`layer:${layer}`);
+    } catch (e) {
+      componentHealth.recordError(`layer:${layer}`, e instanceof Error ? e.message : String(e));
+      throw e;
     } finally {
       this.ctx.inFlight.delete(layer);
       this.ctx.map?.setLayerLoading(layer, false);

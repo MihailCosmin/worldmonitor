@@ -352,6 +352,7 @@ export class InsightsPanel extends Panel {
     const summarizeOpts: SummarizeOptions = {
       skipCloudProviders: !aiFlow.cloudLlm,
       skipBrowserFallback: !aiFlow.browserModel,
+      componentId: 'panel:insights',
     };
 
     const totalSteps = 4;

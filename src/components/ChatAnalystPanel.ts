@@ -522,6 +522,7 @@ export class ChatAnalystPanel extends Panel {
     try {
       const res = await premiumFetch(API_URL, {
         forcePremium: true,
+        componentId: 'panel:chat-analyst',
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

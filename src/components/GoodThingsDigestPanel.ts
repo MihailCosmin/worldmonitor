@@ -78,6 +78,8 @@ export class GoodThingsDigestPanel extends Panel {
           [item.title, item.source],
           undefined,
           item.locationName,
+          undefined,
+          { componentId: 'panel:digest' },
         );
         if (signal.aborted || !this.element?.isConnected) return;
         const summary = result?.summary ?? item.title.slice(0, 200);

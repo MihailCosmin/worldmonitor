@@ -36,6 +36,7 @@ import { PREMIUM_RPC_PATHS } from '@/shared/premium-paths';
 import { PRO_FRESH_CACHE_RPC_PATHS } from '@/shared/pro-fresh-rpc';
 import { withPremiumIntent } from './premium-intent';
 import { isDesktopRuntime } from './runtime';
+import { componentHealth } from './component-health';
 
 /**
  * Test seam — set in unit tests to inject key/token providers without needing
@@ -48,7 +49,17 @@ let _testProviders: {
   isClerkUserSignedIn?: () => boolean | Promise<boolean>;
 } | null = null;
 
-type PremiumFetchInit = RequestInit & { forcePremium?: boolean };
+type PremiumFetchInit = RequestInit & {
+  forcePremium?: boolean;
+  /**
+   * Settings > Log component-health id (e.g. 'panel:chat-analyst') for the
+   * panel driving this call. When supplied, every premiumFetch response —
+   * regardless of which of the 4 auth paths it took — records a generic
+   * success/HTTP-status-failure entry so untracked AI/RPC panels get SOME
+   * status in the Log tab instead of silently showing "unknown".
+   */
+  componentId?: string;
+};
 
 export function _setTestProviders(
   p: typeof _testProviders,
@@ -86,6 +97,12 @@ export function reportServerError(
     const extra = { path, status: res.status };
     enqueue((s) => s.captureMessage(message, { level, tags, extra }));
   } catch { /* ignore URL parse errors */ }
+}
+
+function recordFetchHealth(res: Response, componentId: string | undefined): void {
+  if (!componentId) return;
+  if (res.ok) componentHealth.recordSuccess(componentId);
+  else componentHealth.recordError(componentId, `HTTP ${res.status}`);
 }
 
 function withCredentials(init?: RequestInit): RequestInit {
@@ -209,14 +226,19 @@ export async function premiumFetch(
   init?: PremiumFetchInit,
 ): Promise<Response> {
   const forcePremium = init?.forcePremium === true;
+  const componentId = init?.componentId;
   const requestInit = init ? { ...init } : undefined;
-  if (requestInit) delete requestInit.forcePremium;
+  if (requestInit) {
+    delete requestInit.forcePremium;
+    delete requestInit.componentId;
+  }
 
   // Skip injection if the caller already set an auth header.
   const existing = new Headers(requestInit?.headers);
   if (existing.has('Authorization') || existing.has('X-WorldMonitor-Key')) {
     const res = await globalThis.fetch(input, withCredentials(requestInit));
     reportServerError(res, input);
+    recordFetchHealth(res, componentId);
     return res;
   }
 
@@ -231,6 +253,7 @@ export async function premiumFetch(
         existing.set('X-WorldMonitor-Key', wmKey);
         const res = await globalThis.fetch(input, { ...withCredentials(requestInit), headers: existing });
         reportServerError(res, input);
+        recordFetchHealth(res, componentId);
         return res;
       }
     } catch { /* not available — fall through */ }
@@ -245,6 +268,7 @@ export async function premiumFetch(
     const res = await globalThis.fetch(input, { ...withCredentials(requestInit), headers: testerHeaders });
     if (res.status !== 401) {
       reportServerError(res, input);
+      recordFetchHealth(res, componentId);
       return res;
     }
     // 401 → try the next tester key, then fall through to Clerk if none work.
@@ -275,6 +299,7 @@ export async function premiumFetch(
         existing.set('Authorization', `Bearer ${token}`);
         const res = await globalThis.fetch(input, { ...withCredentials(requestInit), headers: existing });
         reportServerError(res, input);
+        recordFetchHealth(res, componentId);
         return res;
       }
     } catch { /* not signed in — fall through */ }
@@ -319,5 +344,6 @@ export async function premiumFetch(
     : withCredentials(requestInit);
   const res = await globalThis.fetch(input, unauthenticatedInit);
   reportServerError(res, input);
+  recordFetchHealth(res, componentId);
   return res;
 }

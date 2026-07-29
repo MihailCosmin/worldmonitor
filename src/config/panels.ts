@@ -1265,7 +1265,44 @@ export const LAYER_TO_SOURCE: Partial<Record<keyof MapLayers, DataSourceId[]>> =
   climate: ['climate'],
   sanctions: ['sanctions_pressure'],
   radiationWatch: ['radiation'],
+  // Best-effort additions (Settings > Log) — these layers' underlying feeds
+  // aren't otherwise tracked by data-freshness.ts's PANEL_FRESHNESS_SOURCES,
+  // so map them to the closest existing DataSourceId.
+  fires: ['firms'],
+  hotspots: ['gdelt'],
+  conflicts: ['acled', 'gdelt_doc'],
+  gpsJamming: ['gpsjam'],
 };
+
+/**
+ * Map layers with no live-fetch failure mode at all — bundled reference
+ * data or pure client-side computation. The Settings > Log tab shows these
+ * as "static" rather than inferring a fake live status. Layers not listed
+ * here and not in LAYER_TO_SOURCE either fall back to whatever
+ * component-health.ts recorded for `layer:<key>` (see data-loader.ts's
+ * loadDataForLayer/runGuarded instrumentation), or 'unknown' if neither
+ * has ever recorded anything for it.
+ */
+export const STATIC_LAYERS = new Set<keyof MapLayers>([
+  'bases', 'nuclear', 'irradiators', 'spaceports', 'pipelines', 'datacenters',
+  'tradeRoutes', 'waterways', 'economic', 'minerals', 'ciiChoropleth', 'dayNight',
+  'startupHubs', 'techHQs', 'accelerators', 'cloudRegions', 'stockExchanges',
+  'financialCenters', 'centralBanks', 'commodityHubs', 'gulfInvestments',
+  'happiness', 'speciesRecovery', 'renewableInstallations', 'miningSites',
+  'processingPlants', 'commodityPorts', 'storageFacilities', 'fuelShortages',
+  'liveTankers',
+]);
+
+/**
+ * Panels with no live-fetch dependency at all (pure client-side computation
+ * or bundled reference data) — shown as "static" in the Settings > Log tab
+ * rather than an inferred live status. Not exhaustive: panels not listed
+ * here fall back through data-freshness.ts, then component-health.ts
+ * (runGuarded/premiumFetch instrumentation), then 'unknown'.
+ */
+export const STATIC_PANELS = new Set<string>([
+  'world-clock', 'geo-hubs', 'tech-hubs',
+]);
 
 // ============================================
 // PANEL CATEGORY MAP
