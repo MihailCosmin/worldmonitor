@@ -7,6 +7,7 @@ import {
   query,
 } from "./_generated/server";
 import { channelTypeValidator, digestModeValidator, quietHoursOverrideValidator, sensitivityValidator } from "./constants";
+import { requireUserId, resolveUserId } from "./lib/auth";
 
 type DigestMode = "realtime" | "daily" | "twice_daily" | "weekly";
 type Sensitivity = "all" | "high" | "critical";
@@ -180,11 +181,11 @@ function normalizeTickers(input: string[]): string[] {
 export const getAlertRules = query({
   args: {},
   handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) return [];
+    const userId = await resolveUserId(ctx);
+    if (!userId) return [];
     return await ctx.db
       .query("alertRules")
-      .withIndex("by_user", (q) => q.eq("userId", identity.subject))
+      .withIndex("by_user", (q) => q.eq("userId", userId))
       .collect();
   },
 });
@@ -205,9 +206,7 @@ export const setAlertRules = mutation({
     tickers: v.optional(v.array(v.string())),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new ConvexError("UNAUTHENTICATED");
-    const userId = identity.subject;
+    const userId = await requireUserId(ctx);
     await assertProEntitlement(ctx, userId);
 
     const existing = await ctx.db
@@ -278,9 +277,7 @@ export const setDigestSettings = mutation({
     digestTimezone: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new ConvexError("UNAUTHENTICATED");
-    const userId = identity.subject;
+    const userId = await requireUserId(ctx);
     await assertProEntitlement(ctx, userId);
 
     if (args.digestHour !== undefined && (args.digestHour < 0 || args.digestHour > 23 || !Number.isInteger(args.digestHour))) {
@@ -439,9 +436,7 @@ function validateQuietHoursArgs(args: {
 export const setQuietHours = mutation({
   args: QUIET_HOURS_ARGS,
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new ConvexError("UNAUTHENTICATED");
-    const userId = identity.subject;
+    const userId = await requireUserId(ctx);
     await assertProEntitlement(ctx, userId);
     validateQuietHoursArgs(args);
 

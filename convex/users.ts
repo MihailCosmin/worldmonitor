@@ -10,8 +10,10 @@
  * `users` covers EVERY Clerk-authenticated user, free or paid.
  *
  * This mutation is PUBLIC (called from the browser via ConvexClient)
- * but trusts ONLY `ctx.auth.getUserIdentity()` for identity, never the
- * request body. Email is server-derived — clients cannot supply it.
+ * but trusts ONLY `resolveUserId` (real identity, or the CONVEX_IS_DEV
+ * dev-user fallback) for identity, never the request body. Email is
+ * server-derived from the raw identity when present — clients cannot
+ * supply it.
  *
  * Failure mode: returns `{ ok: false, reason }` instead of throwing,
  * so a transient validation or auth blip on session init never crashes
@@ -19,6 +21,7 @@
  */
 import { mutation } from "./_generated/server";
 import { v } from "convex/values";
+import { resolveUserId } from "./lib/auth";
 
 // Validation invariants. Length-bounded BEFORE regex (defense in depth
 // against memory-exhaustion via huge strings).
@@ -94,14 +97,17 @@ export const ensureRecord = mutation({
     }
 
     // ──── Auth ────
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
+    const userId = await resolveUserId(ctx);
+    if (!userId) {
       return { ok: false as const, reason: "unauthenticated" as const };
     }
-    const userId = identity.subject;
-    // Email may be empty for phone-only signups; treated as "no email
-    // observed yet" — we'll fill it on a later call when one is added.
-    const incomingEmail = (identity.email ?? "").trim();
+    // Re-fetch the raw identity for its email — resolveUserId's dev-mode
+    // fallback (CONVEX_IS_DEV) returns a synthetic userId with no backing
+    // identity, so this is null there. Email may also be empty for
+    // phone-only signups; both cases are treated as "no email observed
+    // yet" — we'll fill it on a later call when one is added.
+    const identity = await ctx.auth.getUserIdentity();
+    const incomingEmail = (identity?.email ?? "").trim();
     const incomingNormalizedEmail = incomingEmail.toLowerCase();
 
     // ──── Upsert ────

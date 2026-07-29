@@ -1,5 +1,5 @@
-import { subscribeAuthState, type AuthSession } from '@/services/auth-state';
-import { mountUserButton, openSignIn, openSignUp } from '@/services/clerk';
+import { signIn, signOut, type AuthSession, subscribeAuthState } from '@/services/auth-state';
+import { isClerkAuthEnabled, mountUserButton, openSignUp } from '@/services/clerk';
 import { t } from '@/services/i18n';
 import { setTrustedHtml, trustedHtml } from '@/utils/dom-utils';
 
@@ -50,7 +50,7 @@ export class AuthHeaderWidget {
       this.renderSignedOut();
       return;
     }
-    this.renderSignedIn();
+    this.renderSignedIn(state);
   }
 
   private renderPending(): void {
@@ -77,22 +77,38 @@ export class AuthHeaderWidget {
     signInBtn.textContent = t('auth.signIn');
     signInBtn.addEventListener('click', () => {
       if (this.onSignInClick) this.onSignInClick();
-      else openSignIn();
+      else signIn();
     });
     this.container.appendChild(signInBtn);
 
-    const signUpLink = document.createElement('button');
-    signUpLink.className = 'auth-signup-link';
-    signUpLink.textContent = t('auth.createAccount');
-    signUpLink.addEventListener('click', () => openSignUp());
-    this.container.appendChild(signUpLink);
+    // Sign-up is a Clerk-account concept — nothing to create in local mode,
+    // where "signing in" already just flips a local flag.
+    if (isClerkAuthEnabled()) {
+      const signUpLink = document.createElement('button');
+      signUpLink.className = 'auth-signup-link';
+      signUpLink.textContent = t('auth.createAccount');
+      signUpLink.addEventListener('click', () => openSignUp());
+      this.container.appendChild(signUpLink);
+    }
   }
 
-  private renderSignedIn(): void {
-    const userBtnEl = document.createElement('div');
-    userBtnEl.className = 'auth-clerk-user-button';
-    this.container.appendChild(userBtnEl);
-    this.unmountUserButton = mountUserButton(userBtnEl);
+  private renderSignedIn(state: AuthSession): void {
+    if (isClerkAuthEnabled()) {
+      const userBtnEl = document.createElement('div');
+      userBtnEl.className = 'auth-clerk-user-button';
+      this.container.appendChild(userBtnEl);
+      this.unmountUserButton = mountUserButton(userBtnEl);
+    } else {
+      // Local mode: there's no real Clerk instance to mount a UserButton
+      // from — show a plain chip with a click-to-sign-out affordance.
+      const localChip = document.createElement('button');
+      localChip.type = 'button';
+      localChip.className = 'auth-local-user-chip';
+      localChip.textContent = state.user?.name ?? t('auth.localUser');
+      localChip.title = t('auth.localUserSignOutHint');
+      localChip.addEventListener('click', () => { void signOut(); });
+      this.container.appendChild(localChip);
+    }
 
     if (this.onSettingsClick) {
       const settingsBtn = document.createElement('button');

@@ -3251,7 +3251,9 @@
   "auth": {
     "signIn": "Sign In",
     "createAccount": "Create account",
-    "settings": "Settings"
+    "settings": "Settings",
+    "localUser": "Local User",
+    "localUserSignOutHint": "Signed in locally. Click to sign out."
   },
   "mcp": {
     "connectPanel": "Connect MCP",

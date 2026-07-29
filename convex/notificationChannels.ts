@@ -9,6 +9,7 @@ import {
 } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { channelTypeValidator } from "./constants";
+import { requireUserId, resolveUserId } from "./lib/auth";
 
 // Versioned queue: old Railway relays only poll wm:events:queue and ignore
 // welcomeId. Keeping connection-scoped events on a new queue means they wait
@@ -457,11 +458,11 @@ export const createPairingTokenForUser = internalMutation({
 export const getChannels = query({
   args: {},
   handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) return [];
+    const userId = await resolveUserId(ctx);
+    if (!userId) return [];
     return await ctx.db
       .query("notificationChannels")
-      .withIndex("by_user", (q) => q.eq("userId", identity.subject))
+      .withIndex("by_user", (q) => q.eq("userId", userId))
       .collect();
   },
 });
@@ -475,9 +476,7 @@ export const setChannel = mutation({
     webhookLabel: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new ConvexError("UNAUTHENTICATED");
-    const userId = identity.subject;
+    const userId = await requireUserId(ctx);
     await assertProEntitlement(ctx, userId);
 
     const existing = await ctx.db
@@ -530,9 +529,7 @@ export const setChannel = mutation({
 export const deleteChannel = mutation({
   args: { channelType: channelTypeValidator },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new ConvexError("UNAUTHENTICATED");
-    const userId = identity.subject;
+    const userId = await requireUserId(ctx);
     await assertProEntitlement(ctx, userId);
 
     const existing = await ctx.db
@@ -579,9 +576,7 @@ export const deactivateChannelForUser = internalMutation({
 export const deactivateChannel = mutation({
   args: { channelType: channelTypeValidator },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new ConvexError("UNAUTHENTICATED");
-    const userId = identity.subject;
+    const userId = await requireUserId(ctx);
     await assertProEntitlement(ctx, userId);
 
     const existing = await ctx.db
@@ -600,9 +595,7 @@ export const deactivateChannel = mutation({
 export const createPairingToken = mutation({
   args: { variant: v.optional(v.string()) },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new ConvexError("UNAUTHENTICATED");
-    const userId = identity.subject;
+    const userId = await requireUserId(ctx);
     await assertProEntitlement(ctx, userId);
 
     // Invalidate any existing unused tokens for this user

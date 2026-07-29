@@ -10,7 +10,7 @@ import type { NewsItem, DeductContextDetail } from '@/types';
 import { buildNewsContext } from '@/utils/news-context';
 import { getActiveFrameworkForPanel } from '@/services/analysis-framework-store';
 import { hasPremiumAccess } from '@/services/panel-gating';
-import { getCurrentClerkUser, openSignIn } from '@/services/clerk';
+import { getAuthState, signIn } from '@/services/auth-state';
 import { FrameworkSelector } from './FrameworkSelector';
 import { extractDeductionProbability } from './deduction-probability';
 import { IntelligenceServiceClient } from '@/services/generated-rpc-clients';
@@ -25,7 +25,7 @@ const getIntelligenceClient = createLazyClient(() => new IntelligenceServiceClie
 const COOLDOWN_MS = 5_000;
 
 function canUseDeductionAnalysis(): boolean {
-    return hasPremiumAccess() || getCurrentClerkUser() !== null;
+    return hasPremiumAccess() || getAuthState().user !== null;
 }
 
 export class DeductionPanel extends Panel {
@@ -242,7 +242,7 @@ export class DeductionPanel extends Panel {
         if (!canUseDeductionAnalysis()) {
             this.resultContainer.className = 'deduction-result error';
             this.resultContainer.textContent = 'Sign in to run Deduct Situation analyses.';
-            openSignIn();
+            signIn();
             return;
         }
 
@@ -301,7 +301,7 @@ export class DeductionPanel extends Panel {
             const status = getRpcErrorStatusCode(err);
             if (status === 401) {
                 this.resultContainer.textContent = 'Sign in to run Deduct Situation analyses.';
-                openSignIn();
+                signIn();
             } else if (status === 429) {
                 this.resultContainer.textContent = 'Daily AI analysis quota reached. Try again after UTC midnight.';
             } else {

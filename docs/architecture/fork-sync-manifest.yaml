@@ -76,7 +76,7 @@ meta:
   #     touches, zero new test failures beyond already-documented gaps —
   #     confirmed by scripts/fork-sync-check.mjs and
   #     scripts/fork-sync-verify.mjs, no manual worktree comparison needed.
-  categories: [pro-removal, discord-removal, owner-branding-removal, feature-ungate, upstream-sync]
+  categories: [pro-removal, discord-removal, owner-branding-removal, feature-ungate, upstream-sync, local-auth]
 
 # ---------------------------------------------------------------------------
 # 1. Commit ranges by category — what we changed, and where to look for detail.
@@ -255,6 +255,78 @@ commit_ranges:
       already correct in all 3 cases; only the registry entries / AST shape
       were stale.
 
+  - category: local-auth
+    range: "(uncommitted at time of writing — update to the real commit SHA once this lands)"
+    summary: >
+      Added a genuine local-only sign-in path that bypasses Clerk entirely
+      when VITE_CLERK_PUBLISHABLE_KEY is unset (src/services/local-auth.ts;
+      branch condition is isClerkAuthEnabled() in clerk.ts). This is a real
+      user request ("bypass clerk completely, just have a local sign in"),
+      not an upstream-inherited pattern — upstream will NEVER have this, so
+      a clean auto-merge touching these files should be hand-reviewed for
+      accidental reversion, not treated as "upstream wins by default."
+      Root cause fixed: on a self-hosted install with no Clerk key,
+      clicking "Sign In" silently did nothing (initClerk()/openSignIn()
+      both bail out on a missing publishable key) while
+      UnifiedSettings.ts's gate button closed the settings modal BEFORE the
+      (silently failing) openSignIn() call — exactly reproducing "click
+      Sign In, modal closes, nothing else happens." A second, related
+      latent bug in the same area: scheduleClerkLoad() returned early
+      without ever settling isPending, so getAuthState() stayed
+      {user: null, isPending: true} forever whenever Clerk wasn't
+      configured (isClerkAuthEnabled() existed but nothing acted on it).
+      auth-state.ts's snapshotSession()/initAuthState()/subscribeAuthState()
+      now branch on isClerkAuthEnabled(): real Clerk when configured, the
+      new local-auth module otherwise (this also fixes the stuck-isPending
+      bug). AuthHeaderWidget.ts, AuthLauncher.ts, UnifiedSettings.ts, and
+      DeductionPanel.ts were switched from calling Clerk's
+      openSignIn()/getCurrentClerkUser() directly to the provider-agnostic
+      auth-state.ts signIn()/signOut()/getAuthState(), so both providers
+      work transparently through the same call sites.
+    convex_side: >
+      convex/alertRules.ts, convex/notificationChannels.ts, and
+      convex/users.ts (ensureRecord) were switched from raw
+      ctx.auth.getUserIdentity() to resolveUserId/requireUserId
+      (convex/lib/auth.ts) so a local session gets consistent identity
+      resolution instead of always throwing UNAUTHENTICATED. This ONLY
+      changes behavior when the target Convex deployment has
+      CONVEX_IS_DEV=true set (an opt-in the user applies to their OWN
+      deployment, documented in .env.example + SELF_HOSTING.md) —
+      production/hosted Convex is unaffected either way. For alertRules.ts
+      and notificationChannels.ts specifically, this is a correctness/
+      error-message fix more than a functional unlock: both stay gated
+      behind assertProEntitlement (notifications are genuinely still paid,
+      see paid-capability-allowlist.md), so a local (free-tier) user now
+      sees the honest PRO_REQUIRED error instead of a misleading
+      UNAUTHENTICATED one, but still can't use the feature without a real
+      entitlement — working as intended.
+      Deliberately LEFT UNCHANGED: convex/followedCountries.ts (its client
+      caller, src/services/followed-countries.ts, gates on a raw
+      Clerk-user getter BEFORE ever reaching Convex and falls back to a
+      fully-functional localStorage path when absent — fixing the server
+      side alone would be inert without also re-plumbing that client
+      gate, and the localStorage fallback is arguably the correct behavior
+      for a single-device local install anyway); convex/userPreferences.ts
+      and the /api/user-prefs POST handler in convex/http.ts (the real
+      production path for cloud-prefs-sync.ts is api/user-prefs.ts, a
+      Vercel edge function gated by
+      server/auth-session.ts::validateBearerToken — the real-Bearer-JWT
+      boundary this fork deliberately does not touch, see feature-ungate
+      above; whether Convex's own httpAction duplicate at convex/http.ts
+      is ever reached by any deployment topology was not confirmed).
+    scope_boundary: >
+      Local auth deliberately does NOT touch server/gateway.ts /
+      server/auth-session.ts::validateBearerToken() (the REST-gateway's
+      real-Bearer-JWT verification, used by 17+ files), and does NOT grant
+      Pro/paid-tier access — hasPremiumAccess() and every gate in
+      paid-capability-allowlist.md are untouched. A local session is
+      "signed in" but never "Pro," same as a real free-tier Clerk account.
+    high_risk_files:
+      - src/services/auth-state.ts
+      - src/services/local-auth.ts
+      - src/services/clerk.ts
+      - convex/lib/auth.ts
+
   - category: upstream-sync
     range: "df8467a2d..aa74d8947"          # 5 commits
     summary: >
@@ -363,6 +435,30 @@ high_risk_files:
       DEFAULT_AUTHOR now resolves to the "World Monitor" Organization, not a
       named Person — a naive merge favoring upstream's version here silently
       reintroduces personal-founder attribution as the default blog author.
+
+  - path: src/services/auth-state.ts
+    risk: >
+      Upstream always has Clerk configured (its own hosted deployment), so
+      it has no reason to ever add an `isClerkAuthEnabled()` branch here —
+      but it MAY touch snapshotSession()/initAuthState()/subscribeAuthState()
+      for its own reasons (new Clerk fields, a new session shape) and a
+      merge could drop the `!isClerkAuthEnabled()` local-auth branch instead
+      of threading it through. Losing that branch silently reintroduces the
+      original bug this fork fixed: Sign In does nothing when no Clerk key
+      is configured, and getAuthState() stays {user: null, isPending: true}
+      forever. Also re-check the signIn()/signOut() exports still branch on
+      isClerkAuthEnabled() rather than calling Clerk unconditionally.
+    also: [src/services/local-auth.ts, src/services/clerk.ts]
+
+  - path: src/components/AuthHeaderWidget.ts
+    risk: >
+      renderSignedOut()/renderSignedIn() branch on isClerkAuthEnabled() to
+      decide between mounting a real Clerk UserButton vs. a plain
+      local-session chip. A merge that reintroduces a direct
+      openSignIn()/mountUserButton() call with no local-mode fallback
+      silently breaks the header widget for local sessions (Clerk calls
+      silently no-op with no key configured).
+    also: [src/components/AuthLauncher.ts, src/components/UnifiedSettings.ts, src/components/DeductionPanel.ts]
 
 # ---------------------------------------------------------------------------
 # 3. Upstream commits/patterns already evaluated — the decision still applies

@@ -92,6 +92,44 @@ services:
       AISSTREAM_API_KEY: ""       # same key as above — relay needs it too
 ```
 
+## 👤 Sign-In & Accounts
+
+Out of the box (no Clerk key configured), clicking "Sign In" starts a **local
+session** — a flag stored in your browser's `localStorage`, no account and no
+server round-trip. This unlocks the UI that's gated on "signed in" (viewing/
+editing your own API keys in Settings, the Deduct Situation panel, etc.).
+
+What local sign-in does **not** do:
+- **No cross-device sync.** The session lives in one browser; a different
+  browser or device signs in separately.
+- **No Pro/paid features.** Notification delivery, the MCP proxy, Widget
+  Builder's smart tier, and on-demand simulation triggers stay genuinely
+  gated behind a real subscription — signing in locally doesn't unlock them.
+- **No Convex writes by default.** Most Convex-backed writes (alert rules,
+  notification channels, your saved API keys) still require *some* identity
+  Convex recognizes. If you don't run your own Convex deployment, these
+  features simply don't activate — the rest of the dashboard (earthquakes,
+  weather, conflicts, markets, etc.) is unaffected, since none of it depends
+  on sign-in at all.
+
+If you **do** run your own Convex deployment (`CONVEX_URL` / `VITE_CONVEX_URL`
+above) and want local sign-in to also unlock Convex-backed writes on it, set:
+
+```bash
+CONVEX_IS_DEV=true   # on your Convex deployment's own env vars, not this .env
+```
+
+This makes Convex treat unauthenticated requests as one fixed dev user
+(`test-user-001`) instead of rejecting them — see `convex/lib/auth.ts`. Only
+enable it on a personal/dev Convex deployment; never on a shared or
+production one, since it removes per-user isolation for every function that
+uses the fallback.
+
+If instead you want the full real-account experience (multiple users, real
+device sync, real Pro entitlements), set up your own [Clerk](https://clerk.com)
+application and set `VITE_CLERK_PUBLISHABLE_KEY` (+ the server-side Clerk
+vars) — real sign-in/sign-up UI replaces the local-session button entirely.
+
 ### 💰 Free vs Paid
 
 | Status | Keys |

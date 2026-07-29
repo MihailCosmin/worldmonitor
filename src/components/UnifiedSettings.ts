@@ -25,7 +25,7 @@ import { escapeHtml } from '@/utils/sanitize';
 import type { PanelConfig } from '@/types';
 import { renderPreferences } from '@/services/preferences-content';
 import { renderNotificationsSettings, type NotificationsSettingsResult } from '@/services/notifications-settings';
-import { getAuthState } from '@/services/auth-state';
+import { getAuthState, signIn } from '@/services/auth-state';
 import { track } from '@/services/analytics';
 import { isEntitled, hasFeature, onEntitlementChange, getEntitlementState } from '@/services/entitlements';
 import { hasPremiumAccess } from '@/services/panel-gating';
@@ -1189,7 +1189,7 @@ export class UnifiedSettings {
     if (gateBtn) {
       gateBtn.addEventListener('click', () => {
         this.close();
-        import('@/services/clerk').then(m => m.openSignIn()).catch(() => {});
+        signIn();
       });
     }
   }

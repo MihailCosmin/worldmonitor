@@ -1,12 +1,15 @@
-import { openSignIn, openSignUp } from '@/services/clerk';
+import { signIn } from '@/services/auth-state';
+import { openSignUp } from '@/services/clerk';
 
 /**
- * Minimal auth launcher -- wraps Clerk.openSignIn() / openSignUp().
- * Replaces the custom OTP modal. Clerk handles all UI.
+ * Minimal auth launcher -- wraps auth-state's signIn() (Clerk when
+ * configured, a local-only session otherwise) / Clerk's openSignUp().
+ * Replaces the custom OTP modal. Clerk handles all UI when it's the active
+ * provider.
  */
 export class AuthLauncher {
   public open(): void {
-    openSignIn();
+    signIn();
   }
 
   public openSignUp(): void {

@@ -1,5 +1,6 @@
 import { enqueueSentryCall } from '@/bootstrap/sentry-defer';
-import { getCurrentClerkUser, scheduleClerkLoad, subscribeClerk } from './clerk';
+import { getCurrentClerkUser, isClerkAuthEnabled, openSignIn, scheduleClerkLoad, signOut as clerkSignOut, subscribeClerk } from './clerk';
+import { getLocalUser, isLocalSignedIn, signInLocally, signOutLocally, subscribeLocalAuth } from './local-auth';
 
 /** Minimal user profile exposed to UI components. */
 export interface AuthUser {
@@ -20,21 +21,31 @@ let _currentSession: AuthSession = { user: null, isPending: true };
 
 function snapshotSession(): AuthSession {
   const cu = getCurrentClerkUser();
-  if (!cu) {
-    enqueueSentryCall((s) => s.setUser(null));
-    return { user: null, isPending: false };
+  if (cu) {
+    enqueueSentryCall((s) => s.setUser({ id: cu.id }));
+    return {
+      user: {
+        id: cu.id,
+        name: cu.name,
+        email: cu.email,
+        image: cu.image,
+        role: cu.plan,
+      },
+      isPending: false,
+    };
   }
-  enqueueSentryCall((s) => s.setUser({ id: cu.id }));
-  return {
-    user: {
-      id: cu.id,
-      name: cu.name,
-      email: cu.email,
-      image: cu.image,
-      role: cu.plan,
-    },
-    isPending: false,
-  };
+
+  // Clerk has nothing (either not configured, or configured but signed out).
+  // Local auth is only ever consulted when Clerk isn't configured at all —
+  // it must never shadow a real, properly-configured Clerk deployment's
+  // signed-out state.
+  if (!isClerkAuthEnabled() && isLocalSignedIn()) {
+    enqueueSentryCall((s) => s.setUser(null));
+    return { user: getLocalUser(), isPending: false };
+  }
+
+  enqueueSentryCall((s) => s.setUser(null));
+  return { user: null, isPending: false };
 }
 
 /**
@@ -55,8 +66,18 @@ function snapshotSession(): AuthSession {
  * before Clerk hydrates. The pending-callback queue in clerk.ts fires
  * the subscribeAuthState listener as soon as Clerk loads, snapshots
  * the real session, and flips `isPending` to `false`.
+ *
+ * When Clerk isn't configured at all (`isClerkAuthEnabled()` false),
+ * `scheduleClerkLoad()` is a permanent no-op (it bails out before ever
+ * touching `loadScheduled`/`initClerk()`), so nothing would ever flip
+ * `isPending` to `false` — every consumer would show a loading skeleton
+ * forever. Settle immediately in that case instead.
  */
 export async function initAuthState(): Promise<void> {
+  if (!isClerkAuthEnabled()) {
+    _currentSession = snapshotSession();
+    return;
+  }
   scheduleClerkLoad();
 }
 
@@ -68,10 +89,16 @@ export function subscribeAuthState(callback: (state: AuthSession) => void): () =
   // Emit current state immediately
   callback(_currentSession);
 
-  return subscribeClerk(() => {
+  const onChange = () => {
     _currentSession = snapshotSession();
     callback(_currentSession);
-  });
+  };
+  const unsubClerk = subscribeClerk(onChange);
+  const unsubLocal = subscribeLocalAuth(onChange);
+  return () => {
+    unsubClerk();
+    unsubLocal();
+  };
 }
 
 /**
@@ -79,4 +106,28 @@ export function subscribeAuthState(callback: (state: AuthSession) => void): () =
  */
 export function getAuthState(): AuthSession {
   return _currentSession;
+}
+
+/**
+ * Sign in — opens Clerk's sign-in modal when Clerk is configured, otherwise
+ * establishes a local-only session (see local-auth.ts). This is the one
+ * function every "Sign In" button in the app should call instead of
+ * `clerk.ts`'s `openSignIn()` directly, so a self-hosted install with no
+ * Clerk key gets a working sign-in instead of a silent no-op.
+ */
+export function signIn(): void {
+  if (isClerkAuthEnabled()) {
+    openSignIn();
+    return;
+  }
+  signInLocally();
+}
+
+/** Symmetric with `signIn()`. */
+export async function signOut(): Promise<void> {
+  if (isClerkAuthEnabled()) {
+    await clerkSignOut();
+    return;
+  }
+  signOutLocally();
 }
