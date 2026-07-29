@@ -1,7 +1,7 @@
 /**
  * Summarization Service with Fallback Chain
  * Server-side Redis caching handles cross-user deduplication
- * Fallback: Ollama -> Groq -> OpenRouter -> Browser T5
+ * Fallback: Ollama (local, always tried if configured) -> OpenRouter -> Groq -> Browser T5
  *
  * Uses NewsServiceClient.summarizeArticle() RPC instead of legacy
  * per-provider fetch endpoints.
@@ -34,6 +34,7 @@ import {
   describeSummarizationChainOutcome,
   logChainOutcome,
   markSummarizationAttempt,
+  markSummarizationProviderFailure,
   markSummarizationShortCircuited,
   markSummarizationSuppressed,
   type AttemptedSummarizationProvider,
@@ -53,7 +54,7 @@ export interface SummarizationResult {
 export type ProgressCallback = (step: number, total: number, message: string) => void;
 
 export interface SummarizeOptions {
-  skipCloudProviders?: boolean;  // true = skip Ollama/Groq/OpenRouter, go straight to browser T5
+  skipCloudProviders?: boolean;  // true = skip Groq/OpenRouter (real cloud APIs). Ollama is local, not cloud, and is never affected by this — see generateSummaryInternal.
   skipBrowserFallback?: boolean; // true = skip browser T5 fallback
   /**
    * Optional article bodies paired 1:1 with `headlines`. When supplied and
@@ -142,8 +143,12 @@ async function tryApiProvider(
 ): Promise<SummarizationResult | null> {
   if (!isFeatureAvailable(providerDef.featureId)) return null;
   // Entitlement/suppression gate BEFORE any network dispatch (#4913) — a
-  // denial returns null so the chain falls through to browser T5.
-  if (!canAttemptServerSummarization()) {
+  // denial returns null so the chain falls through to browser T5. Ollama is
+  // exempt: it's local, user-configured infra, never behind the premium wall
+  // server-side (see summarize-article.ts's matching carve-out) — gating it
+  // here too would mean a self-hosted user's own Ollama server never even
+  // gets dispatched to.
+  if (providerDef.provider !== 'ollama' && !canAttemptServerSummarization()) {
     // #5605: a denial while the post-403/429 cooldown is armed is a server
     // outage, not the designed anon decline. Recording which one it was keeps
     // a paying user's broken entitlement visible at the chain's log site.
@@ -193,10 +198,16 @@ async function tryApiProvider(
     }
 
     // Provider skipped (credentials missing) or signaled fallback
-    if (resp.status === 'SUMMARIZE_STATUS_SKIPPED' || resp.fallback) return null;
+    if (resp.status === 'SUMMARIZE_STATUS_SKIPPED' || resp.fallback) {
+      markSummarizationProviderFailure(attemptState, providerDef.provider, resp.statusDetail || resp.error || 'skipped');
+      return null;
+    }
 
     const summary = typeof resp.summary === 'string' ? resp.summary.trim() : '';
-    if (!summary) return null;
+    if (!summary) {
+      markSummarizationProviderFailure(attemptState, providerDef.provider, resp.error || resp.statusDetail || 'empty summary returned');
+      return null;
+    }
 
     const cached = resp.status === 'SUMMARIZE_STATUS_CACHED';
     const resultProvider = cached ? 'cache' : providerDef.provider;
@@ -208,6 +219,7 @@ async function tryApiProvider(
     };
   } catch (error) {
     console.warn(`[Summarization] ${providerDef.label} failed:`, error);
+    markSummarizationProviderFailure(attemptState, providerDef.provider, error instanceof Error ? error.message : String(error));
     return null;
   }
 }
@@ -247,6 +259,7 @@ async function tryBrowserT5(
     const [summary] = await mlWorker.summarize([prompt], modelId);
 
     if (!summary || summary.length < 20 || summary.toLowerCase().includes('summarize') || summary.toLowerCase().includes('résumez')) {
+      markSummarizationProviderFailure(attemptState, 'browser', 'produced no usable summary (empty, too short, or echoed the prompt)');
       return null;
     }
 
@@ -258,6 +271,7 @@ async function tryBrowserT5(
     };
   } catch (error) {
     console.warn('[Summarization] Browser T5 failed:', error);
+    markSummarizationProviderFailure(attemptState, 'browser', error instanceof Error ? error.message : String(error));
     return null;
   }
 }
@@ -284,7 +298,8 @@ async function runApiChain(
 }
 
 /**
- * Generate a summary using the fallback chain: Ollama -> Groq -> OpenRouter -> Browser T5
+ * Generate a summary using the fallback chain: Ollama (local, always tried if
+ * configured) -> OpenRouter -> Groq -> Browser T5
  * Server-side Redis caching is handled by the SummarizeArticle RPC handler.
  *
  * @param geoContext Optional geographic signal context to include in the prompt
@@ -320,7 +335,7 @@ export async function generateSummary(
       } else {
         trackLLMFailure(attemptState.lastAttemptedProvider);
         if (options?.componentId) {
-          const { message } = describeSummarizationChainOutcome('', classifySummarizationChainOutcome(attemptState));
+          const { message } = describeSummarizationChainOutcome('', classifySummarizationChainOutcome(attemptState), attemptState);
           componentHealth.recordError(options.componentId, message.trim());
         }
       }
@@ -356,37 +371,54 @@ async function generateSummaryInternal(
     } catch { /* cache lookup failed — proceed to provider chain */ }
   }
 
+  // Ollama is local infrastructure the user runs and configures themselves
+  // (Settings > Data Sources), not a cloud provider — it must be tried
+  // regardless of skipCloudProviders (driven by the "Cloud AI (Groq &
+  // OpenRouter)" toggle) or BETA_MODE's browser-first heuristic below.
+  // Without this split, turning cloud AI off silently fell all the way
+  // through to the browser model even with Ollama configured and available.
+  // isFeatureAvailable('aiOllama') — Ollama's own independent gate (configured
+  // AND its Data Sources toggle enabled) — is what actually decides whether
+  // this does anything; see tryApiProvider.
+  const ollamaProvider = API_PROVIDERS.find(p => p.provider === 'ollama');
+  if (ollamaProvider) {
+    onProgress?.(0, 1, `Connecting to ${ollamaProvider.label}...`);
+    const ollamaResult = await tryApiProvider(ollamaProvider, attemptState, headlines, geoContext, lang, bodies);
+    if (ollamaResult) return ollamaResult;
+  }
+  const cloudProviders = API_PROVIDERS.filter(p => p.provider !== 'ollama');
+
   if (BETA_MODE) {
     const modelReady = mlWorker.isAvailable && mlWorker.isModelLoaded('summarization-beta');
 
     if (modelReady) {
-      const totalSteps = 1 + API_PROVIDERS.length;
+      const totalSteps = 1 + cloudProviders.length;
       // Model already loaded -- use browser T5-small first
       if (!options?.skipBrowserFallback) {
         onProgress?.(1, totalSteps, 'Running local AI model (beta)...');
         const browserResult = await tryBrowserT5(attemptState, headlines, 'summarization-beta', bodies);
         if (browserResult) {
-          const groqProvider = API_PROVIDERS.find(p => p.provider === 'groq');
+          const groqProvider = cloudProviders.find(p => p.provider === 'groq');
           if (groqProvider && !options?.skipCloudProviders) tryApiProvider(groqProvider, attemptState, headlines, geoContext, undefined, bodies).catch(() => {});
 
           return browserResult;
         }
       }
 
-      // Warm model failed inference -- fallback through API providers
+      // Warm model failed inference -- fallback through remaining cloud providers
       if (!options?.skipCloudProviders) {
-        const chainResult = await runApiChain(API_PROVIDERS, attemptState, headlines, geoContext, undefined, onProgress, 2, totalSteps, bodies);
+        const chainResult = await runApiChain(cloudProviders, attemptState, headlines, geoContext, undefined, onProgress, 2, totalSteps, bodies);
         if (chainResult) return chainResult;
       }
     } else {
-      const totalSteps = API_PROVIDERS.length + 2;
+      const totalSteps = cloudProviders.length + 2;
       if (mlWorker.isAvailable && !options?.skipBrowserFallback) {
         mlWorker.loadModel('summarization-beta').catch(() => {});
       }
 
-      // API providers while model loads
+      // Remaining cloud providers while model loads
       if (!options?.skipCloudProviders) {
-        const chainResult = await runApiChain(API_PROVIDERS, attemptState, headlines, geoContext, undefined, onProgress, 1, totalSteps, bodies);
+        const chainResult = await runApiChain(cloudProviders, attemptState, headlines, geoContext, undefined, onProgress, 1, totalSteps, bodies);
         if (chainResult) {
           return chainResult;
         }
@@ -394,7 +426,7 @@ async function generateSummaryInternal(
 
       // Last resort: try browser T5 (may have finished loading by now)
       if (mlWorker.isAvailable && !options?.skipBrowserFallback) {
-        onProgress?.(API_PROVIDERS.length + 1, totalSteps, 'Waiting for local AI model...');
+        onProgress?.(cloudProviders.length + 1, totalSteps, 'Waiting for local AI model...');
         const browserResult = await tryBrowserT5(attemptState, headlines, 'summarization-beta', bodies);
         if (browserResult) return browserResult;
       }
@@ -406,12 +438,12 @@ async function generateSummaryInternal(
     return null;
   }
 
-  // Normal mode: API chain -> Browser T5
-  const totalSteps = API_PROVIDERS.length + 1;
+  // Normal mode: Ollama (tried above) -> remaining cloud chain -> Browser T5
+  const totalSteps = cloudProviders.length + 1;
   let chainResult: SummarizationResult | null = null;
 
   if (!options?.skipCloudProviders) {
-    chainResult = await runApiChain(API_PROVIDERS, attemptState, headlines, geoContext, lang, onProgress, 1, totalSteps, bodies);
+    chainResult = await runApiChain(cloudProviders, attemptState, headlines, geoContext, lang, onProgress, 1, totalSteps, bodies);
   }
   if (chainResult) return chainResult;
 

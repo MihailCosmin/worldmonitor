@@ -4,6 +4,14 @@
 // or client/server cache keys will silently diverge.
 import { hashString } from './hash';
 
+// Bumped v8 → v9 (2026-07-29): the client provider chain fix that makes
+// Ollama try independent of the "Cloud AI (Groq & OpenRouter)" toggle
+// (previously Ollama was wrongly swept into skipCloudProviders, so cloud-off
+// users silently fell straight to the browser model even with Ollama
+// configured and available — see generateSummaryInternal). v8 rows may carry
+// a browser-model summary that should have come from Ollama; retire them
+// cleanly at cutover instead of serving the wrong provider's voice for the TTL.
+//
 // Bumped v7 → v8 on 2026-07-06 (#4944): the summarize provider chain moved
 // from groq llama-3.1-8b-instant-first to OpenRouter deepseek-v4-flash-first,
 // so v7 rows carry old-model voice — retire them cleanly at cutover instead
@@ -18,7 +26,7 @@ import { hashString } from './hash';
 // DON'T pass `bodies` saw a forced cold-start so the pre-grounding
 // headline-only rows aged out cleanly on first tick after deploy. See
 // docs/plans/2026-04-24-001-fix-rss-description-end-to-end-plan.md U6.
-export const CACHE_VERSION = 'v8';
+export const CACHE_VERSION = 'v9';
 
 const MAX_HEADLINE_LEN = 500;
 const MAX_HEADLINES_FOR_KEY = 5;

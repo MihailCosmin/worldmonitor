@@ -31,9 +31,10 @@ describe('buildSummaryCacheKey', () => {
 
   it('systemAppend suffix does not break existing namespace', () => {
     const base = buildSummaryCacheKey(HEADLINES, 'brief', 'US', 'full', 'en');
-    // v7 → v8 on 2026-07-06 (#4944 DeepSeek cutover); v6 → v7 on 2026-07-05
-    // (#4914 pair-dedup); v5 → v6 on 2026-04-24 (RSS grounding fix, U6).
-    assert.match(base, /^summary:v8:/);
+    // v8 → v9 on 2026-07-29 (Ollama-priority fix); v7 → v8 on 2026-07-06
+    // (#4944 DeepSeek cutover); v6 → v7 on 2026-07-05 (#4914 pair-dedup);
+    // v5 → v6 on 2026-04-24 (RSS grounding fix, U6).
+    assert.match(base, /^summary:v9:/);
     assert.doesNotMatch(base, /:fw/);
   });
 
@@ -86,7 +87,7 @@ describe('buildSummaryCacheKey', () => {
 
   it('bodies.length < headlines.length is padded (no crash)', () => {
     const k = buildSummaryCacheKey(HEADLINES, 'brief', 'US', 'full', 'en', undefined, ['only first']);
-    assert.ok(k.startsWith('summary:v8:brief:'));
+    assert.ok(k.startsWith('summary:v9:brief:'));
   });
 
   it('translate mode ignores bodies (no :b segment)', () => {

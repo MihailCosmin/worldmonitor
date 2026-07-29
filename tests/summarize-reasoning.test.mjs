@@ -253,11 +253,14 @@ describe('Fix 3: hasReasoningPreamble', () => {
 describe('Fix 4: cache version bump', () => {
   const src = readSrc('src/utils/summary-cache-key.ts');
 
-  it('CACHE_VERSION is v8', () => {
-    // Bumped v7 → v8 on 2026-07-06 (#4944): summarize chain moved to
-    // OpenRouter deepseek-v4-flash-first; v7 rows carry old-model voice and
-    // must age out. (v6 → v7 on 2026-07-05 for pair-dedup, #4914.)
-    assert.match(src, /CACHE_VERSION\s*=\s*'v8'/,
-      'CACHE_VERSION must be v8 to retire pre-DeepSeek cached summaries');
+  it('CACHE_VERSION is v9', () => {
+    // Bumped v8 → v9 on 2026-07-29: Ollama now tries independent of the
+    // "Cloud AI (Groq & OpenRouter)" toggle (previously wrongly swept into
+    // skipCloudProviders); v8 rows may carry a browser-model summary that
+    // should have come from Ollama and must age out.
+    // (v7 → v8 on 2026-07-06 for the OpenRouter deepseek-v4-flash-first
+    // move, #4944; v6 → v7 on 2026-07-05 for pair-dedup, #4914.)
+    assert.match(src, /CACHE_VERSION\s*=\s*'v9'/,
+      'CACHE_VERSION must be v9 to retire pre-Ollama-priority-fix cached summaries');
   });
 });

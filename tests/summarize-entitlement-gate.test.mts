@@ -271,7 +271,12 @@ describe('summarization.ts wiring (source-grep — module not loadable under nod
     assert.ok(apiStart > -1 && apiEnd > apiStart, 'tryApiProvider slice anchors must resolve');
     const api = code.slice(apiStart, apiEnd);
 
-    const gateIdx = api.indexOf('if (!canAttemptServerSummarization())');
+    // Substring only (not the full `if (...)`), so the Ollama carve-out
+    // (`providerDef.provider !== 'ollama' && !canAttemptServerSummarization()`)
+    // — Ollama is local infra and isn't behind the premium gate, see
+    // summarize-article.ts's matching server-side exemption — doesn't
+    // require rewriting this anchor every time the condition's prefix changes.
+    const gateIdx = api.indexOf('!canAttemptServerSummarization()');
     const executeIdx = api.indexOf('summaryBreaker.execute(');
     const markIdx = api.indexOf('markSummarizationAttempt(');
     assert.ok(gateIdx > -1, 'tryApiProvider must branch on the entitlement gate');

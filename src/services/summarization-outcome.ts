@@ -38,6 +38,15 @@ export interface SummarizationAttemptState {
   declinedBySuppression: boolean;
   /** An eligible provider's dispatch never ran (breaker open). */
   shortCircuited: boolean;
+  /**
+   * One entry per provider whose dispatch actually executed and failed to
+   * produce a summary, in attempt order (e.g. Ollama unreachable, then
+   * OpenRouter not configured, then Groq not configured). Without this,
+   * "All providers failed" was the ENTIRE diagnostic — Settings > Log
+   * couldn't distinguish "Ollama's connection actually failed" from "Ollama
+   * was never reachable in the first place" from a browser-model rejection.
+   */
+  failures: Array<{ provider: AttemptedSummarizationProvider; detail: string }>;
 }
 
 interface SummarizationOutcomeLogger {
@@ -46,7 +55,7 @@ interface SummarizationOutcomeLogger {
 }
 
 export function createSummarizationAttemptState(): SummarizationAttemptState {
-  return { lastAttemptedProvider: 'none', declinedBySuppression: false, shortCircuited: false };
+  return { lastAttemptedProvider: 'none', declinedBySuppression: false, shortCircuited: false, failures: [] };
 }
 
 /**
@@ -59,6 +68,27 @@ export function markSummarizationAttempt(
   provider: AttemptedSummarizationProvider,
 ): void {
   state.lastAttemptedProvider = provider;
+}
+
+const MAX_FAILURE_DETAIL_LEN = 200;
+
+/**
+ * Record WHY a dispatched provider failed to produce a summary — a rejected
+ * HTTP status, an empty/invalid response, or a thrown network error message.
+ * Called only for a dispatch that actually ran (after markSummarizationAttempt),
+ * never for a gate denial or short-circuit — those already have their own,
+ * more precise cause.
+ */
+export function markSummarizationProviderFailure(
+  state: SummarizationAttemptState,
+  provider: AttemptedSummarizationProvider,
+  detail: string,
+): void {
+  const trimmed = detail.trim();
+  state.failures.push({
+    provider,
+    detail: trimmed.length > MAX_FAILURE_DETAIL_LEN ? `${trimmed.slice(0, MAX_FAILURE_DETAIL_LEN)}…` : trimmed,
+  });
 }
 
 /** Record that the entitlement gate declined while the 403/429 cooldown was armed. */
@@ -93,6 +123,7 @@ export function classifySummarizationChainOutcome(
 export function describeSummarizationChainOutcome(
   prefix: string,
   outcome: SummarizationChainOutcome,
+  state?: SummarizationAttemptState,
 ): { level: 'debug' | 'warn'; message: string } {
   switch (outcome) {
     case 'no-eligible-provider':
@@ -110,8 +141,12 @@ export function describeSummarizationChainOutcome(
         level: 'warn',
         message: `${prefix} Summarization unavailable: circuit breaker open, no provider was dispatched`,
       };
-    case 'provider-failure':
-      return { level: 'warn', message: `${prefix} All providers failed` };
+    case 'provider-failure': {
+      const failures = state?.failures ?? [];
+      if (failures.length === 0) return { level: 'warn', message: `${prefix} All providers failed` };
+      const detail = failures.map(f => `${f.provider}: ${f.detail}`).join('; ');
+      return { level: 'warn', message: `${prefix} All providers failed — ${detail}` };
+    }
   }
 }
 
@@ -123,6 +158,7 @@ export function logChainOutcome(
   const { level, message } = describeSummarizationChainOutcome(
     prefix,
     classifySummarizationChainOutcome(state),
+    state,
   );
   logger[level](message);
 }

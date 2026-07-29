@@ -66,7 +66,13 @@ export class InsightsPanel extends Panel {
   private fwSelector: FrameworkSelector | null = null;
   private updateGeneration = 0;
   private static readonly BRIEF_COOLDOWN_MS = 120000; // 2 min cooldown (API has limits)
-  private static readonly BRIEF_CACHE_KEY = 'summary:world-brief';
+  // Bumped :v2 (2026-07-29): retires pre-fix rows that may carry a
+  // browser-model brief that should have come from Ollama (see
+  // summarization.ts's CACHE_VERSION v8→v9 for the underlying fix) — this
+  // panel-level cache is read BEFORE generateSummary() is ever called
+  // (subject to its own BRIEF_COOLDOWN_MS), so bumping CACHE_VERSION alone
+  // wouldn't un-stick an already-cached brief still sitting under the old key.
+  private static readonly BRIEF_CACHE_KEY = 'summary:world-brief:v2';
   // #4928: the server synthesis cites up to 12 sources — capping the cached
   // list at the legacy 6 orphans [7]/[8] citations on the early paint (#4890)
   // and client cooldown renders. Keep read + write on this shared bound.

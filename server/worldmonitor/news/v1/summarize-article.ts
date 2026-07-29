@@ -75,7 +75,14 @@ export async function summarizeArticle(
   const isPremium = premiumIdentity.isPremium;
   const { provider, mode = 'brief', geoContext = '', variant = 'full', lang = 'en' } = req;
   const systemAppend = isPremium && typeof req.systemAppend === 'string' ? req.systemAppend : '';
-  const requiresPremium = mode !== 'translate';
+  // Ollama never consumes WorldMonitor's paid Groq/OpenRouter credits — it
+  // only produces a result at all when THIS deployment's own process has
+  // OLLAMA_API_URL configured (see getProviderCredentials below), which for
+  // the hosted SaaS is simply never set and for a self-hosted deployment is
+  // the operator's own local server. So there is no cross-tenant/hosted-SaaS
+  // abuse surface in exempting it here, and requiring a Pro subscription to
+  // use your own local hardware makes no sense.
+  const requiresPremium = mode !== 'translate' && provider !== 'ollama';
 
   const MAX_HEADLINES = 10;
   const MAX_HEADLINE_LEN = 500;
