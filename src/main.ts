@@ -374,7 +374,7 @@ window.addEventListener('securitypolicyviolation', (e) => {
 import { debugGetCells, getCellCount } from '@/services/geo-convergence';
 import { initMetaTags } from '@/services/meta-tags';
 import { installRuntimeFetchPatch, installWebApiRedirect } from '@/services/runtime';
-import { loadDesktopSecrets } from '@/services/runtime-config';
+import { loadDesktopSecrets, loadSelfHostedSecretStatus } from '@/services/runtime-config';
 import { applyStoredTheme } from '@/utils/theme-manager';
 import { applyFont } from '@/services/font-settings';
 import { initAnalytics } from '@/services/analytics';
@@ -404,6 +404,7 @@ installWebApiRedirect();
 // is the 'dev' marker.
 installStaleBundleCheck();
 loadDesktopSecrets().catch(() => {});
+loadSelfHostedSecretStatus().catch(() => {});
 
 // Apply stored theme preference before app initialization (safety net for inline script)
 applyStoredTheme();

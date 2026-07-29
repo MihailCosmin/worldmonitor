@@ -1,5 +1,6 @@
-import { isDesktopRuntime } from './runtime';
+import { isDesktopRuntime, isSelfHostedRuntime } from './runtime';
 import { invokeTauri } from './tauri-bridge';
+import { getAuthState } from './auth-state';
 
 export type RuntimeSecretKey =
   | 'GROQ_API_KEY'
@@ -67,10 +68,11 @@ export interface RuntimeFeatureDefinition {
 }
 
 export interface RuntimeSecretState {
-  /** Values are retained only for browser environment variables. Desktop vault
-   * entries intentionally expose presence/status without returning plaintext. */
+  /** Values are retained only for browser environment variables. Desktop
+   * vault entries and self-hosted 'local-server' entries intentionally
+   * expose presence/status without returning plaintext. */
   value?: string;
-  source: 'env' | 'vault';
+  source: 'env' | 'vault' | 'local-server';
 }
 
 export interface RuntimeConfig {
@@ -359,7 +361,12 @@ export function validateSecret(key: RuntimeSecretKey, value: string): { valid: b
 let secretsReadyResolve!: () => void;
 export const secretsReady = new Promise<void>(r => { secretsReadyResolve = r; });
 
-if (!isDesktopRuntime()) secretsReadyResolve();
+// Hosted-SaaS web has nothing to load (secrets live server-side) and
+// resolves immediately. Desktop and self-hosted web both have local secret
+// state to fetch asynchronously, so they resolve `secretsReady` at the end
+// of their own load function (loadDesktopSecrets / loadSelfHostedSecretStatus)
+// instead of here.
+if (!isDesktopRuntime() && !isSelfHostedRuntime()) secretsReadyResolve();
 
 const listeners = new Set<() => void>();
 
@@ -418,12 +425,12 @@ export function isFeatureEnabled(featureId: RuntimeFeatureId): boolean {
   return runtimeConfig.featureToggles[featureId] !== false;
 }
 
-export function getSecretState(key: RuntimeSecretKey): { present: boolean; valid: boolean; source: 'env' | 'vault' | 'missing' } {
+export function getSecretState(key: RuntimeSecretKey): { present: boolean; valid: boolean; source: 'env' | 'vault' | 'local-server' | 'missing' } {
   const state = runtimeConfig.secrets[key];
   if (!state) return { present: false, valid: false, source: 'missing' };
   return {
     present: true,
-    valid: state.source === 'vault' || validateSecret(key, state.value ?? '').valid,
+    valid: state.source === 'vault' || state.source === 'local-server' || validateSecret(key, state.value ?? '').valid,
     source: state.source,
   };
 }
@@ -432,8 +439,10 @@ export function isFeatureAvailable(featureId: RuntimeFeatureId): boolean {
   if (!isFeatureEnabled(featureId)) return false;
 
   // Cloud/web deployments validate credentials server-side.
-  // Desktop runtime validates local secrets client-side for capability gating.
-  if (!isDesktopRuntime()) {
+  // Desktop and self-hosted-web runtimes validate local secrets client-side
+  // for capability gating (self-hosted has no separate server-side
+  // entitlement check for these — they're either configured or not).
+  if (!isDesktopRuntime() && !isSelfHostedRuntime()) {
     return true;
   }
 
@@ -453,28 +462,79 @@ export function setFeatureToggle(featureId: RuntimeFeatureId, enabled: boolean):
   notifyConfigChanged();
 }
 
+/**
+ * Self-hosted web has no separate trusted process the way desktop has its
+ * native shell — the browser tab itself calls local-api-server.mjs directly.
+ * That's an explicit, accepted trade-off (see docs/architecture/
+ * fork-sync-manifest.yaml's local-auth entry), gated on local sign-in as a
+ * deliberate speed bump, not real security: it stops a passive/stale-tab
+ * view, not a determined attacker who can already reach the box.
+ */
+function canEditSelfHostedSecrets(): boolean {
+  return isSelfHostedRuntime() && getAuthState().user !== null;
+}
+
+/**
+ * True whenever the current UI should let the user edit runtime secrets/
+ * feature toggles at all — desktop (native vault) or a signed-in
+ * self-hosted-web session. False for hosted-SaaS web (server-managed) and
+ * for a self-hosted-web session that hasn't signed in yet.
+ */
+export function canEditRuntimeConfig(): boolean {
+  return isDesktopRuntime() || canEditSelfHostedSecrets();
+}
+
+/** True for a self-hosted-web install regardless of sign-in state — use to
+ * distinguish "not editable yet, sign in" from "not editable, hosted SaaS". */
+export { isSelfHostedRuntime };
+
 export async function setSecretValue(key: RuntimeSecretKey, value: string): Promise<void> {
-  if (!isDesktopRuntime()) {
-    console.warn('[runtime-config] Ignoring secret write outside desktop runtime');
+  if (isDesktopRuntime()) {
+    const sanitized = value.trim();
+    if (sanitized) {
+      await invokeTauri<void>('set_secret', { key, value: sanitized });
+      runtimeConfig.secrets[key] = { source: 'vault' };
+    } else {
+      await invokeTauri<void>('delete_secret', { key });
+      delete runtimeConfig.secrets[key];
+    }
+
+    // Signal other windows (main ↔ settings) to reload secrets from keychain.
+    // The `storage` event fires in all same-origin windows except the one that wrote.
+    try {
+      localStorage.setItem('wm-secrets-updated', String(Date.now()));
+    } catch { /* localStorage may be unavailable */ }
+
+    notifyConfigChanged();
     return;
   }
 
-  const sanitized = value.trim();
-  if (sanitized) {
-    await invokeTauri<void>('set_secret', { key, value: sanitized });
-    runtimeConfig.secrets[key] = { source: 'vault' };
-  } else {
-    await invokeTauri<void>('delete_secret', { key });
-    delete runtimeConfig.secrets[key];
+  if (isSelfHostedRuntime()) {
+    if (!canEditSelfHostedSecrets()) {
+      console.warn('[runtime-config] Ignoring secret write — sign in locally first');
+      return;
+    }
+    const sanitized = value.trim();
+    const resp = await fetch('/api/local-env-update', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ key, value: sanitized || null }),
+    });
+    if (!resp.ok) {
+      const body: unknown = await resp.json().catch(() => null);
+      const message = body && typeof body === 'object' ? String((body as Record<string, unknown>).error ?? '') : '';
+      throw new Error(message || `Failed to save ${key} (${resp.status})`);
+    }
+    if (sanitized) {
+      runtimeConfig.secrets[key] = { source: 'local-server' };
+    } else {
+      delete runtimeConfig.secrets[key];
+    }
+    notifyConfigChanged();
+    return;
   }
 
-  // Signal other windows (main ↔ settings) to reload secrets from keychain.
-  // The `storage` event fires in all same-origin windows except the one that wrote.
-  try {
-    localStorage.setItem('wm-secrets-updated', String(Date.now()));
-  } catch { /* localStorage may be unavailable */ }
-
-  notifyConfigChanged();
+  console.warn('[runtime-config] Ignoring secret write outside desktop/self-hosted runtime');
 }
 
 export async function verifySecretWithApi(
@@ -487,42 +547,59 @@ export async function verifySecretWithApi(
     return { valid: false, message: localValidation.hint || 'Invalid value' };
   }
 
-  if (!isDesktopRuntime()) {
-    return { valid: true, message: 'Saved' };
+  if (isDesktopRuntime()) {
+    try {
+      const response = await invokeTauri<{ status: number; payload: unknown }>('validate_secret_with_sidecar', {
+        key,
+        value: value.trim(),
+        context,
+      });
+      return parseSecretVerificationPayload(response.status, response.payload);
+    } catch (error) {
+      // Network errors reaching the sidecar should NOT block saving.
+      // Only explicit 401/403 from the provider means the key is invalid.
+      const message = error instanceof Error ? error.message : 'Secret validation failed';
+      return { valid: true, message: `Saved (could not verify – ${message})` };
+    }
   }
 
-  try {
-    const response = await invokeTauri<{ status: number; payload: unknown }>('validate_secret_with_sidecar', {
-      key,
-      value: value.trim(),
-      context,
-    });
-    const { payload } = response;
-
-    if (response.status < 200 || response.status >= 300) {
-      const message = payload && typeof payload === 'object'
-        ? String(
-          (payload as Record<string, unknown>).message
-          || (payload as Record<string, unknown>).error
-          || 'Secret validation failed'
-        )
-        : `Secret validation failed (${response.status})`;
-      return { valid: false, message };
+  if (canEditSelfHostedSecrets()) {
+    try {
+      const resp = await fetch('/api/local-validate-secret', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key, value: value.trim(), context }),
+      });
+      const payload: unknown = await resp.json().catch(() => null);
+      return parseSecretVerificationPayload(resp.status, payload);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Secret validation failed';
+      return { valid: true, message: `Saved (could not verify – ${message})` };
     }
-
-    if (!payload || typeof payload !== 'object') {
-      return { valid: false, message: 'Secret validation returned an invalid response' };
-    }
-
-    const valid = Boolean((payload as Record<string, unknown>).valid);
-    const message = String((payload as Record<string, unknown>).message || (valid ? 'Verified' : 'Verification failed'));
-    return { valid, message };
-  } catch (error) {
-    // Network errors reaching the sidecar should NOT block saving.
-    // Only explicit 401/403 from the provider means the key is invalid.
-    const message = error instanceof Error ? error.message : 'Secret validation failed';
-    return { valid: true, message: `Saved (could not verify – ${message})` };
   }
+
+  return { valid: true, message: 'Saved' };
+}
+
+function parseSecretVerificationPayload(status: number, payload: unknown): SecretVerificationResult {
+  if (status < 200 || status >= 300) {
+    const message = payload && typeof payload === 'object'
+      ? String(
+        (payload as Record<string, unknown>).message
+        || (payload as Record<string, unknown>).error
+        || 'Secret validation failed'
+      )
+      : `Secret validation failed (${status})`;
+    return { valid: false, message };
+  }
+
+  if (!payload || typeof payload !== 'object') {
+    return { valid: false, message: 'Secret validation returned an invalid response' };
+  }
+
+  const valid = Boolean((payload as Record<string, unknown>).valid);
+  const message = String((payload as Record<string, unknown>).message || (valid ? 'Verified' : 'Verification failed'));
+  return { valid, message };
 }
 
 export async function loadDesktopSecrets(): Promise<void> {
@@ -542,6 +619,37 @@ export async function loadDesktopSecrets(): Promise<void> {
     notifyConfigChanged();
   } catch (error) {
     console.warn('[runtime-config] Failed to load desktop secrets from vault', error);
+  } finally {
+    secretsReadyResolve();
+  }
+}
+
+/**
+ * Self-hosted-web counterpart to loadDesktopSecrets() — probes
+ * local-api-server.mjs's /api/local-env-status. On the hosted SaaS this
+ * route doesn't exist (404), which this treats the same as "no backend
+ * support" rather than an error worth warning about. Presence-only, same
+ * as the desktop vault — no plaintext value ever comes back over the wire.
+ */
+export async function loadSelfHostedSecretStatus(): Promise<void> {
+  if (!isSelfHostedRuntime()) return;
+
+  try {
+    const resp = await fetch('/api/local-env-status');
+    if (!resp.ok) return;
+    const payload = await resp.json() as { ok?: boolean; keys?: Record<string, boolean> };
+    const keys = payload?.keys ?? {};
+
+    for (const [key, state] of Object.entries(runtimeConfig.secrets)) {
+      if (state.source === 'local-server') delete runtimeConfig.secrets[key as RuntimeSecretKey];
+    }
+    for (const [key, present] of Object.entries(keys)) {
+      if (present) runtimeConfig.secrets[key as RuntimeSecretKey] = { source: 'local-server' };
+    }
+
+    notifyConfigChanged();
+  } catch (error) {
+    console.warn('[runtime-config] Failed to load self-hosted secret status', error);
   } finally {
     secretsReadyResolve();
   }

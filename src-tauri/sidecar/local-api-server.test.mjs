@@ -832,14 +832,20 @@ test('allows only Docker mode to fetch configured private Redis REST origin', as
     const dockerResponse = await runProbe('docker');
     assert.equal(dockerResponse.status, 200);
     assert.deepEqual(await dockerResponse.json(), { ok: true });
-    assert.equal(upstreamHits, 1);
+    // 2, not 1: createLocalApiServer's own startup now does one Redis GET in
+    // docker mode (loadPersistedSecretsIntoEnv, checking for UI-persisted
+    // secrets) before the handler's own probe fetch runs.
+    assert.equal(upstreamHits, 2);
 
     const desktopResponse = await runProbe('desktop-sidecar');
     assert.equal(desktopResponse.status, 502);
     const desktopBody = await desktopResponse.json();
     assert.equal(desktopBody.error, 'Local handler error');
     assert.match(desktopBody.reason, /SSRF blocked/);
-    assert.equal(upstreamHits, 1);
+    // Unchanged from above: loadPersistedSecretsIntoEnv only runs in docker
+    // mode, and the handler's own probe fetch is SSRF-blocked before it
+    // reaches upstream, so desktop-sidecar mode adds zero new hits.
+    assert.equal(upstreamHits, 2);
   } finally {
     if (originalRedisUrl === undefined) delete process.env.UPSTASH_REDIS_REST_URL;
     else process.env.UPSTASH_REDIS_REST_URL = originalRedisUrl;

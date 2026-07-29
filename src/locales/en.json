@@ -646,7 +646,7 @@
       "showLess": "Show less"
     },
     "runtimeConfig": {
-      "title": "Desktop Configuration",
+      "title": "Data Source Configuration",
       "alertTitle": {
         "configured": "Desktop settings configured",
         "needsKeys": "Configure API keys to unlock features",
@@ -654,9 +654,12 @@
       },
       "reserveEarlyAccess": "Reserve Your Early Access",
       "skipSetup": "Skip the setup — a single World Monitor license unlocks everything. Join the waitlist for early access.",
+      "signInToEdit": "Sign in to view and edit your data-source API keys",
       "summary": {
         "desktop": "Desktop mode",
         "web": "Web mode (read-only, server-managed credentials)",
+        "selfHostedSignedIn": "Self-hosted mode",
+        "selfHostedSignedOut": "Self-hosted mode — sign in to edit",
         "secrets": "local secrets configured",
         "available": "features available"
       },

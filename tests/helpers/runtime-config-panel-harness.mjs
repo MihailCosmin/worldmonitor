@@ -72,6 +72,18 @@ async function loadRuntimeConfigPanel() {
         return true;
       }
 
+      // This harness models a desktop-like, always-editable environment
+      // (matches runtime-stub's isDesktopRuntime() => true below) — these
+      // tests exercise general panel rendering, not the self-hosted-web
+      // sign-in gate specifically.
+      export function canEditRuntimeConfig() {
+        return true;
+      }
+
+      export function isSelfHostedRuntime() {
+        return false;
+      }
+
       export function setFeatureToggle() {}
 
       export async function setSecretValue() {}
@@ -90,6 +102,12 @@ async function loadRuntimeConfigPanel() {
       }
     `],
     ['runtime-stub', `export function isDesktopRuntime() { return true; }`],
+    ['auth-state-stub', `
+      export function signIn() {}
+      export function subscribeAuthState() {
+        return () => {};
+      }
+    `],
     ['tauri-bridge-stub', `export async function invokeTauri() {}`],
     ['i18n-stub', `export function t(key) { return key; }`],
     ['dom-utils-stub', `
@@ -184,6 +202,8 @@ async function loadRuntimeConfigPanel() {
     ['@/services/runtime-config', 'runtime-config-stub'],
     ['../services/runtime', 'runtime-stub'],
     ['@/services/runtime', 'runtime-stub'],
+    ['../services/auth-state', 'auth-state-stub'],
+    ['@/services/auth-state', 'auth-state-stub'],
     ['../services/tauri-bridge', 'tauri-bridge-stub'],
     ['@/services/tauri-bridge', 'tauri-bridge-stub'],
     ['../services/i18n', 'i18n-stub'],

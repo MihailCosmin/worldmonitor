@@ -92,6 +92,28 @@ services:
       AISSTREAM_API_KEY: ""       # same key as above — relay needs it too
 ```
 
+### ✏️ Editing keys from the dashboard (no restart)
+
+As an alternative to editing `docker-compose.override.yml` and recreating the
+container, the dashboard itself has a **Data Source Configuration** panel
+(search for it, or find it in Settings) that lists every key above, shows
+whether it's currently set, and lets you add/change/clear values from the
+browser — no restart needed, changes apply to the next request.
+
+This requires signing in first (see "Sign-In & Accounts" below — a
+lightweight speed-bump, not real security). Edits are written to
+Redis so they survive `docker compose restart`, under a key namespaced apart
+from cached feed data (`wm:local-secrets:v1`) — a Redis compromise on a
+self-hosted box exposes these alongside whatever else is in Redis, so treat
+Redis access with the same care you'd give `docker-compose.override.yml`.
+Values you enter are never echoed back in plaintext (same "configured or
+not" contract as the desktop app's OS-keychain vault) — to change a key you
+overwrite it, you can't view what's currently stored.
+
+This panel only appears for self-hosted web and the desktop app — it has no
+effect (and isn't shown) on the hosted worldmonitor.app, which manages its
+own credentials server-side.
+
 ## 👤 Sign-In & Accounts
 
 Out of the box (no Clerk key configured), clicking "Sign In" starts a **local

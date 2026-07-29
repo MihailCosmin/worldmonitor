@@ -131,6 +131,26 @@ function isWorldMonitorWebHost(hostname: string): boolean {
     || hostname.endsWith('.worldmonitor.app');
 }
 
+/**
+ * True for a self-hosted web install — a non-desktop deployment NOT served
+ * from the hosted worldmonitor.app SaaS domain (Docker/self-host, a custom
+ * domain, a LAN IP, plain `npx vite build` on your own box, etc.). The Vite
+ * bundle itself is identical between hosted and self-hosted web — there's no
+ * build-time flag to distinguish them — so this is a runtime hostname check,
+ * same signal `getConfiguredWebApiBaseUrl()` already uses to decide whether
+ * relative `/api/*` calls should target the local origin.
+ *
+ * Used to gate features that only make sense against your OWN backend (e.g.
+ * editing your own env-configured data-source API keys via
+ * local-api-server.mjs) — the hosted SaaS backend has no such endpoint, so
+ * the UI shouldn't offer it there.
+ */
+export function isSelfHostedRuntime(): boolean {
+  if (isDesktopRuntime() || typeof window === 'undefined') return false;
+  const hostname = window.location?.hostname ?? '';
+  return hostname.length > 0 && !isWorldMonitorWebHost(hostname);
+}
+
 export function getConfiguredWebApiBaseUrl(): string {
   if (WS_API_URL) {
     return normalizeBaseUrl(WS_API_URL);

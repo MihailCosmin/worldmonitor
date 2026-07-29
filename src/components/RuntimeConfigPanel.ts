@@ -1,11 +1,13 @@
 import { Panel } from './Panel';
 import {
   RUNTIME_FEATURES,
+  canEditRuntimeConfig,
   getEffectiveSecrets,
   getRuntimeConfigSnapshot,
   getSecretState,
   isFeatureAvailable,
   isFeatureEnabled,
+  isSelfHostedRuntime,
   setFeatureToggle,
   setSecretValue,
   subscribeRuntimeConfig,
@@ -23,6 +25,7 @@ import { t } from '@/services/i18n';
 import { trackFeatureToggle } from '@/services/analytics';
 import { SIGNUP_URLS, PLAINTEXT_KEYS, MASKED_SENTINEL } from '@/services/settings-constants';
 import { setTrustedHtml, trustedHtml } from '@/utils/dom-utils';
+import { signIn, subscribeAuthState } from '@/services/auth-state';
 
 
 interface RuntimeConfigPanelOptions {
@@ -33,6 +36,7 @@ interface RuntimeConfigPanelOptions {
 
 export class RuntimeConfigPanel extends Panel {
   private unsubscribe: (() => void) | null = null;
+  private unsubscribeAuth: (() => void) | null = null;
   private readonly mode: 'full' | 'alert';
   private readonly buffered: boolean;
   private readonly featureFilter?: RuntimeFeatureId[];
@@ -47,6 +51,12 @@ export class RuntimeConfigPanel extends Panel {
     this.buffered = options.buffered ?? false;
     this.featureFilter = options.featureFilter;
     this.unsubscribe = subscribeRuntimeConfig(() => this.render());
+    // Self-hosted-web editability depends on local sign-in state, which
+    // lives outside runtime-config's own subscription — re-render whenever
+    // it changes so inputs enable/disable live without a manual refresh.
+    if (isSelfHostedRuntime()) {
+      this.unsubscribeAuth = subscribeAuthState(() => this.render());
+    }
     this.render();
   }
 
@@ -158,6 +168,8 @@ export class RuntimeConfigPanel extends Panel {
   public destroy(): void {
     this.unsubscribe?.();
     this.unsubscribe = null;
+    this.unsubscribeAuth?.();
+    this.unsubscribeAuth = null;
   }
 
   private setEffectiveVisibility(visible: boolean): void {
@@ -208,6 +220,25 @@ export class RuntimeConfigPanel extends Panel {
     }
   }
 
+  private summaryText(): string {
+    if (isDesktopRuntime()) return t('modals.runtimeConfig.summary.desktop');
+    if (isSelfHostedRuntime()) {
+      return canEditRuntimeConfig()
+        ? t('modals.runtimeConfig.summary.selfHostedSignedIn')
+        : t('modals.runtimeConfig.summary.selfHostedSignedOut');
+    }
+    return t('modals.runtimeConfig.summary.web');
+  }
+
+  private renderSelfHostedSignInCta(): string {
+    if (!isSelfHostedRuntime() || canEditRuntimeConfig()) return '';
+    return `
+      <div class="runtime-config-signin-cta">
+        <button type="button" class="runtime-signin-btn" data-runtime-signin>${escapeHtml(t('modals.runtimeConfig.signInToEdit'))}</button>
+      </div>
+    `;
+  }
+
   protected render(): void {
     this.captureUnsavedInputs();
     const snapshot = getRuntimeConfigSnapshot();
@@ -256,8 +287,9 @@ export class RuntimeConfigPanel extends Panel {
 
     setTrustedHtml(this.content, trustedHtml(`
       <div class="runtime-config-summary">
-        ${desktop ? t('modals.runtimeConfig.summary.desktop') : t('modals.runtimeConfig.summary.web')} · ${features.filter(f => isFeatureAvailable(f.id)).length}/${features.length} ${t('modals.runtimeConfig.summary.available')}
+        ${this.summaryText()} · ${features.filter(f => isFeatureAvailable(f.id)).length}/${features.length} ${t('modals.runtimeConfig.summary.available')}
       </div>
+      ${this.renderSelfHostedSignInCta()}
       <div class="runtime-config-list">
         ${features.map(feature => this.renderFeature(feature)).join('')}
       </div>
@@ -276,14 +308,14 @@ export class RuntimeConfigPanel extends Panel {
     const pillClass = available ? 'ok' : allStaged ? 'staged' : 'warn';
     const pillLabel = available ? t('modals.runtimeConfig.status.ready') : allStaged ? t('modals.runtimeConfig.status.staged') : t('modals.runtimeConfig.status.needsKeys');
     const secrets = effectiveSecrets.map((key) => this.renderSecretRow(key)).join('');
-    const desktop = isDesktopRuntime();
+    const canEdit = canEditRuntimeConfig();
     const fallbackHtml = available || allStaged ? '' : `<p class="runtime-feature-fallback fallback">${escapeHtml(feature.fallback)}</p>`;
 
     return `
       <section class="runtime-feature ${available ? 'available' : allStaged ? 'staged' : 'degraded'}">
         <header class="runtime-feature-header">
           <label>
-            <input type="checkbox" data-toggle="${feature.id}" ${enabled ? 'checked' : ''} ${desktop ? '' : 'disabled'}>
+            <input type="checkbox" data-toggle="${feature.id}" ${enabled ? 'checked' : ''} ${canEdit ? '' : 'disabled'}>
             <span>${escapeHtml(feature.name)}</span>
           </label>
           <span class="runtime-pill ${pillClass}">${pillLabel}</span>
@@ -295,6 +327,7 @@ export class RuntimeConfigPanel extends Panel {
   }
 
   private renderSecretRow(key: RuntimeSecretKey): string {
+    const canEdit = canEditRuntimeConfig();
     const state = getSecretState(key);
     const pending = this.pendingSecrets.has(key);
     const pendingValid = pending ? this.validatedKeys.get(key) : undefined;
@@ -326,10 +359,10 @@ export class RuntimeConfigPanel extends Panel {
           <span class="runtime-secret-status ${statusClass}">${escapeHtml(status)}</span>
           <span class="runtime-secret-check ${checkClass}">&#x2713;</span>
           ${helpText ? `<div class="runtime-secret-meta">${escapeHtml(helpText)}</div>` : ''}
-          <select data-model-select class="${inputClass}" ${isDesktopRuntime() ? '' : 'disabled'}>
+          <select data-model-select class="${inputClass}" ${canEdit ? '' : 'disabled'}>
             ${storedModel ? `<option value="${escapeHtml(storedModel)}" selected>${escapeHtml(storedModel)}</option>` : '<option value="" selected disabled>Loading models...</option>'}
           </select>
-          <input type="text" data-model-manual class="${inputClass} hidden-input" placeholder="Or type model name" autocomplete="off" ${isDesktopRuntime() ? '' : 'disabled'} ${storedModel ? `value="${escapeHtml(storedModel)}"` : ''}>
+          <input type="text" data-model-manual class="${inputClass} hidden-input" placeholder="Or type model name" autocomplete="off" ${canEdit ? '' : 'disabled'} ${storedModel ? `value="${escapeHtml(storedModel)}"` : ''}>
           ${hintText ? `<span class="runtime-secret-hint">${escapeHtml(hintText)}</span>` : ''}
         </div>
       `;
@@ -346,7 +379,7 @@ export class RuntimeConfigPanel extends Panel {
         <span class="runtime-secret-check ${checkClass}">&#x2713;</span>
         ${helpText ? `<div class="runtime-secret-meta">${escapeHtml(helpText)}</div>` : ''}
         <div class="runtime-input-wrapper${showGetKey ? ' has-suffix' : ''}">
-          <input type="${PLAINTEXT_KEYS.has(key) ? 'text' : 'password'}" data-secret="${key}" placeholder="${pending ? t('modals.runtimeConfig.placeholder.staged') : t('modals.runtimeConfig.placeholder.setSecret')}" autocomplete="off" ${isDesktopRuntime() ? '' : 'disabled'} class="${inputClass}" ${pending ? `value="${PLAINTEXT_KEYS.has(key) ? escapeHtml(this.pendingSecrets.get(key) || '') : MASKED_SENTINEL}"` : (PLAINTEXT_KEYS.has(key) && state.present ? `value="${escapeHtml(getRuntimeConfigSnapshot().secrets[key]?.value || '')}"` : '')}>
+          <input type="${PLAINTEXT_KEYS.has(key) ? 'text' : 'password'}" data-secret="${key}" placeholder="${pending ? t('modals.runtimeConfig.placeholder.staged') : t('modals.runtimeConfig.placeholder.setSecret')}" autocomplete="off" ${canEdit ? '' : 'disabled'} class="${inputClass}" ${pending ? `value="${PLAINTEXT_KEYS.has(key) ? escapeHtml(this.pendingSecrets.get(key) || '') : MASKED_SENTINEL}"` : (PLAINTEXT_KEYS.has(key) && state.present ? `value="${escapeHtml(getRuntimeConfigSnapshot().secrets[key]?.value || '')}"` : '')}>
           ${getKeyHtml}
         </div>
         ${hintText ? `<span class="runtime-secret-hint">${escapeHtml(hintText)}</span>` : ''}
@@ -368,7 +401,9 @@ export class RuntimeConfigPanel extends Panel {
       });
     });
 
-    if (!isDesktopRuntime()) return;
+    this.content.querySelector<HTMLButtonElement>('[data-runtime-signin]')?.addEventListener('click', () => signIn());
+
+    if (!canEditRuntimeConfig()) return;
 
     if (this.mode === 'alert') {
       this.content.querySelector<HTMLButtonElement>('[data-early-access]')?.addEventListener('click', () => {

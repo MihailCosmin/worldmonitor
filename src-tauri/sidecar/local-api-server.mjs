@@ -303,6 +303,112 @@ const ALLOWED_ENV_KEYS = new Set([
   'AVIATIONSTACK_API', 'ICAO_API_KEY', 'UCDP_ACCESS_TOKEN', DESKTOP_AUTH_SECRET_ENV,
 ]);
 
+// ── Docker-only secret persistence (Redis) ──────────────────────────────────
+// In-memory `process.env` mutation (below) takes effect immediately but is
+// lost on container restart — there's no "recreate this .env value" step
+// inside the container the way there is on desktop (OS keychain vault) or
+// dev (hand-edited .env). Self-hosted Docker already ships Redis for cached
+// feed data, so secrets set through the web UI are persisted there too,
+// under a namespace distinct from cached data, and reloaded into
+// `process.env` on the next container start. Desktop is unaffected — it
+// never reaches this code path (its secrets flow through the native vault,
+// not this HTTP server, and the renderer's own fetch to these routes is
+// intercepted and rejected; see src/services/runtime.ts's fetch patch).
+const LOCAL_SECRETS_REDIS_KEY = 'wm:local-secrets:v1';
+
+// `globalThis.fetch` is monkey-patched (above) to SSRF-block private-IP
+// origins by default; `registerSidecarAllowedPrivateFetchOrigins` normally
+// allowlists the Redis REST proxy's internal docker origin, but only once
+// `start()` runs — AFTER the server is already listening. These two
+// functions can run earlier (loadPersistedSecretsIntoEnv, called at startup
+// before the server binds its port), so allowlist defensively on every call
+// rather than depending on that later registration's timing. Idempotent —
+// `Set.add` on an already-present origin is a no-op.
+function allowRedisPrivateOriginIfConfigured(logger) {
+  const url = process.env.UPSTASH_REDIS_REST_URL;
+  if (!url) return;
+  try {
+    sidecarAllowedPrivateFetchOrigins.add(new URL(url).origin);
+  } catch (err) {
+    logger.warn(`[local-api] UPSTASH_REDIS_REST_URL is not a valid URL; Redis secret persistence calls may be SSRF-blocked: ${err.message}`);
+  }
+}
+
+async function redisReadPersistedSecrets(logger) {
+  allowRedisPrivateOriginIfConfigured(logger);
+  const url = process.env.UPSTASH_REDIS_REST_URL;
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+  if (!url || !token) return {};
+  try {
+    const resp = await fetch(`${url}/get/${encodeURIComponent(LOCAL_SECRETS_REDIS_KEY)}`, {
+      headers: { Authorization: `Bearer ${token}` },
+      signal: AbortSignal.timeout(5000),
+    });
+    if (!resp.ok) throw new Error(`Redis HTTP ${resp.status}`);
+    const data = await resp.json();
+    if (!data?.result) return {};
+    const parsed = JSON.parse(data.result);
+    return (parsed && typeof parsed === 'object') ? parsed : {};
+  } catch (err) {
+    logger.warn(`[local-api] failed to read persisted secrets from Redis: ${err.message}`);
+    return {};
+  }
+}
+
+async function redisWritePersistedSecrets(logger, secrets) {
+  allowRedisPrivateOriginIfConfigured(logger);
+  const url = process.env.UPSTASH_REDIS_REST_URL;
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+  if (!url || !token) return false;
+  try {
+    const resp = await fetch(`${url}/`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify(['SET', LOCAL_SECRETS_REDIS_KEY, JSON.stringify(secrets)]),
+      signal: AbortSignal.timeout(5000),
+    });
+    const data = await resp.json().catch(() => null);
+    if (!resp.ok || data?.error) {
+      logger.warn(`[local-api] failed to persist secrets to Redis: ${data?.error ?? `HTTP ${resp.status}`}`);
+      return false;
+    }
+    return true;
+  } catch (err) {
+    logger.warn(`[local-api] failed to persist secrets to Redis: ${err.message}`);
+    return false;
+  }
+}
+
+/**
+ * Read-modify-write a single key's persisted value (or delete it when
+ * `value` is nullish/empty). Fetches the current blob first so a batch of
+ * near-simultaneous single-key edits from one admin's own browser tab don't
+ * clobber each other — this is a single-operator local tool, not a
+ * multi-writer store, so last-write-wins on the full blob is an acceptable
+ * trade rather than needing a CAS/transaction.
+ */
+async function persistSecretUpdates(logger, updates) {
+  const current = await redisReadPersistedSecrets(logger);
+  for (const [key, value] of updates) {
+    if (value == null || value === '') delete current[key];
+    else current[key] = String(value);
+  }
+  return redisWritePersistedSecrets(logger, current);
+}
+
+/** Called once at server startup (docker mode only) — see comment above. */
+async function loadPersistedSecretsIntoEnv(context) {
+  if (context.mode !== 'docker') return;
+  const persisted = await redisReadPersistedSecrets(context.logger);
+  let loaded = 0;
+  for (const [key, value] of Object.entries(persisted)) {
+    if (!ALLOWED_ENV_KEYS.has(key) || typeof value !== 'string') continue;
+    process.env[key] = value;
+    loaded += 1;
+  }
+  if (loaded > 0) context.logger.log(`[local-api] loaded ${loaded} persisted secret(s) from Redis`);
+}
+
 const CHROME_UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36';
 
 // ── SSRF protection ──────────────────────────────────────────────────────
@@ -1644,6 +1750,9 @@ async function dispatch(requestUrl, req, routes, context) {
               process.env[key] = String(value);
               context.logger.log(`[local-api] env set: ${key}`);
             }
+            if (context.mode === 'docker') {
+              await persistSecretUpdates(context.logger, [[key, value]]);
+            }
             moduleCache.clear();
             failedImports.clear();
             cloudPreferred.clear();
@@ -1666,6 +1775,7 @@ async function dispatch(requestUrl, req, routes, context) {
       if (!Array.isArray(entries)) return json({ error: 'entries must be an array' }, 400);
       if (entries.length > 50) return json({ error: 'too many entries (max 50)' }, 400);
       const results = [];
+      const appliedUpdates = [];
       for (const { key, value } of entries) {
         if (typeof key !== 'string' || !key.length || !ALLOWED_ENV_KEYS.has(key)) {
           results.push({ key, ok: false, error: 'not in allowlist' });
@@ -1678,9 +1788,13 @@ async function dispatch(requestUrl, req, routes, context) {
           process.env[key] = String(value);
           context.logger.log(`[local-api] env set: ${key}`);
         }
+        appliedUpdates.push([key, value]);
         results.push({ key, ok: true });
       }
-      if (results.some(r => r.ok)) {
+      if (appliedUpdates.length > 0) {
+        if (context.mode === 'docker') {
+          await persistSecretUpdates(context.logger, appliedUpdates);
+        }
         moduleCache.clear();
         failedImports.clear();
         cloudPreferred.clear();
@@ -1688,6 +1802,21 @@ async function dispatch(requestUrl, req, routes, context) {
       return json({ ok: true, results });
     } catch { /* bad JSON */ }
     return json({ error: 'invalid JSON' }, 400);
+  }
+
+  // Cheap, read-only probe: lets the self-hosted web frontend detect that
+  // this backend supports local env editing at all (the hosted SaaS has no
+  // such route, so a fetch to this path there simply 404s), and shows which
+  // ALLOWED_ENV_KEYS are already configured — presence only, never the
+  // plaintext value, matching the desktop vault's "status not value"
+  // contract in src/services/runtime-config.ts.
+  if (requestUrl.pathname === '/api/local-env-status') {
+    if (req.method !== 'GET') return json({ error: 'GET required' }, 405);
+    const keys = {};
+    for (const key of ALLOWED_ENV_KEYS) {
+      keys[key] = Boolean(process.env[key]);
+    }
+    return json({ ok: true, mode: context.mode, keys });
   }
 
   if (requestUrl.pathname === '/api/local-validate-secret') {
@@ -1790,6 +1919,7 @@ export const __testing__ = {
 export async function createLocalApiServer(options = {}) {
   const context = resolveConfig(options);
   loadVerboseState(context.dataDir);
+  await loadPersistedSecretsIntoEnv(context);
   const routes = await buildRouteTable(context.apiDir);
   let unregisterSelfFetchOrigins = null;
 
@@ -1808,6 +1938,7 @@ export async function createLocalApiServer(options = {}) {
       || requestUrl.pathname === '/api/local-debug-toggle'
       || requestUrl.pathname === '/api/local-env-update'
       || requestUrl.pathname === '/api/local-env-update-batch'
+      || requestUrl.pathname === '/api/local-env-status'
       || requestUrl.pathname === '/api/local-validate-secret';
 
     try {
