@@ -18342,6 +18342,13 @@ a.prediction-link:hover {
   margin-bottom: 8px;
 }
 
+.insights-brief-source {
+  color: var(--text-dim);
+  text-transform: none;
+  font-weight: 400;
+  letter-spacing: normal;
+}
+
 .insights-brief-text {
   font-size: 12px;
   line-height: 1.5;

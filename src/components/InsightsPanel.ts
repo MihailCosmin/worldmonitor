@@ -29,10 +29,33 @@ import type { ClusteredEvent, FocalPoint, MilitaryFlight } from '@/types';
 
 const getAuthoritativeCountryScore = getCachedCountryScoreValue;
 
+// Raw SummarizationProvider values ('ollama' | 'groq' | 'openrouter' |
+// 'browser' | 'cache') aren't presentable as-is — this maps each to the
+// label shown in the brief heading (see InsightsPanel.renderWorldBrief).
+const BRIEF_PROVIDER_LABELS: Record<string, string> = {
+  ollama: 'Ollama',
+  groq: 'Groq',
+  openrouter: 'OpenRouter',
+  browser: 'Browser (local)',
+  cache: 'Cached',
+};
+
+function formatBriefSourceLabel(provider: string | null | undefined, model: string | null | undefined): string {
+  if (!provider) return '';
+  const label = BRIEF_PROVIDER_LABELS[provider] ?? provider;
+  return model ? `${label} / ${model}` : label;
+}
+
 export class InsightsPanel extends Panel {
   private lastBriefUpdate = 0;
   private cachedBrief: string | null = null;
   private cachedBriefSources: BriefSource[] = [];
+  // Which provider/model actually produced cachedBrief — null whenever it
+  // came from the server-insights path (no such metadata exists there) or
+  // hasn't been generated client-side yet. Shown in the brief heading so
+  // "which AI wrote this" is never a guessing game (#ollama-model-trust).
+  private cachedBriefProvider: string | null = null;
+  private cachedBriefModel: string | null = null;
   private lastMissedStories: AnalyzedHeadline[] = [];
   private lastConvergenceZones: RegionalConvergence[] = [];
   private lastFocalPoints: FocalPoint[] = [];
@@ -115,7 +138,7 @@ export class InsightsPanel extends Panel {
 
   private async loadBriefFromCache(): Promise<boolean> {
     if (this.cachedBrief) return false;
-    const entry = await getPersistentCache<{ summary: string; sources?: BriefSource[] }>(InsightsPanel.BRIEF_CACHE_KEY);
+    const entry = await getPersistentCache<{ summary: string; sources?: BriefSource[]; provider?: string; model?: string }>(InsightsPanel.BRIEF_CACHE_KEY);
     if (!entry?.data?.summary) return false;
     const { sources, legacySourceShape } = normalizeCachedBriefSources(entry.data, InsightsPanel.BRIEF_CACHE_MAX_SOURCES);
     if (legacySourceShape) {
@@ -124,6 +147,8 @@ export class InsightsPanel extends Panel {
     }
     this.cachedBrief = entry.data.summary;
     this.cachedBriefSources = sources;
+    this.cachedBriefProvider = entry.data.provider ?? null;
+    this.cachedBriefModel = entry.data.model ?? null;
     this.lastBriefUpdate = entry.updatedAt;
     return true;
   }
@@ -142,7 +167,7 @@ export class InsightsPanel extends Panel {
     if (this.updateGeneration > 0 || !this.cachedBrief) return;
     this.setDataBadge('cached');
     this.setSafeContent(unsafeRawHtml(
-      this.renderWorldBrief(this.cachedBrief, this.cachedBriefSources),
+      this.renderWorldBrief(this.cachedBrief, this.cachedBriefSources, '', this.cachedBriefProvider, this.cachedBriefModel),
       'renderWorldBrief escapes the cached summary (#4890 early brief paint)',
     ));
   }
@@ -482,8 +507,15 @@ export class InsightsPanel extends Panel {
           worldBrief = result.summary;
           this.cachedBrief = worldBrief;
           this.cachedBriefSources = currentBriefSources;
+          this.cachedBriefProvider = result.provider;
+          this.cachedBriefModel = result.model || null;
           this.lastBriefUpdate = now;
-          void setPersistentCache(InsightsPanel.BRIEF_CACHE_KEY, { summary: worldBrief, sources: currentBriefSources });
+          void setPersistentCache(InsightsPanel.BRIEF_CACHE_KEY, {
+            summary: worldBrief,
+            sources: currentBriefSources,
+            provider: result.provider,
+            model: result.model || null,
+          });
         }
       } else {
         this.setProgress(3, totalSteps, t('components.insights.usingCachedBrief'));
@@ -516,7 +548,9 @@ export class InsightsPanel extends Panel {
     worldBriefSources: BriefSource[] = [],
   ): void {
     const clusters = items.map(({ cluster }) => cluster);
-    const briefHtml = worldBrief ? this.renderWorldBrief(worldBrief, worldBriefSources) : '';
+    const briefHtml = worldBrief
+      ? this.renderWorldBrief(worldBrief, worldBriefSources, '', this.cachedBriefProvider, this.cachedBriefModel)
+      : '';
     const focalPointsHtml = this.renderFocalPoints();
     const convergenceHtml = this.renderConvergenceZones();
     const sentimentOverview = this.renderSentimentOverview(sentiments);
@@ -556,8 +590,13 @@ export class InsightsPanel extends Panel {
       // #4890: keep the persistent brief cache warm from the dominant server
       // path (previously only the client-LLM fallback wrote it, so repeat
       // visitors had an empty cache and nothing to early-paint at boot).
+      // No provider/model metadata exists for this path (server-computed,
+      // not attributed) — clear any stale value left over from an earlier
+      // client-generated brief rather than showing it against different text.
       this.cachedBrief = insights.worldBrief;
       this.cachedBriefSources = worldBriefSources;
+      this.cachedBriefProvider = null;
+      this.cachedBriefModel = null;
       this.lastBriefUpdate = Date.now();
       void setPersistentCache(InsightsPanel.BRIEF_CACHE_KEY, { summary: insights.worldBrief, sources: this.cachedBriefSources });
     }
@@ -685,15 +724,24 @@ export class InsightsPanel extends Panel {
     return linesHtml + footer;
   }
 
-  private renderWorldBrief(brief: string, sources: BriefSource[] = [], extrasHtml = ''): string {
+  private renderWorldBrief(
+    brief: string,
+    sources: BriefSource[] = [],
+    extrasHtml = '',
+    provider?: string | null,
+    model?: string | null,
+  ): string {
     const heading =
       SITE_VARIANT === 'tech'      ? `🚀 ${t('components.insights.briefTech')}`
     : SITE_VARIANT === 'commodity' ? `⛏️ ${t('components.insights.briefCommodity')}`
     : SITE_VARIANT === 'energy'    ? `⚡ ${t('components.insights.briefEnergy')}`
     :                                `🌍 ${t('components.insights.briefWorld')}`;
+    const sourceLabel = formatBriefSourceLabel(provider, model);
     return `
       <div class="insights-brief">
-        <div class="insights-section-title">${heading}</div>
+        <div class="insights-section-title">
+          ${heading}${sourceLabel ? ` <span class="insights-brief-source">- ${escapeHtml(sourceLabel)}</span>` : ''}
+        </div>
         <div class="insights-brief-text">${escapeHtml(brief)}</div>
         ${extrasHtml}
         ${renderBriefSourcesFooter(sources, { className: 'insights-brief-sources', maxSources: Math.max(6, sources.length) })}
@@ -949,6 +997,8 @@ export class InsightsPanel extends Panel {
     this.updateGeneration++;
     // Reset brief cache so new provider settings take effect immediately
     this.cachedBrief = null;
+    this.cachedBriefProvider = null;
+    this.cachedBriefModel = null;
     this.lastBriefUpdate = 0;
     try {
       await deletePersistentCache(InsightsPanel.BRIEF_CACHE_KEY);

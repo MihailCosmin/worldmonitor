@@ -49,8 +49,8 @@ describe('InsightsPanel early cached-brief paint (#4890)', () => {
     );
     assert.match(
       method,
-      /this\.renderWorldBrief\(this\.cachedBrief, this\.cachedBriefSources\)/,
-      'the early paint must reuse renderWorldBrief (it escapes the cached summary)',
+      /this\.renderWorldBrief\(this\.cachedBrief, this\.cachedBriefSources, '', this\.cachedBriefProvider, this\.cachedBriefModel\)/,
+      'the early paint must reuse renderWorldBrief (it escapes the cached summary) and restore the cached provider/model attribution',
     );
   });
 
