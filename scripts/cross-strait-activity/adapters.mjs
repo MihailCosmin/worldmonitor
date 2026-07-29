@@ -1130,9 +1130,13 @@ function decodeHtml(value) {
     .replace(/&#x([0-9a-f]+);/gi, (_, hex) => decodeNumericEntity(hex, 16))
     .replace(/&#(\d+);/g, (_, digits) => decodeNumericEntity(digits, 10))
     .replace(/&nbsp;/gi, ' ')
-    .replace(/&amp;/gi, '&')
     .replace(/&quot;/gi, '"')
     .replace(/&#39;|&apos;/gi, "'")
+    // &amp; must decode LAST so one pass decodes exactly one level
+    // (`&amp;quot;` stays the literal text `&quot;`). Accepted residual,
+    // same as PR #5432: `&#38;quot;` still double-decodes because numerics
+    // run before the named entities.
+    .replace(/&amp;/gi, '&')
     .replace(/\r/g, '')
     .replace(/[ \t]+/g, ' ')
     .replace(/\n\s+/g, '\n')
@@ -2056,7 +2060,7 @@ export async function fetchCrossStraitActivitySnapshot({
   previousSnapshot = null,
   mndListUrl = CROSS_STRAIT_SOURCE_CONTRACTS.taiwanMnd.listUrl,
   sleepFn = (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
-  proxyUrl = process.env.PROXY_URL ?? '',
+  proxyUrl = process.env.JAPAN_MOD_PROXY_URL || process.env.PROXY_URL || '',
   proxyRequestFn = proxyFetch,
 } = {}) {
   const generatedAt = new Date(now).toISOString();
