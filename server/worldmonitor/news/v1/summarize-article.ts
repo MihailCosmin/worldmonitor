@@ -25,6 +25,37 @@ import {
 import { stripThinkingTags } from '../../../_shared/llm';
 import { buildLlmCallEvent, deliverUsageEvents } from '../../../_shared/usage';
 
+// Groq/OpenRouter run fixed, non-reasoning (or reasoning-disabled) models
+// server-side, so 100 tokens / 25s comfortably covers a short brief. Ollama
+// is whatever model the self-hosted user configured, often a reasoning model
+// (gpt-oss, deepseek-r1, qwen3...) that puts its chain-of-thought in a
+// SEPARATE `message.reasoning`/`message.thinking` field, not
+// `message.content`.
+//
+// Ollama therefore gets its NATIVE /api/chat endpoint rather than the
+// OpenAI-compatible /v1/chat/completions, because the compat layer drops the
+// two parameters that actually matter here (confirmed by raw-response
+// logging, #ollama-empty-response):
+//   - `think: false` is a native-only field. Over the compat endpoint it is
+//     ignored, so the model reasons no matter what getProviderCredentials
+//     puts in extraBody.
+//   - the context window is pinned to the model default (4096). Raising
+//     max_tokens does nothing: a 128k request still came back with
+//     total_tokens exactly 4096 and finish_reason 'length', the entire
+//     budget spent inside `reasoning` while `content` never started. Only
+//     the native endpoint accepts `options.num_ctx`.
+// Native also reports token counts as eval_count/prompt_eval_count and the
+// stop reason as done_reason, so the response parsing branches too.
+//
+// Ollama has no per-token cost and the AbortSignal below (not num_predict)
+// is what actually bounds wall-clock time, so the generation ceiling stays
+// generous; num_ctx is the value that has to be big enough to hold prompt +
+// any reasoning + the answer, but not so big it forces a needless
+// memory-hungry model reload.
+const OLLAMA_MAX_TOKENS = 128_000;
+const OLLAMA_NUM_CTX = 32_768;
+const OLLAMA_TIMEOUT_MS = 360_000;
+
 // Best-effort llm_call telemetry (#4895). This handler bypasses callLlm (the
 // client picks the provider), so it emits its own events.
 async function emitSummarizeLlmEvent(p: {
@@ -74,6 +105,7 @@ export async function summarizeArticle(
   const premiumIdentity = await resolvePremiumCallerIdentity(ctx.request);
   const isPremium = premiumIdentity.isPremium;
   const { provider, mode = 'brief', geoContext = '', variant = 'full', lang = 'en' } = req;
+  const isOllama = provider === 'ollama';
   const systemAppend = isPremium && typeof req.systemAppend === 'string' ? req.systemAppend : '';
   // Ollama never consumes WorldMonitor's paid Groq/OpenRouter credits — it
   // only produces a result at all when THIS deployment's own process has
@@ -240,21 +272,50 @@ export async function summarizeArticle(
 
         const llmStartMs = Date.now();
         const llmPromptChars = effectiveSystemPrompt.length + userPrompt.length;
-        const response = await fetch(apiUrl, {
-          method: 'POST',
-          headers: { ...providerHeaders, 'User-Agent': CHROME_UA },
-          body: JSON.stringify({
+        const messages = [
+          { role: 'system', content: effectiveSystemPrompt },
+          { role: 'user', content: userPrompt },
+        ];
+
+        // getProviderCredentials builds the OpenAI-compat URL (shared with
+        // callLlm); rebase onto the native path for this handler only.
+        const requestUrl = isOllama ? new URL('/api/chat', apiUrl).toString() : apiUrl;
+        const requestBody = isOllama
+          ? {
             model,
-            messages: [
-              { role: 'system', content: effectiveSystemPrompt },
-              { role: 'user', content: userPrompt },
-            ],
+            messages,
+            stream: false,
+            // Native-only: suppress chain-of-thought entirely so the model
+            // spends its budget on `content` instead of `thinking`.
+            think: false,
+            options: {
+              temperature: 0.3,
+              top_p: 0.9,
+              num_ctx: OLLAMA_NUM_CTX,
+              num_predict: OLLAMA_MAX_TOKENS,
+            },
+          }
+          : {
+            model,
+            messages,
             temperature: 0.3,
             max_tokens: 100,
             top_p: 0.9,
             ...extraBody,
-          }),
-          signal: AbortSignal.timeout(25_000),
+          };
+
+        if (isOllama) {
+          console.log(`[SummarizeArticle:ollama] request:`, JSON.stringify({
+            requestUrl, model, numCtx: OLLAMA_NUM_CTX, numPredict: OLLAMA_MAX_TOKENS,
+            timeoutMs: OLLAMA_TIMEOUT_MS, promptChars: llmPromptChars,
+          }));
+        }
+
+        const response = await fetch(requestUrl, {
+          method: 'POST',
+          headers: { ...providerHeaders, 'User-Agent': CHROME_UA },
+          body: JSON.stringify(requestBody),
+          signal: AbortSignal.timeout(isOllama ? OLLAMA_TIMEOUT_MS : 25_000),
         });
 
         if (!response.ok) {
@@ -265,11 +326,39 @@ export async function summarizeArticle(
         }
 
         const data = await response.json() as any;
-        const tokens = (data.usage?.total_tokens as number) || 0;
-        const usage = data.usage as { total_tokens?: number; prompt_tokens?: number; completion_tokens?: number } | undefined;
-        const message = data.choices?.[0]?.message;
+
+        // Native /api/chat returns { message, done_reason, prompt_eval_count,
+        // eval_count } — no `choices` array and no `usage` object.
+        const message = isOllama ? data.message : data.choices?.[0]?.message;
+        const finishReason = (isOllama ? data.done_reason : data.choices?.[0]?.finish_reason) ?? null;
+        const usage = isOllama
+          ? {
+            prompt_tokens: (data.prompt_eval_count as number) || 0,
+            completion_tokens: (data.eval_count as number) || 0,
+            total_tokens: ((data.prompt_eval_count as number) || 0) + ((data.eval_count as number) || 0),
+          }
+          : data.usage as { total_tokens?: number; prompt_tokens?: number; completion_tokens?: number } | undefined;
+        const tokens = usage?.total_tokens || 0;
         const rawText = typeof message?.content === 'string' ? message.content.trim() : '';
         const rawContent = stripThinkingTags(rawText);
+
+        if (isOllama) {
+          // Prints the exact shape Ollama returned — which field the content
+          // actually lands in, whether done_reason is 'length' (ran out of
+          // context) vs 'stop' (model finished), and what stripThinkingTags
+          // removed — instead of guessing from a rejection message alone.
+          const thinking = typeof message?.thinking === 'string' ? message.thinking : '';
+          console.log(`[SummarizeArticle:ollama] raw response:`, JSON.stringify({
+            finishReason,
+            usage,
+            messageKeys: message ? Object.keys(message) : [],
+            thinkingLength: thinking.length,
+            rawTextLength: rawText.length,
+            rawTextPreview: rawText.slice(0, 800),
+            rawContentLength: rawContent.length,
+            rawContentPreview: rawContent.slice(0, 800),
+          }, null, 2));
+        }
 
         if (['brief', 'analysis'].includes(mode) && rawContent.length < 20) {
           console.warn(`[SummarizeArticle:${provider}] Output too short after stripping (${rawContent.length} chars), rejecting`);
@@ -286,6 +375,13 @@ export async function summarizeArticle(
         await emitSummarizeLlmEvent({ provider, model, ok: Boolean(rawContent), durationMs: Date.now() - llmStartMs, promptChars: llmPromptChars, usage, reason: rawContent ? '' : 'empty' });
         return rawContent ? { summary: rawContent, model, tokens } : null;
       },
+      120,
+      // cachedFetchJsonWithMeta force-rejects the fetcher after this timeout
+      // regardless of the inner fetch()'s own AbortSignal — MUST stay above
+      // OLLAMA_TIMEOUT_MS or local/reasoning-model calls get cut off here
+      // instead, with a less specific "cachedFetchJsonWithMeta ... timeout"
+      // error masking the real cause.
+      isOllama ? { timeoutMs: OLLAMA_TIMEOUT_MS + 10_000 } : undefined,
     );
 
     if (result?.summary) {
