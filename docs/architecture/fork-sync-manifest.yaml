@@ -56,7 +56,7 @@
 meta:
   upstream_remote: upstream
   upstream_repo: koala73/worldmonitor
-  last_sync_commit: "PENDING"             # set to this sync's merge commit SHA in a follow-up commit
+  last_sync_commit: "3e1d9a4e7"           # our merge commit for this sync
   last_sync_upstream_head: "bc99aad53"    # upstream/main SHA merged as of last sync
   # `git log bc99aad53..upstream/main --oneline` shows how far upstream has moved
   # since.
