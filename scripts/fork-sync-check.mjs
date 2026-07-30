@@ -58,7 +58,12 @@ function collectHighRiskPaths(manifest) {
     for (const key of ['mirrors', 'also_check']) {
       for (const p of entry[key] ?? []) paths.add(norm(p));
     }
-    if (entry.also) paths.add(norm(entry.also));
+    // `also` is a single string on some entries, an array on others (e.g.
+    // auth-state.ts lists two related files) — normalize to array first.
+    if (entry.also) {
+      const alsoList = Array.isArray(entry.also) ? entry.also : [entry.also];
+      for (const p of alsoList) paths.add(norm(p));
+    }
   }
   // commit_ranges[].high_risk_files is a flat array of path strings (a
   // lighter-weight per-category list, distinct from the top-level
