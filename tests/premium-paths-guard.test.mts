@@ -527,7 +527,7 @@ describe('premium-paths guard — browser direct-LLM routes cannot trigger wm-se
     const panelSource = readFileSync(join(repoRoot, 'src/components/DeductionPanel.ts'), 'utf8');
     assert.match(
       panelSource,
-      /premiumFetch\(input,\s*\{\s*\.\.\.\(init \?\? \{\}\),\s*forcePremium:\s*true\s*\}\)/,
+      /premiumFetch\(input,\s*\{\s*\.\.\.\(init \?\? \{\}\),\s*forcePremium:\s*true\s*(?:,\s*componentId:\s*'[^']*'\s*)?\}\)/,
       'DeductionPanel must attach Clerk auth through premiumFetch(forcePremium:true).',
     );
 

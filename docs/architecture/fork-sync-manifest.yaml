@@ -56,9 +56,9 @@
 meta:
   upstream_remote: upstream
   upstream_repo: koala73/worldmonitor
-  last_sync_commit: "02239675e"           # our merge commit for this sync
-  last_sync_upstream_head: "aa74d8947"    # upstream/main SHA merged as of last sync
-  # `git log aa74d8947..upstream/main --oneline` shows how far upstream has moved
+  last_sync_commit: "PENDING"             # set to this sync's merge commit SHA in a follow-up commit
+  last_sync_upstream_head: "bc99aad53"    # upstream/main SHA merged as of last sync
+  # `git log bc99aad53..upstream/main --oneline` shows how far upstream has moved
   # since.
   #
   # Sync history:
@@ -76,6 +76,15 @@ meta:
   #     touches, zero new test failures beyond already-documented gaps —
   #     confirmed by scripts/fork-sync-check.mjs and
   #     scripts/fork-sync-verify.mjs, no manual worktree comparison needed.
+  #   - aa74d8947 -> bc99aad53: a 45-commit sync (see commit_ranges.upstream-sync
+  #     entry dated 2026-07-30). 22 real conflicts, all hand-resolved; the
+  #     bigger risk this time was on files that merged CLEANLY: a blanket
+  #     "restore deleted generated files from HEAD" wrongly reverted a
+  #     legitimately-regenerated src/generated/market/v1 client/server pair,
+  #     and a clean adoption of upstream's new firePremiumLoaders fan-out
+  #     silently reintroduced clearGlobalTenders() (Global Tenders is free on
+  #     this fork). Both caught by running the FULL test suite, not just
+  #     protected_invariant_tests — see that entry for the complete story.
   categories: [pro-removal, discord-removal, owner-branding-removal, feature-ungate, upstream-sync, local-auth]
 
 # ---------------------------------------------------------------------------
@@ -349,6 +358,108 @@ commit_ranges:
       git-worktree pre-existing-failure comparison was needed; the tooling's
       output was sufficient on its own.
 
+  - category: upstream-sync
+    range: "aa74d8947..bc99aad53"          # 45 commits
+    summary: >
+      Synced 45 upstream commits (2026-07-30), including a stock-analysis
+      fundamentals-blended "rating" system (composite_score, rating_signal/
+      summary/action/confidence/why_now, rating_bullish/risk_factors, news
+      sentiment, realized volatility/ATR/max drawdown — analyze_stock.proto
+      +14 fields, backtest_stock.proto +1), a reload-loop fix
+      (entitlement-reload-controller.ts, "daypesta" customer recording: an
+      account-scoped sessionStorage guard replacing the old boolean
+      transition check so a flapping entitlement snapshot can navigate at
+      most once per account per tab), a #5619/#5622 premium-check fix
+      (resolvePremiumCallerIdentity now distinguishes a missing credential
+      from a confirmed-free plan from an unverifiable lookup, each getting
+      its own status/message instead of being flattened to one), and a large
+      docs/API-versioning restructure that deleted and reorganized
+      docs/api/*.openapi.* and touched proto/buf.gen.yaml. 22 real conflicts,
+      all hand-resolved (see high_risk_files below for the two file-classes
+      that needed per-file 3-way analysis rather than a blanket accept).
+
+      Two clean-merge (no conflict marker) regressions found ONLY by running
+      the full test suite, not just protected_invariant_tests:
+
+      1. `git checkout HEAD -- src/generated/` (meant to restore generated
+         client/server files that looked deleted) reverted
+         src/generated/{client,server}/worldmonitor/market/v1/service_*.ts to
+         their pre-sync content, discarding upstream's legitimate
+         regeneration for the new rating fields above. Root cause: most of
+         src/generated/ WAS a clean "theirs deleted, ours never touched"
+         case (matching docs/api/'s restructure), but this one path was
+         "theirs changed, ours never touched" — a plain modification, not a
+         deletion. A per-file base/ours/theirs classification (not a
+         directory-wide restore) is required whenever this happens again;
+         see the new high_risk_files entry below.
+      2. Adopting upstream's new `firePremiumLoaders` fan-out in src/App.ts
+         (fires PRO-gated initial loads on a free→pro transition) pulled in
+         its `else if (!nowPremium && hadPremium) { clearGlobalTenders() }`
+         downgrade-clear branch verbatim. Global Tenders is free for all
+         users on this fork (D-series ungate), so there is no Pro-only cache
+         to purge on downgrade — clearGlobalTenders() doesn't exist on this
+         fork's data-loader.ts. Worse, `firePremiumLoaders` itself turned out
+         to be dead weight this fork doesn't want at all:
+         tests/premium-loaders-fan-out-coverage.test.mts (existing,
+         pre-merge test — NOT part of protected_invariant_tests, which is
+         how this slipped past the first verify pass) asserts the entire
+         entitlement-transition fan-out helper must not exist, because every
+         panel it re-primes already free-loads via the normal
+         shouldPrime()/scheduleRefresh() lifecycle. Fixed by deleting
+         firePremiumLoaders/unsubEntitlementPremiumLoaders/the
+         onEntitlementChange wiring entirely, restoring the pre-sync
+         shouldPrime/scheduleRefresh-only design.
+
+      A related but NOT-a-regression finding: entitlement-reload-controller
+      wiring in src/app/panel-layout.ts (this file WAS one of the 22
+      conflicts) correctly omits upstream's `onSnapshot: () =>
+      this.updatePanelGating(...)` — updatePanelGating was deleted outright
+      by this fork's D13 pro-panel-gating removal
+      (tests/remove-pro-cleanup.test.mjs bans the identifier from this file
+      even in comments) and there is nothing left to refresh in place. The
+      new upstream test tests/entitlement-reload-controller.test.mts
+      hardcoded that exact onSnapshot wiring as an assertion; adjusted the
+      one assertion to match this fork's reality rather than the code (the
+      other 6 tests in that file, testing createEntitlementReloadController
+      itself, are generic and unchanged).
+
+      Also found and fixed: `public/pro/assets/index-BOTuWg_3.js` was
+      dropped by the merge (upstream's tree has no file at that path — a
+      clean "theirs deleted" outcome) even though this fork's own kept
+      (--ours) public/pro/index.html still `modulepreload`s it by exact
+      hash-named filename. Vite content-hashed build output isn't safe to
+      bulk-restore-or-delete by directory; always cross-check every asset
+      path referenced by the kept HTML actually exists after resolving a
+      public/pro/assets conflict. Incidentally also fixed
+      tests/pro-sentry-chunk.test.mjs (same missing file, different
+      assertion).
+
+      docs/api/MarketService.openapi.{json,yaml} and
+      docs/api/worldmonitor.openapi.yaml needed real 3-way merges (both
+      sides changed them: this fork's own PRO-gating-language edits —
+      "Free for all users." insertions — vs. upstream's new rating-system
+      schema and one overlapping BacktestStock description-text collision).
+      Resolved by generating from upstream's copy (has the new schema) and
+      replaying this fork's specific description-text edits on top, using
+      the ALREADY-MERGED proto/*.proto rpc comments (not manual prose
+      reconciliation) as the source of truth for the one truly-overlapping
+      line. `make generate`/buf unavailable in the sandbox that ran this
+      sync — these two files plus MarketService.openapi.* are consistent
+      with the merged proto NOW, but should be regenerated for real (`npm
+      run build:openapi` needs `docs/api/worldmonitor.openapi.yaml`, which
+      needs `make generate` with go+buf installed) at the next opportunity
+      to catch anything a hand-merge missed.
+
+      Verified via scripts/fork-sync-check.mjs and
+      scripts/fork-sync-verify.mjs, PLUS a full run of every test file
+      matching *premium*/*pro-*/*gate*/*entitlement*/*ungate* (not just
+      protected_invariant_tests) — 876 passed, 10 failed, all 10 matching
+      already-documented known_pre_existing_gaps entries exactly (one
+      previously-undocumented premium-paths-guard.test.mts subtest was
+      fixed instead of documented: a regex too strict for the
+      `componentId` field the Log-tab component-health work added to
+      DeductionPanel.ts's premiumFetch call — unrelated to this sync).
+
 # ---------------------------------------------------------------------------
 # 2. High-risk files — hand-review on every sync regardless of conflict markers.
 # ---------------------------------------------------------------------------
@@ -460,6 +571,42 @@ high_risk_files:
       silently no-op with no key configured).
     also: [src/components/AuthLauncher.ts, src/components/UnifiedSettings.ts, src/components/DeductionPanel.ts]
 
+  - path: src/generated/**
+    risk: >
+      Committed sebuf-generated RPC client/server code (protoc-gen-ts-client
+      output) — NOT purely a build artifact you can restore-or-delete as a
+      block. When a path here shows as cleanly deleted by the merge, check
+      base/ours/theirs individually (`git show <rev>:<path>` for the
+      merge-base, HEAD, and upstream/main) before deciding: most of the time
+      it really is "theirs deleted, ours never touched" (safe to restore
+      from HEAD, matching docs/api/'s restructure below), but a path can
+      also be "theirs changed, ours never touched" — a plain regeneration
+      you must take FROM upstream, not revert. A blanket `git checkout HEAD
+      -- src/generated/` reverted src/generated/{client,server}/worldmonitor/
+      market/v1/service_*.ts to stale pre-sync content this way during the
+      aa74d8947..bc99aad53 sync, breaking `tsc --noEmit` against code that
+      correctly expected the new fields. `make generate` (needs go+buf) is
+      the real fix when available; absent that, per-file 3-way
+      classification is the only safe manual substitute.
+    also: [docs/api/**]
+
+  - path: src/App.ts
+    risk: >
+      Home to `firePremiumLoaders` upstream's entitlement-transition fan-out
+      helper, added upstream to fire PRO-gated initial loads on a free→pro
+      transition and clear Pro-only caches on downgrade. This fork's public
+      panels (trade policy, stock analysis/backtest, daily market brief,
+      global tenders, resilience ranking, ...) already free-load via the
+      normal shouldPrime()/scheduleRefresh() lifecycle and don't need this
+      fan-out at all — tests/premium-loaders-fan-out-coverage.test.mts
+      asserts `firePremiumLoaders` must not exist in this file. A clean
+      merge will silently re-add it (and its clearGlobalTenders() downgrade
+      call, which references a data-loader.ts method this fork deleted
+      outright since Global Tenders is free). If upstream adds a genuinely
+      new premium loader in a future sync, thread it into the existing
+      shouldPrime/scheduleRefresh calls instead of reviving this helper.
+    companion_test: tests/premium-loaders-fan-out-coverage.test.mts
+
 # ---------------------------------------------------------------------------
 # 3. Upstream commits/patterns already evaluated — the decision still applies
 #    if the same commit, a rebase of it, or a near-identical reimplementation
@@ -512,6 +659,7 @@ protected_invariant_tests:
   - tests/indexable-content-visibility.test.mjs
   - tests/pro-critical-css.test.mjs
   - tests/deploy-config.test.mjs
+  - tests/premium-loaders-fan-out-coverage.test.mts
   - convex/__tests__/apiKeys.test.ts
 
 # Known gaps in the above, so they aren't mistaken for sync regressions.

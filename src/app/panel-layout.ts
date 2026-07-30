@@ -43,7 +43,8 @@ import { trackCriticalBannerAction, trackCheckoutSuccess, trackCheckoutFailed, r
 import { getStoredMapModePreference } from '@/services/map-mode-preference';
 import { loadWidgets, saveWidget } from '@/services/widget-store';
 import type { CustomWidgetSpec } from '@/services/widget-store';
-import { initEntitlementSubscription, destroyEntitlementSubscription, isEntitled, onEntitlementChange, shouldReloadOnEntitlementChange } from '@/services/entitlements';
+import { initEntitlementSubscription, destroyEntitlementSubscription, isEntitled, onEntitlementChange } from '@/services/entitlements';
+import { createEntitlementReloadController } from '@/services/entitlement-reload-controller';
 import { initSubscriptionWatch, destroySubscriptionWatch } from '@/services/billing';
 import { initPaymentFailureBanner } from '@/components/payment-failure-banner';
 import { handleCheckoutReturn } from '@/services/checkout-return';
@@ -438,10 +439,10 @@ export class PanelLayoutManager implements AppModule {
       email: getAuthState().user?.email ?? null,
     }));
 
-    // Reload only on a free→pro transition. Legacy-pro users whose first
-    // snapshot is already pro (lastEntitled === null) must not trigger a
-    // reload loop, but a user who pays mid-session (false → true) must see
-    // their panels unlock without manual refresh.
+    // Reload at most once per account and browser tab on a free→pro
+    // transition. Legacy-pro users whose first snapshot is already pro must
+    // not reload, while a newly upgraded user gets one clean boot with every
+    // premium panel initialized against the paid entitlement.
     //
     // When we just returned from a Dodo full-page redirect checkout, seed
     // lastEntitled = false instead of null. The webhook may have already
@@ -451,24 +452,34 @@ export class PanelLayoutManager implements AppModule {
     // the user would see locked panels until a manual refresh — exactly the
     // symptom that caused the 2026-04-17/18 duplicate-subscription incident.
     //
-    // REQUIRES_SKIP_INITIAL_SNAPSHOT_BEHAVIOR — the watcher is the SOLE
-    // automatic reload source for post-checkout success (the overlay
-    // handler in checkout.ts deliberately does NOT reload). If PR #3163's
-    // fix to `skipInitialSnapshot` is ever reverted, this detector
-    // swallows the activation silently and users see locked panels for
-    // 30s until the extended-unlock timeout fires a manual-refresh CTA.
-    // Regression guard: tests/entitlement-transition.test.mts locks the
-    // "incident sequence" semantics; see mirror marker in checkout.ts.
-    let lastEntitled: boolean | null = returnedFromCheckout ? false : null;
-    this.unsubscribeEntitlementChange = onEntitlementChange(() => {
-      const entitled = isEntitled();
-      const reload = shouldReloadOnEntitlementChange(lastEntitled, entitled);
-      lastEntitled = entitled;
-      if (reload) {
-        console.log('[entitlements] Subscription activated — reloading to unlock panels');
+    // The guard is persisted and verified BEFORE navigation. If storage is
+    // blocked, we fail closed without reloading. This prevents the
+    // customer-visible failure where each new page boot receives
+    // another transient free→pro sequence and reloads again every ~500ms.
+    //
+    // REQUIRES_SKIP_INITIAL_SNAPSHOT_BEHAVIOR — this remains the sole
+    // automatic reload source for post-checkout success (the overlay handler
+    // in checkout.ts deliberately does NOT reload). Regression guards:
+    // tests/entitlement-transition.test.mts locks the raw transition semantics;
+    // tests/entitlement-reload-controller.test.mts locks the cross-boot
+    // one-navigation invariant from the daypesta customer recording.
+    // No onSnapshot: upstream's version re-runs its per-panel premium-lock
+    // refresh here on each snapshot without a full reload — this fork removed
+    // that machinery entirely (see the pro-removal sync), so there is nothing
+    // to refresh; the reload itself (below) remains the only user-visible
+    // effect of a real upgrade.
+    const entitlementReloadController = createEntitlementReloadController({
+      returnedFromCheckout,
+      reload: () => {
+        console.log('[entitlements] Subscription activated — reloading once to unlock panels');
         window.location.reload();
-        return;
-      }
+      },
+    });
+    this.unsubscribeEntitlementChange = onEntitlementChange(() => {
+      entitlementReloadController.handleSnapshot(
+        isEntitled(),
+        getAuthState().user?.id ?? null,
+      );
     });
 
   }

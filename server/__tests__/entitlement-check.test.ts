@@ -178,15 +178,63 @@ describe("gateway entitlement check", () => {
     expect(body.requiredTier).toBe(1);
   });
 
-  test("checkEntitlement returns 403 when getEntitlements returns null (fail-closed)", async () => {
-    // getCachedJson returns null by default (no Redis data, no Convex URL) -> null entitlements
-    const result = await checkEntitlement("test-user", "/api/intelligence/v1/classify-event", {});
-    expect(result).not.toBeNull();
-    expect(result!.status).toBe(403);
+  test("checkEntitlement returns 403 when Convex CONFIRMS no entitlement row (fail-closed)", async () => {
+    // This test used to rely on "no Convex URL" to produce its null, which
+    // conflated the two states a null now distinguishes: a lookup that was
+    // never attempted vs one that came back empty. Drive the confirmed case
+    // explicitly — backend configured, Convex answering 200 with a null body —
+    // so the terminal 403 is asserted against a real verdict about the account.
+    //
+    // Endpoint choice: upstream's version of this test exercises
+    // /api/market/v1/analyze-stock, which is still tier-gated on upstream but
+    // is one of this fork's deliberately-ungated stock-analysis endpoints (see
+    // fork-sync-manifest.yaml's premium-paths.ts entry) — using it here would
+    // assert a 403 this fork must never actually return. classify-event stays
+    // genuinely gated on both trees, matching the neighboring test above.
+    await withConvexEntitlementFetch(
+      () => Promise.resolve(new Response("null", {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      })),
+      async () => {
+        const result = await checkEntitlement("test-user", "/api/intelligence/v1/classify-event", {});
+        expect(result).not.toBeNull();
+        expect(result!.status).toBe(403);
 
-    const body = await result!.json();
-    expect(body.error).toBe("Unable to verify entitlements");
-    expect(body.requiredTier).toBe(1);
+        const body = await result!.json();
+        expect(body.error).toBe("Unable to verify entitlements");
+        expect(body.requiredTier).toBe(1);
+      },
+    );
+  });
+
+  test("checkEntitlement answers the retryable 503 when the backend is UNCONFIGURED", async () => {
+    // The other half of the split above. With CONVEX_SITE_URL / the shared
+    // secret missing, getEntitlements returns null before attempting a lookup —
+    // for every user, paying customers included. Rendering that as the terminal
+    // "unable to verify" 403 tells subscribers their access failed because of
+    // our own deploy defect. This gate is reached from server/gateway.ts on
+    // every tier-gated session request, so it is the widest surface of the
+    // asymmetry #5619 set out to remove (#5600 is the precedent).
+    const originalSiteUrl = process.env.CONVEX_SITE_URL;
+    const originalSecret = process.env.CONVEX_SERVER_SHARED_SECRET;
+    delete process.env.CONVEX_SITE_URL;
+    delete process.env.CONVEX_SERVER_SHARED_SECRET;
+    vi.mocked(getCachedJson).mockResolvedValueOnce(null);
+    try {
+      const result = await checkEntitlement("test-user", "/api/market/v1/analyze-stock", {});
+      expect(result).not.toBeNull();
+      expect(result!.status).toBe(503);
+      expect(result!.headers.get("X-Billing-Verification")).toBe(
+        "entitlement_verification_unavailable",
+      );
+      expect(Number(result!.headers.get("Retry-After"))).toBeGreaterThan(0);
+    } finally {
+      if (originalSiteUrl === undefined) delete process.env.CONVEX_SITE_URL;
+      else process.env.CONVEX_SITE_URL = originalSiteUrl;
+      if (originalSecret === undefined) delete process.env.CONVEX_SERVER_SHARED_SECRET;
+      else process.env.CONVEX_SERVER_SHARED_SECRET = originalSecret;
+    }
   });
 
   test("transient Convex fetch failure returns a verificationUnavailable marker, not null", async () => {
@@ -204,7 +252,7 @@ describe("gateway entitlement check", () => {
     );
   });
 
-  test("Convex 5xx returns the verificationUnavailable marker; 4xx stays a fail-closed null", async () => {
+  test("neither a Convex 5xx nor a 4xx can be mistaken for a confirmed answer", async () => {
     await withConvexEntitlementFetch(
       () => Promise.resolve(new Response("upstream error", { status: 503 })),
       async () => {
@@ -215,10 +263,90 @@ describe("gateway entitlement check", () => {
     await withConvexEntitlementFetch(
       () => Promise.resolve(new Response("forbidden", { status: 403 })),
       async () => {
-        // A 4xx (bad shared secret / contract rejection) is a deploy defect,
-        // not a transient — the hard fail-closed null posture must hold.
+        // #5619: a 4xx (bad shared secret / contract rejection) IS a deploy
+        // defect rather than a blip, and #5661 kept it a fail-closed null on
+        // that reasoning. But "not transient" and "is a verdict about this
+        // user's plan" are different axes: the lookup did not happen, so
+        // rendering it as `pro_required` sells a subscription to a paying
+        // customer — the #5600 failure mode. The marker denies just as hard
+        // (tier 0, nothing granted) and only changes the wording to the
+        // retryable contract, which is already what server/gateway.ts answers
+        // for this exact state on wm_-key traffic. A client that keeps
+        // retrying spends its transient budget and lands on `give_up` — still
+        // terminal, still not an upsell.
         const ent = await getEntitlements("user-config-4xx");
-        expect(ent).toBeNull();
+        expect(ent?.verificationUnavailable).toBe(true);
+        expect(ent?.features.tier).toBe(0);
+        expect(ent?.features.apiAccess).toBe(false);
+        expect(ent?.validUntil).toBe(0);
+      },
+    );
+  });
+
+  test("an unconfigured backend still returns null — the gateway's fail-open exception depends on it", async () => {
+    // The one null that survives #5619. server/gateway.ts distinguishes it with
+    // isEntitlementBackendConfigured() and serves wm_-key traffic fail-open,
+    // because 503ing a missing env var turns a config regression into a
+    // fleet-wide API outage. Returning a marker here would silently delete that
+    // exception (the gateway would answer the billing 503 first).
+    const site = process.env.CONVEX_SITE_URL;
+    const secret = process.env.CONVEX_SERVER_SHARED_SECRET;
+    delete process.env.CONVEX_SITE_URL;
+    delete process.env.CONVEX_SERVER_SHARED_SECRET;
+    vi.mocked(getCachedJson).mockResolvedValueOnce(null);
+    const fetchSpy = vi.fn();
+    vi.stubGlobal("fetch", fetchSpy);
+    try {
+      expect(await getEntitlements("user-unconfigured")).toBeNull();
+      // Not merely null — null WITHOUT attempting a lookup, which is what
+      // separates this state from the 4xx above.
+      expect(fetchSpy).not.toHaveBeenCalled();
+    } finally {
+      vi.unstubAllGlobals();
+      if (site !== undefined) process.env.CONVEX_SITE_URL = site;
+      if (secret !== undefined) process.env.CONVEX_SERVER_SHARED_SECRET = secret;
+    }
+  });
+
+  test("a 429 carries its own Retry-After instead of the generic default", async () => {
+    // Every other unanswered lookup gets the generic 5s. A 429 is the one that
+    // tells us how long the upstream wants to be left alone; re-advertising 5s
+    // would send clients back inside that window and amplify the throttling.
+    await withConvexEntitlementFetch(
+      () => Promise.resolve(new Response("slow down", {
+        status: 429,
+        headers: { "Retry-After": "60" },
+      })),
+      async () => {
+        const ent = await getEntitlements("user-429");
+        expect(ent?.verificationUnavailable).toBe(true);
+        expect(ent?.retryAfterSeconds).toBe(60);
+        // Still denies exactly as hard.
+        expect(ent?.features.tier).toBe(0);
+        const denial = classifyBillingVerification(ent);
+        expect(denial?.retryAfterSeconds).toBe(60);
+
+        // And it must survive the negative-cache hit. The cache re-synthesizes
+        // the marker rather than storing it, so without carrying the cooldown
+        // the first response honors the upstream and every hit inside the
+        // window quietly downgrades to the generic default.
+        const cached = await getEntitlements("user-429");
+        expect(cached?.verificationUnavailable).toBe(true);
+        expect(cached?.retryAfterSeconds).toBe(60);
+      },
+    );
+  });
+
+  test("a non-429 unanswered lookup keeps the generic Retry-After", async () => {
+    await withConvexEntitlementFetch(
+      () => Promise.resolve(new Response("boom", {
+        status: 503,
+        headers: { "Retry-After": "60" },
+      })),
+      async () => {
+        const ent = await getEntitlements("user-503-retryafter");
+        expect(ent?.verificationUnavailable).toBe(true);
+        expect(ent?.retryAfterSeconds).toBeUndefined();
       },
     );
   });
@@ -995,7 +1123,7 @@ describe("transient-failure negative cache (#5622)", () => {
     __resetEntitlementNegativeCacheForTests();
   });
 
-  test("a fail-closed null is never negative-cached (a 4xx deploy defect keeps its hard posture)", async () => {
+  test("a 4xx is negative-cached like any other unanswered lookup — and still never upsells", async () => {
     __resetEntitlementNegativeCacheForTests();
     const originalSiteUrl = process.env.CONVEX_SITE_URL;
     const originalSecret = process.env.CONVEX_SERVER_SHARED_SECRET;
@@ -1007,9 +1135,16 @@ describe("transient-failure negative cache (#5622)", () => {
       .mockResolvedValue(new Response("forbidden", { status: 403 }));
     vi.stubGlobal("fetch", fetchMock);
     try {
-      expect(await getEntitlements("user-negcache-4xx")).toBeNull();
-      expect(await getEntitlements("user-negcache-4xx")).toBeNull();
-      expect(fetchMock).toHaveBeenCalledTimes(2);
+      // #5619: the 4xx now answers with the marker, so the same amplification
+      // bound applies to it — one lookup per user per 3s window instead of one
+      // per request while a bad shared secret is live. Recovery after the fix
+      // deploys is bounded by that same window.
+      expect((await getEntitlements("user-negcache-4xx"))?.verificationUnavailable).toBe(true);
+      const cached = await getEntitlements("user-negcache-4xx");
+      expect(cached?.verificationUnavailable).toBe(true);
+      expect(cached?.features.tier).toBe(0);
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+      expect(__negativeCacheSizeForTests()).toBe(1);
     } finally {
       if (originalSiteUrl === undefined) delete process.env.CONVEX_SITE_URL;
       else process.env.CONVEX_SITE_URL = originalSiteUrl;
