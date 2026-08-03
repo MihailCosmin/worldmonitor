@@ -29,18 +29,42 @@
 # reading each high-risk file's diff.
 #
 # Tooling that reads this file (so the steps above are commands, not manual
-# toil):
+# toil). Normally you only run the first one:
+#
+#   - `npm run fork-sync`            — the whole pipeline, read-only by default.
+#     Preflight + fresh merge-base + incoming-commit analysis + a contamination
+#     scan of the upstream range. Add `-- --merge` to merge and auto-resolve
+#     conflicts by `conflict_policy` below, `-- --merge --tests` to also run the
+#     guard suite. `-- --abort` rolls a merge back and restores the lock.
+#     It never commits.
+#
+#   The individual stages, for when a sync goes sideways and you need one:
 #   - `npm run fork-sync:check`  — BEFORE merging. Computes the real merge-base
 #     fresh (never trusts meta.last_sync_upstream_head as the diff base), lists
 #     incoming commits, flags any that touch high_risk_files, and cross-checks
 #     commit SHAs / subject keywords against evaluated_upstream_commits.
+#   - `npm run fork-sync:lock`   — rewrites docs/architecture/fork-divergence.lock.json:
+#     every significant line `git diff <merge-base>...HEAD` removes or adds,
+#     stored with occurrence counts. This is the machine-readable definition of
+#     what this fork IS. Re-run it after every sync commit.
+#   - `npm run fork-sync:lock:verify` — replays that lock against the working
+#     tree. Catches the failure mode a clean auto-merge produces: a line we
+#     deleted whose count climbed back up (gating returned), or a line we added
+#     that vanished (fork work reverted). This is what replaces reading every
+#     high-risk file by hand.
+#   - `npm run fork-sync:scan`   — the complementary direction: gating, upsell
+#     copy or founder branding in lines the merge ADDS, which the lock cannot
+#     see because it never existed at the merge-base. Rules live in
+#     `contamination_patterns` below.
 #   - `npm run fork-sync:verify` — AFTER resolving conflicts. Runs
 #     protected_invariant_tests and classifies every failing file against
 #     known_pre_existing_gaps, so "is this pre-existing" doesn't require a
 #     fresh git-worktree/ORIG_HEAD comparison every single sync. Add
 #     `:full` to run the whole test:data suite instead of just the
 #     gating-focused subset.
-#   Neither script touches git state — read-only analysis and test runs only.
+#
+#   Only `fork-sync -- --merge` touches git state, and only as far as a staged,
+#   uncommitted merge; everything else is read-only analysis and test runs.
 #
 # Companion docs:
 #   - remove_pro.md                                — full task-by-task Pro/Premium
@@ -646,7 +670,215 @@ evaluated_upstream_commits:
       reason: "Keep the 401-only resolveAuthenticatedCallerIdentity gate instead."
 
 # ---------------------------------------------------------------------------
-# 4. Run these after every sync, before declaring the merge finished. A test
+# 4. Contamination patterns — read by scripts/fork-sync-scan.mjs.
+#
+#    These match against ADDED lines only. The divergence lock covers "did the
+#    merge undo something we did"; this covers the case the lock structurally
+#    cannot see — gating that is brand new, that we never removed because it
+#    never existed here. Most of what needs catching on any given sync is this
+#    kind, since upstream keeps building its monetization layer.
+#
+#    severity: critical  → blocks the sync until removed or allowlisted
+#              warn      → reported, does not block; judge against
+#                          docs/architecture/paid-capability-allowlist.md
+#    allow_paths          → globs where a match is legitimate, not a violation
+#
+#    Editing this list changes the scan with no code change. If the section is
+#    deleted, scripts/fork-sync-scan.mjs falls back to its own built-in copy
+#    rather than silently passing everything.
+# ---------------------------------------------------------------------------
+contamination_patterns:
+  - id: panel-gating
+    severity: critical
+    regex: 'showLocked\s*\(|panel-locked-|panel-pro-badge|panel-is-locked|\bWEB_PREMIUM_PANELS\b|\bupdatePanelGating\b|\bgetGateAction\b|\bgetProPanelKeys\b|\bPanelGateReason\b|\bresolveBillingAwareGateReason\b'
+    reason: >
+      D13 panel-gate machinery this fork deleted. tests/remove-pro-cleanup.test.mjs
+      bans these identifiers from Panel.ts / panel-layout.ts / panels.ts /
+      panel-gating.ts even inside comments.
+
+  - id: export-gate
+    severity: critical
+    regex: '\bExportGateControl\b|services/export-gate|\bcanExportStructuredData\b|\bcanExportEvidenceBundle\b|export-locked-state'
+    reason: >
+      Upstream's export paywall, excluded wholesale (see
+      evaluated_upstream_commits.exclude). Upstream has since moved it under
+      src/services/gates/ — the identifiers travel with it.
+
+  - id: tab-cap
+    severity: critical
+    regex: 'tab-cap-notice|\bTAB_CAP\b|\btabCapReached\b|\bmaxDashboardTabs\b'
+    reason: "Upstream's dashboard-tab-count paywall (PanelTabBar locked-state machinery)."
+
+  - id: pro-banner
+    severity: critical
+    regex: '\bProBanner\b|pro-banner-policy|components\.proBanner|\bshouldShowProBanner\b'
+    reason: "Pure upsell surface, deleted outright. Locale bundles must not define components.proBanner."
+
+  - id: premium-loaders
+    severity: critical
+    regex: '\bfirePremiumLoaders\b|\bclearGlobalTenders\b'
+    reason: >
+      Entitlement-transition fan-out this fork removed;
+      tests/premium-loaders-fan-out-coverage.test.mts asserts it must not exist
+      in src/App.ts. clearGlobalTenders() additionally references a
+      data-loader.ts method this fork deleted (Global Tenders is free here), so
+      adopting it does not even compile.
+
+  - id: ungated-endpoint-regating
+    severity: critical
+    regex: "'/api/market/v1/(analyze-stock|backtest-stock|get-stock-analysis-history|list-stored-stock-backtests)'|'/api/intelligence/v1/(get-country-intel-brief|deduct-situation)'|'/api/scenario/v1/(run-scenario|get-scenario-status)'"
+    reason: >
+      Endpoints this fork made free. A new occurrence only matters inside
+      PREMIUM_RPC_PATHS / ENDPOINT_ENTITLEMENTS — hence the allow_paths for the
+      call sites and tests that legitimately name them.
+    allow_paths: ['tests/**', 'docs/**', 'src/services/**', 'src/app/**']
+
+  - id: upsell-copy
+    severity: critical
+    regex: 'Upgrade to Pro\b|Upgrade to PRO\b|Sign In to Unlock|Pro is launched|premium analytics|Unlock with Pro'
+    reason: >
+      Upsell copy stripped from every locale bundle and component. New upstream
+      locales (uk.json etc.) arrive carrying the full set and need the same
+      treatment as the other 25.
+
+  - id: founder-branding
+    severity: critical
+    regex: 'eliehabib|Elie\s+Habib|elie-habib'
+    reason: >
+      Personal attribution to the original founder, removed from all branding
+      surfaces. LICENSE copyright notices are the deliberate exception (AGPL/MIT
+      require preserving them — a legal question, not a branding one), as are
+      docs/audits/ and docs/plans/ dated internal records.
+    allow_paths:
+      - LICENSE
+      - cli/LICENSE
+      - sdk/**/LICENSE
+      - docs/audits/**
+      - docs/plans/**
+
+  - id: discord-marketing
+    severity: critical
+    regex: 'discord\.gg/|Join the Discord|CommunityWidget'
+    reason: >
+      Discord MARKETING links only. The functional Discord notification channel
+      (OAuth connect flow, webhook delivery to a user's own server) is
+      deliberately KEPT — a match inside notification-channel code is a false
+      positive, not a regression.
+    allow_paths:
+      - convex/notificationChannels.ts
+      - server/**/notification*
+      - src/services/notification*
+
+  - id: new-premium-gate
+    severity: warn
+    regex: '\brequirePremiumRpcAccess\b|\bassertProEntitlement\b|\bhasPremiumAccess\b|pro_required|PRO_REQUIRED'
+    reason: >
+      Legitimate on the genuinely-paid surfaces in
+      docs/architecture/paid-capability-allowlist.md (API/MCP access, scheduled
+      digest delivery, Widget Builder tier). Anywhere else it is new gating —
+      read the call site before accepting.
+
+  - id: premium-registry-growth
+    severity: warn
+    regex: '\bPREMIUM_RPC_PATHS\b|\bENDPOINT_ENTITLEMENTS\b'
+    reason: >
+      A new entry in either registry gates an endpoint. Confirm against
+      paid-capability-allowlist.md, and against the
+      "endpoint-not-in-PREMIUM_RPC_PATHS dedicated tests" gap cluster below —
+      that cluster is existing debt these registries should be shrinking
+      toward, not growing away from.
+
+# ---------------------------------------------------------------------------
+# 5. Conflict policy — read by scripts/fork-sync-run.mjs --merge.
+#
+#    First matching rule wins, so order matters. Each rule encodes a decision an
+#    earlier sync already made by hand (see the conflicts_resolved entries in
+#    commit_ranges above); the point is to stop re-making them.
+#
+#    strategy: ours     → keep this fork's version, stage it
+#              theirs   → take upstream's version, stage it
+#              manual   → never auto-resolve; stop and require a human
+#    regenerate_with    → command that must run afterwards to produce the real
+#                         content (the chosen side is only a parseable
+#                         placeholder for build artifacts)
+#
+#    Anything with no matching rule defaults to `manual`. That default is the
+#    safe one: a new conflict class should surface, not get silently picked.
+# ---------------------------------------------------------------------------
+conflict_policy:
+  - path: package-lock.json
+    strategy: theirs
+    regenerate_with: npm install
+    reason: "Lockfile conflicts are never meaningful; regenerate from the merged package.json."
+
+  - path: public/pro/**
+    strategy: theirs
+    regenerate_with: npm run build:pro
+    reason: >
+      Vite content-hashed build output. Taking a side per-file is what dropped
+      public/pro/assets/index-BOTuWg_3.js during the aa74d8947..bc99aad53 sync
+      while the kept (--ours) index.html still modulepreloaded it by exact
+      hash-named filename. Take upstream's whole tree so HTML and assets stay
+      internally consistent, then rebuild from pro-test/ — which is the source
+      of truth and IS reviewed.
+
+  - path: src/generated/**
+    strategy: theirs
+    regenerate_with: make generate
+    reason: >
+      Committed sebuf output. Upstream's copy corresponds to the merged protos
+      (this fork's own proto edits are documentation-only enrichments), so
+      theirs is the right side — the opposite of the blanket
+      `git checkout HEAD -- src/generated/` that reverted the market/v1 client
+      to stale pre-sync content last sync. Still regenerate for real when
+      go+buf are available.
+
+  - path: docs/api/*.openapi.json
+    strategy: theirs
+    regenerate_with: make generate && npm run build:openapi
+    reason: "Generated from proto; upstream's copy has the newer schema. Regenerate rather than hand-merge."
+
+  # --- everything below is deliberately NOT automatable -------------------
+  - path: docs/api/*.openapi.yaml
+    strategy: manual
+    reason: >
+      Not symmetric with the .json above: this fork hand-edits description text
+      here ("Free for all users." insertions) that upstream does not have, and
+      those edits collide with upstream's schema additions. Needs the 3-way
+      treatment documented in the aa74d8947..bc99aad53 entry — generate from
+      upstream, replay this fork's description edits using the already-merged
+      proto rpc comments as the source of truth.
+
+  - path: vercel.json
+    strategy: manual
+    reason: "CSP sha256 hashes and content-corpus routing collide here; picking a side has twice discarded unconflicted upstream additions. Diff parsed JSON."
+
+  - path: src/locales/*.json
+    strategy: manual
+    reason: "Upsell copy lives here. A new upstream locale arrives with the full pro/proBanner/premium branches that the other 25 had stripped."
+
+  - path: pro-test/src/locales/*.json
+    strategy: manual
+    reason: "Same as src/locales, for the marketing site."
+
+  - path: index.html
+    strategy: manual
+    reason: "JSON-LD founder attribution overlaps the fix(seo) 7313562e4 and fix(i18n) 534a3efd9 hunks — see high_risk_files."
+
+  - path: src/styles/main.css
+    strategy: manual
+    reason: "Orphaned selectors for deleted gating UI are only detectable against what components actually render."
+
+  - path: src/App.ts
+    strategy: manual
+    reason: "firePremiumLoaders lands here. See high_risk_files."
+
+  - path: src/app/panel-layout.ts
+    strategy: manual
+    reason: "Touched by every divergence category at once. Highest conflict surface in the repo."
+
+# ---------------------------------------------------------------------------
+# 6. Run these after every sync, before declaring the merge finished. A test
 #    failure here with zero git conflict markers means something slipped back
 #    in silently — go find it, don't just note the test as "newly failing."
 # ---------------------------------------------------------------------------
