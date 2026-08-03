@@ -182,12 +182,72 @@ function conflictedPaths() {
   return out ? out.split('\n').filter(Boolean) : [];
 }
 
+// Index-stage view of a conflict: 1 = merge-base, 2 = ours, 3 = theirs.
+// A missing stage 2 with a present stage 1 is "we deleted it, upstream changed
+// it" — the modify/delete case.
+function conflictStages(path) {
+  const stages = {};
+  for (const line of git(['ls-files', '-u', '--', path]).split('\n')) {
+    const m = line.match(/^\d+ ([0-9a-f]{40}) (\d)\t/);
+    if (m) stages[m[2]] = m[1];
+  }
+  return stages;
+}
+
+// Modify/delete conflicts where THIS FORK is the side that deleted the file are
+// the single most mechanical class in a sync: upstream kept developing a
+// feature we removed, so every one resolves to "stay deleted". Deciding it from
+// the baseline lock rather than a path glob means the rule keeps working when
+// upstream renames the file — which it does: this sync's
+// src/services/gates/export-resolver.ts is upstream's new home for the
+// src/services/export-gate.ts we deleted, and git's rename detection reports
+// the conflict under the NEW path. Matching on the merge-base blob SHA sees
+// through that; matching on the path would not.
+function resolveForkDeletions(conflicts) {
+  if (!existsSync(baselinePath)) return { kept: [], remaining: conflicts };
+  const lock = JSON.parse(readFileSync(baselinePath, 'utf8'));
+
+  const deletedBlobs = new Map();
+  for (const path of lock.deleted_by_fork ?? []) {
+    const r = tryGit(['rev-parse', `${lock.base}:${path}`]);
+    if (r.ok) deletedBlobs.set(r.stdout, path);
+  }
+
+  const kept = [];
+  const remaining = [];
+  for (const path of conflicts) {
+    const stages = conflictStages(path);
+    const forkDeleted = !stages['2'] && stages['1'] && deletedBlobs.has(stages['1']);
+    if (!forkDeleted) {
+      remaining.push(path);
+      continue;
+    }
+    const r = tryGit(['rm', '-f', '--', path]);
+    if (!r.ok) {
+      remaining.push(path);
+      continue;
+    }
+    const origin = deletedBlobs.get(stages['1']);
+    kept.push({ path, origin: origin === path ? null : origin });
+  }
+  return { kept, remaining };
+}
+
 function autoResolve(manifest) {
   const rules = loadConflictPolicy(manifest);
-  const conflicts = conflictedPaths();
-  if (conflicts.length === 0) {
+  const allConflicts = conflictedPaths();
+  if (allConflicts.length === 0) {
     console.log('No conflicts.');
     return { resolved: [], manual: [], regenerate: new Set() };
+  }
+
+  const { kept, remaining: conflicts } = resolveForkDeletions(allConflicts);
+  if (kept.length > 0) {
+    console.log(`Kept ${kept.length} fork deletion(s) — upstream kept developing features this fork removed:`);
+    for (const k of kept) {
+      console.log(`  ${k.path}${k.origin ? `   (upstream renamed it from ${k.origin})` : ''}`);
+    }
+    console.log('');
   }
 
   const resolved = [];
