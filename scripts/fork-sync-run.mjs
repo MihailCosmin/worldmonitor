@@ -321,6 +321,59 @@ function jsonReplay(path) {
   return { ok: true, removed: removed.length, rewritten: rewritten.length, introduced: introduced.length };
 }
 
+// A locale upstream introduces that has never existed here is not a conflict at
+// all — uk.json merged perfectly cleanly in the bc99aad53..ab798e628 sync,
+// carrying the complete premium/proBanner/tabCap/upsell set with it. There is
+// no base or ours side to replay a delta from, so json-replay cannot see it.
+//
+// Resolve it from its siblings instead: the leaves the fork strips from the 26
+// locales it HAS diverged on are the same leaves that must not exist in a 27th.
+// Runs over every file matching a json-replay glob, conflicted or not.
+function normalizeNewSiblings(rules, resolvedPaths) {
+  const jsonRules = rules.filter((r) => r.strategy === 'json-replay');
+  if (jsonRules.length === 0) return [];
+
+  const tracked = git(['ls-files']).split('\n').filter(Boolean);
+  const normalized = [];
+
+  for (const rule of jsonRules) {
+    const siblings = tracked.filter((p) => rule.match.test(p));
+    if (siblings.length === 0) continue;
+
+    // Union of what the fork removes across every sibling with both sides.
+    const stripKeys = new Set();
+    for (const path of siblings) {
+      const baseText = tryGit(['show', `${git(['merge-base', 'HEAD', 'MERGE_HEAD'])}:${path}`]);
+      const oursText = tryGit(['show', `HEAD:${path}`]);
+      if (!baseText.ok || !oursText.ok) continue;
+      try {
+        const baseLeaves = leafMap(JSON.parse(baseText.stdout));
+        const ourLeaves = leafMap(JSON.parse(oursText.stdout));
+        for (const k of baseLeaves.keys()) if (!ourLeaves.has(k)) stripKeys.add(k);
+      } catch { /* unparseable sibling contributes nothing */ }
+    }
+    if (stripKeys.size === 0) continue;
+
+    for (const path of siblings) {
+      if (resolvedPaths.has(path)) continue; // json-replay already handled it
+      const abs = resolve(root, path);
+      if (!existsSync(abs)) continue;
+      const text = readFileSync(abs, 'utf8');
+      let doc;
+      try { doc = JSON.parse(text); } catch { continue; }
+      const present = leafMap(doc);
+      const hits = [...stripKeys].filter((k) => present.has(k));
+      if (hits.length === 0) continue;
+      for (const k of hits) deleteLeaf(doc, k);
+      const indent = /^\{\n(\s+)"/.exec(text)?.[1].length ?? 2;
+      writeFileSync(abs, JSON.stringify(doc, null, indent) + (text.endsWith('\n') ? '\n' : ''));
+      tryGit(['add', '--', path]);
+      normalized.push({ path, stripped: hits.length });
+    }
+  }
+  return normalized;
+}
+
 function autoResolve(manifest) {
   const rules = loadConflictPolicy(manifest);
   const allConflicts = conflictedPaths();
@@ -399,6 +452,12 @@ function autoResolve(manifest) {
         : '';
       console.log(`  ${agg.n.toString().padStart(4)}  ${key}${delta}`);
     }
+  }
+
+  const normalized = normalizeNewSiblings(rules, new Set(resolved.map((r) => r.path)));
+  if (normalized.length > 0) {
+    console.log(`\nNormalized ${normalized.length} non-conflicted file(s) that merged cleanly carrying stripped keys:`);
+    for (const n of normalized) console.log(`  ${n.path}  (-${n.stripped} keys)`);
   }
 
   if (manual.length > 0) {
