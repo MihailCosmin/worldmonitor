@@ -16,7 +16,8 @@ import { sanitizeUrl, escapeHtml } from '@/utils/sanitize';
 import { computeAlternativeSuppliers, type ChokepointScoreMap, type EnrichedExporter } from '@/utils/supplier-route-risk';
 import { formatIntelBrief } from '@/utils/format-intel-brief';
 import { collectBriefSources, renderBriefSourcesFooter, type BriefSource } from '@/utils/brief-sources';
-import { getCSSColor } from '@/utils';
+import { getCSSColor, isMobileDevice } from '@/utils';
+import { overlayHistory, type OverlayCloseOrigin } from '@/utils/overlay-history';
 import { toFlagEmoji } from '@/utils/country-flag';
 import { PORTS } from '@/config/ports';
 import { getChokepointRoutes } from '@/config/trade-routes';
@@ -295,7 +296,11 @@ export class CountryDeepDivePanel implements CountryBriefPanel {
     this.open();
   }
 
-  public hide(): void {
+  private historyRegistered = false;
+
+  public hide(origin: OverlayCloseOrigin = 'control'): void {
+    if (origin === 'control' && this.historyRegistered) overlayHistory.close('deep-dive');
+    this.historyRegistered = false;
     this.destroyResilienceWidget();
     this.tearDownFollowButton();
     if (this.isMaximizedState) {
@@ -3025,7 +3030,13 @@ export class CountryDeepDivePanel implements CountryBriefPanel {
     this.panel.classList.add('active');
     this.panel.setAttribute('aria-hidden', 'false');
     document.addEventListener('keydown', this.handleGlobalKeydown);
-    requestAnimationFrame(() => this.closeButton.focus());
+    if (isMobileDevice()) {
+      this.historyRegistered = true;
+      overlayHistory.open('deep-dive', (origin) => this.hide(origin));
+    }
+    requestAnimationFrame(() => {
+      if (this.panel.classList.contains('active')) this.closeButton.focus();
+    });
     this.onStateChangeCallback?.({ visible: true, maximized: this.isMaximizedState });
   }
 

@@ -185,6 +185,11 @@ function proxyConnectTunnel(targetHostname, proxyConfig, { timeoutMs = 20_000, t
           return rejectOnce(
             Object.assign(new Error(`Proxy CONNECT: ${statusLine}`), {
               status: parseInt(statusLine.split(' ')[1], 10) || 0,
+              // Marks a gateway-layer rejection (auth, quota, policy) as opposed
+              // to a status the target origin returned through the tunnel. The
+              // two are indistinguishable once both collapse to HTTP_<status>,
+              // and only the origin case can be helped by a different exit.
+              proxyConnect: true,
             })
           );
         }
@@ -245,6 +250,8 @@ function proxyFetch(url, proxyConfig, {
   maxResponseBytes = Infinity,
   timeoutMs = 20_000,
   signal,
+  connectTunnel = proxyConnectTunnel,
+  requestFn = https.request,
 } = {}) {
   const targetUrl = new URL(url);
 
@@ -252,7 +259,7 @@ function proxyFetch(url, proxyConfig, {
     return Promise.reject(signal.reason || new Error('aborted'));
   }
 
-  return proxyConnectTunnel(targetUrl.hostname, proxyConfig, { timeoutMs, signal }).then(({ socket: tlsSocket, destroy }) => {
+  return connectTunnel(targetUrl.hostname, proxyConfig, { timeoutMs, signal }).then(({ socket: tlsSocket, destroy }) => {
     return new Promise((resolve, reject) => {
       let settled = false;
       let onAbort = null;
@@ -282,7 +289,7 @@ function proxyFetch(url, proxyConfig, {
         reqHeaders['Content-Length'] = Buffer.byteLength(body);
       }
 
-      const req = https.request({
+      const req = requestFn({
         hostname: targetUrl.hostname,
         path: targetUrl.pathname + targetUrl.search,
         method,
@@ -298,6 +305,7 @@ function proxyFetch(url, proxyConfig, {
           (buffer) => resolveOnce({
             ok: resp.statusCode >= 200 && resp.statusCode < 300,
             status: resp.statusCode,
+            location: resp.headers.location || '',
             buffer,
             contentType: resp.headers['content-type'] || '',
           }),

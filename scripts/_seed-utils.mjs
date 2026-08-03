@@ -25,7 +25,7 @@ const MAX_PAYLOAD_BYTES = 5 * 1024 * 1024; // 5MB per key
 
 const __seed_dirname = dirname(fileURLToPath(import.meta.url));
 
-export { CHROME_UA };
+export { CHROME_UA, MAX_PAYLOAD_BYTES };
 
 /**
  * Resolve the CoinGecko base URL + auth header for the configured key tier.
@@ -545,6 +545,53 @@ export async function atomicPublish(canonicalKey, data, validateFn, ttlSeconds, 
   );
 }
 
+// Fields the shared seed-meta writer owns. afterPublish freshnessMetaPatch
+// (and any preserve-on-skip merge) may add other diagnostics, but never
+// re-anchor these — they come from the current runSeed outcome only.
+export const FRESHNESS_META_RESERVED_FIELDS = Object.freeze([
+  'fetchedAt',
+  'recordCount',
+  'sourceVersion',
+  'newestItemAt',
+  'oldestItemAt',
+  'maxContentAgeMin',
+]);
+
+/**
+ * Strip reserved freshness fields from an existing seed-meta object so the
+ * remainder can be re-applied as a freshnessMetaPatch. Used when a validation
+ * skip rewrites seed-meta while preserving last-good data — without this,
+ * diagnostics such as prediction poolCounts are wiped and fail-closed health
+ * false-alarms (#5875 review).
+ */
+export function freshnessMetaDiagnosticsPatch(existingMeta) {
+  if (!existingMeta || typeof existingMeta !== 'object' || Array.isArray(existingMeta)) {
+    return null;
+  }
+  const reserved = new Set(FRESHNESS_META_RESERVED_FIELDS);
+  const patch = {};
+  for (const [key, value] of Object.entries(existingMeta)) {
+    if (!reserved.has(key)) patch[key] = value;
+  }
+  return Object.keys(patch).length > 0 ? patch : null;
+}
+
+/**
+ * Best-effort read of the current seed-meta value for a domain/resource.
+ * Returns the bare meta object, or null when missing / unreadable. Never throws.
+ */
+export async function readExistingSeedMeta(domain, resource) {
+  try {
+    const { url, token } = getRedisCredentials();
+    const metaKey = `seed-meta:${domain}:${resource}`;
+    const value = await redisGet(url, token, metaKey);
+    if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+    return value;
+  } catch {
+    return null;
+  }
+}
+
 export async function writeFreshnessMetadata(
   domain,
   resource,
@@ -578,14 +625,7 @@ export async function writeFreshnessMetadata(
   if (metaPatch && typeof metaPatch === 'object') {
     // Hooks may add bounded diagnostics, but the shared writer owns freshness
     // and record-count truth. Never let a hook silently re-anchor those fields.
-    const reservedFields = new Set([
-      'fetchedAt',
-      'recordCount',
-      'sourceVersion',
-      'newestItemAt',
-      'oldestItemAt',
-      'maxContentAgeMin',
-    ]);
+    const reservedFields = new Set(FRESHNESS_META_RESERVED_FIELDS);
     for (const [key, value] of Object.entries(metaPatch)) {
       if (!reservedFields.has(key)) meta[key] = value;
     }
@@ -906,10 +946,11 @@ export function extraKeyPayloadBytes(key, data, envelopeMeta) {
   return Buffer.byteLength(serializeExtraKeyValue(key, data, envelopeMeta), 'utf8');
 }
 
-export async function writeSeedMeta(dataKey, recordCount, metaKeyOverride, metaTtlSeconds) {
+export async function writeSeedMeta(dataKey, recordCount, metaKeyOverride, metaTtlSeconds, coverage) {
   const { url, token } = getRedisCredentials();
   const metaKey = metaKeyOverride || `seed-meta:${dataKey.replace(/:v\d+$/, '')}`;
   const meta = { fetchedAt: Date.now(), recordCount: recordCount ?? 0 };
+  if (coverage) meta.coverage = coverage;
   const metaTtl = metaTtlSeconds ?? 86400 * 7;
   const resp = await fetch(url, {
     method: 'POST',
@@ -924,9 +965,9 @@ export async function writeSeedMeta(dataKey, recordCount, metaKeyOverride, metaT
   return true;
 }
 
-export async function writeExtraKeyWithMeta(key, data, ttl, recordCount, metaKeyOverride, metaTtlSeconds) {
+export async function writeExtraKeyWithMeta(key, data, ttl, recordCount, metaKeyOverride, metaTtlSeconds, coverage) {
   await writeExtraKey(key, data, ttl);
-  return writeSeedMeta(key, recordCount, metaKeyOverride, metaTtlSeconds);
+  return writeSeedMeta(key, recordCount, metaKeyOverride, metaTtlSeconds, coverage);
 }
 
 // Detailed counterpart to extendExistingTtl. Results stay aligned to the input
@@ -1735,6 +1776,10 @@ export async function runSeed(domain, resource, canonicalKey, fetchFn, opts = {}
     // Keys written outside runSeed's normal extra-key phase that still need
     // last-good TTL protection when the primary fetch fails or is skipped.
     preserveKeys = [],
+    // Opt-in companion keys whose write TTL differs from the canonical key.
+    // Each declaration is preserved at its own TTL; preserveKeys keeps its
+    // existing canonical-TTL behavior for backward compatibility.
+    preserveKeyTtls = [],
     beforePublish,
     afterPublish,
     afterValidationSkip,
@@ -1776,14 +1821,72 @@ export async function runSeed(domain, resource, canonicalKey, fetchFn, opts = {}
       process.exit(1);
     }
   }
+  if (!Array.isArray(preserveKeyTtls)) {
+    console.error(`  CONTRACT VIOLATION: ${domain}:${resource} preserveKeyTtls must be an array`);
+    process.exit(1);
+  }
+  const normalizedPreserveKeyTtls = [];
+  const declaredTtlByKey = new Map();
+  for (const declaration of preserveKeyTtls) {
+    const key = declaration?.key;
+    const declaredTtl = declaration?.ttlSeconds;
+    if (
+      !declaration
+      || typeof declaration !== 'object'
+      || Array.isArray(declaration)
+      || typeof key !== 'string'
+      || key.trim().length === 0
+      || !Number.isInteger(declaredTtl)
+      || declaredTtl <= 0
+    ) {
+      console.error(
+        `  CONTRACT VIOLATION: ${domain}:${resource} preserveKeyTtls entries must be `
+        + `{ key: non-empty string, ttlSeconds: positive integer }`,
+      );
+      process.exit(1);
+    }
+    if (declaredTtlByKey.has(key) && declaredTtlByKey.get(key) !== declaredTtl) {
+      console.error(
+        `  CONTRACT VIOLATION: ${domain}:${resource} preserveKeyTtls declares conflicting TTLs for ${key}`,
+      );
+      process.exit(1);
+    }
+    declaredTtlByKey.set(key, declaredTtl);
+    normalizedPreserveKeyTtls.push({ key, ttlSeconds: declaredTtl });
+  }
   const runId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   const startMs = Date.now();
-  const preservationKeys = () => [...new Set([
+  const defaultPreservationTtl = ttlSeconds || 600;
+  const defaultPreservationKeys = [...new Set([
     canonicalKey,
     `seed-meta:${domain}:${resource}`,
     ...(extraKeys || []).map((ek) => ek.key),
     ...preserveKeys,
   ].filter((key) => typeof key === 'string' && key.length > 0))];
+
+  // Single preservation seam for fetch failure, fetch-phase SIGTERM, contract
+  // RETRY, validation skip, and per-extra-key empty skips. Grouping keys by TTL
+  // keeps one Redis pipeline per TTL while allowing explicit declarations to
+  // override a key that also appears in the default canonical-TTL cohort.
+  const preserveExistingKeys = async (targets) => {
+    const ttlByKey = new Map();
+    if (targets) {
+      for (const target of targets) ttlByKey.set(target.key, target.ttlSeconds);
+    } else {
+      for (const key of defaultPreservationKeys) ttlByKey.set(key, defaultPreservationTtl);
+      for (const target of normalizedPreserveKeyTtls) ttlByKey.set(target.key, target.ttlSeconds);
+    }
+
+    const keysByTtl = new Map();
+    for (const [key, targetTtl] of ttlByKey) {
+      if (!keysByTtl.has(targetTtl)) keysByTtl.set(targetTtl, []);
+      keysByTtl.get(targetTtl).push(key);
+    }
+    const results = await Promise.all(
+      [...keysByTtl].map(([targetTtl, keys]) => extendExistingTtl(keys, targetTtl)),
+    );
+    return results.every(Boolean);
+  };
 
   console.log(`=== ${domain}:${resource} Seed ===`);
   console.log(`  Run ID:  ${runId}`);
@@ -1828,10 +1931,9 @@ export async function runSeed(domain, resource, canonicalKey, fetchFn, opts = {}
     console.error(`  [${domain}:${resource}] SIGTERM received during ${currentPhase} phase — releasing lock runId=${runId}`);
     try {
       if (currentPhase === 'fetch') {
-        const ttl = ttlSeconds || 600;
         await Promise.allSettled([
           releaseLock(`${domain}:${resource}`, runId),
-          extendExistingTtl(preservationKeys(), ttl),
+          preserveExistingKeys(),
         ]);
       } else {
         await releaseLock(`${domain}:${resource}`, runId);
@@ -1876,8 +1978,7 @@ export async function runSeed(domain, resource, canonicalKey, fetchFn, opts = {}
     const cause = err.cause ? ` (cause: ${err.cause.message || err.cause.code || err.cause})` : '';
     console.error(`  FETCH FAILED: ${err.message || err}${cause}`);
 
-    const ttl = ttlSeconds || 600;
-    await extendExistingTtl(preservationKeys(), ttl);
+    await preserveExistingKeys();
 
     console.log(`\n=== Failed gracefully (${Math.round(durationMs)}ms) ===`);
     await exitAfterTelemetryFlush(GRACEFUL_FETCH_FAILURE_EXIT_CODE);
@@ -1968,7 +2069,7 @@ export async function runSeed(domain, resource, canonicalKey, fetchFn, opts = {}
     // and /api/health already carries the alarm).
     if (contractState === 'RETRY') {
       const durationMs = Date.now() - startMs;
-      const preserved = await extendExistingTtl(preservationKeys(), ttlSeconds || 600);
+      const preserved = await preserveExistingKeys();
 
       // #5256: the RETRY-FAILED exit below assumes A LATER TICK CAN RESTORE THE DATA. When
       // the seeder reports it had no usable source at all (primary unconfigured AND every
@@ -2019,7 +2120,7 @@ export async function runSeed(domain, resource, canonicalKey, fetchFn, opts = {}
     });
     if (publishResult.skipped) {
       const durationMs = Date.now() - startMs;
-      const preserved = await extendExistingTtl(preservationKeys(), ttlSeconds || 600);
+      const preserved = await preserveExistingKeys();
       const strictFailure = Boolean(opts.emptyDataIsFailure);
       const validationSkipContext = {
         canonicalKey,
@@ -2031,9 +2132,19 @@ export async function runSeed(domain, resource, canonicalKey, fetchFn, opts = {}
       // Some rejected snapshots carry failure evidence that must survive even
       // when there is no complete last-good cohort to preserve. Keep this hook
       // in the publish phase so its persistence cannot make withRetry(fetchFn)
-      // repeat upstream source requests.
+      // repeat upstream source requests. A hook may return
+      // `{ freshnessMetaPatch }`; reserved freshness fields are stripped before
+      // the shared writer applies the patch.
+      let validationSkipResult = null;
+      let validationSkipMetaRead = false;
+      let validationSkipExistingMeta = null;
       if (!strictFailure && afterValidationSkip) {
-        await afterValidationSkip(data, validationSkipContext);
+        validationSkipExistingMeta = await readExistingSeedMeta(domain, resource);
+        validationSkipMetaRead = true;
+        validationSkipResult = await afterValidationSkip(data, {
+          ...validationSkipContext,
+          existingSeedMeta: validationSkipExistingMeta,
+        });
       }
       if (strictFailure) {
         // Strict-floor seeders (e.g. IMF-External, floor=180 countries) treat
@@ -2067,6 +2178,18 @@ export async function runSeed(domain, resource, canonicalKey, fetchFn, opts = {}
         //   - canonical envelope is malformed / legacy bare shape
         //   - canonical envelope has recordCount <= 0
         const canonicalMeta = await readCanonicalEnvelopeMeta(canonicalKey);
+        // Preserve non-reserved diagnostics (poolCounts, GDELT errorReason, …)
+        // from the previous seed-meta write. The SET below replaces the whole
+        // key; without this merge a validate-skip after a healthy publish wipes
+        // afterPublish patches and fail-closed consumers false-alarm.
+        const preservedDiagnostics = {
+          ...(freshnessMetaDiagnosticsPatch(
+            validationSkipMetaRead
+              ? validationSkipExistingMeta
+              : await readExistingSeedMeta(domain, resource),
+          ) || {}),
+          ...(freshnessMetaDiagnosticsPatch(validationSkipResult?.freshnessMetaPatch) || {}),
+        };
         if (canonicalMeta) {
           // Pass-through canonical's contentAge so health doesn't lose the
           // STALE_CONTENT signal exactly when last-good-with-stale-content
@@ -2077,6 +2200,7 @@ export async function runSeed(domain, resource, canonicalKey, fetchFn, opts = {}
             ttlSeconds,
             canonicalMeta.fetchedAt,
             canonicalMeta.contentAge,
+            Object.keys(preservedDiagnostics).length > 0 ? preservedDiagnostics : null,
           );
           console.log(
             `  SKIPPED: validation failed (empty/partial fetch) — seed-meta mirrors canonical ` +
@@ -2085,6 +2209,8 @@ export async function runSeed(domain, resource, canonicalKey, fetchFn, opts = {}
             `existing cache TTL extended`,
           );
         } else {
+          // No last-good envelope: quiet-period zero write. Drop prior
+          // diagnostics — they described a different cohort and would lie.
           await writeFreshnessMetadataSafely(domain, resource, 0, opts.sourceVersion, ttlSeconds);
           console.log(`  SKIPPED: validation failed (empty data) — seed-meta refreshed (recordCount=0), existing cache TTL extended`);
         }
@@ -2160,7 +2286,10 @@ export async function runSeed(domain, resource, canonicalKey, fetchFn, opts = {}
           // whose IDs the upstream dropped this cycle). Preserve last-good by
           // extending the existing key's TTL instead.
           if (shouldSkipEmptyExtraKey(ek, ekCount)) {
-            await extendExistingTtl([ek.key], ek.ttl || ttlSeconds || 600);
+            await preserveExistingKeys([{
+              key: ek.key,
+              ttlSeconds: ek.ttl || ttlSeconds || 600,
+            }]);
             console.log(`  [extraKey] ${ek.key} empty (recordCount=0) — skipped write, extended TTL to preserve last-good`);
             continue;
           }
