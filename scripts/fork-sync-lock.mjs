@@ -82,6 +82,16 @@ const DEFAULT_IGNORE_GLOBS = [
   '**/*.generated.ts',
   'public/product-facts.json',
   'e2e/**/*-snapshots/**',
+  // The lock cannot lock itself: every re-snapshot rewrites this file, so the
+  // previous snapshot's ~100 header//entry lines read as "fork work reverted"
+  // on the very next verify.
+  'docs/architecture/fork-divergence.lock.json',
+  // Fork-owned sync paperwork upstream has no copy of, so a merge can never
+  // touch it. `added_by_fork` already asserts these exist; tracking their line
+  // content adds ~1200 locked lines of pure churn — they are rewritten by hand
+  // every sync, which is exactly the noise that hides a real violation.
+  'docs/architecture/fork-sync-manifest.yaml',
+  'remove_pro.md',
 ];
 
 // Minimal glob → RegExp. Supports **, * and ? with the usual semantics; that is
