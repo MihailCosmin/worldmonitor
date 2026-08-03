@@ -29,7 +29,7 @@
 // reviewed, which is the one step that must stay a human decision.
 
 import { execFileSync, spawnSync } from 'node:child_process';
-import { readFileSync, existsSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import yaml from 'js-yaml';
@@ -233,6 +233,94 @@ function resolveForkDeletions(conflicts) {
   return { kept, remaining };
 }
 
+// --- json-replay ----------------------------------------------------------
+//
+// For structured data files (locale bundles above all), "pick a side" is always
+// wrong: upstream's copy carries new keys and retranslations we want, ours
+// carries the removals and rewrites that define the fork. Neither is a superset.
+//
+// So take upstream's file and replay the fork's key-level delta onto it: delete
+// the leaves the fork deleted, re-apply the leaves it added or rewrote. The
+// delta is recomputed from the merge-base every time rather than hardcoded, so
+// it stays correct as the fork evolves — for src/locales/*.json it currently
+// works out to 28 deletions (premium.*, components.proBanner.*,
+// components.exportGate.*, components.tabCap.*, the free-tier limit strings and
+// the Discord join copy), 6 rewrites and 11 additions.
+//
+// Where both sides changed the same leaf, the fork wins: those rewrites are
+// deliberate de-gating/de-branding edits, and losing them silently is the exact
+// failure this whole pipeline exists to prevent.
+function leafMap(node, prefix = '', out = new Map()) {
+  for (const key of Object.keys(node)) {
+    const path = prefix ? `${prefix}.${key}` : key;
+    const value = node[key];
+    if (value && typeof value === 'object' && !Array.isArray(value)) leafMap(value, path, out);
+    else out.set(path, value);
+  }
+  return out;
+}
+
+function setLeaf(root, path, value) {
+  const parts = path.split('.');
+  let node = root;
+  for (const part of parts.slice(0, -1)) {
+    if (!node[part] || typeof node[part] !== 'object' || Array.isArray(node[part])) node[part] = {};
+    node = node[part];
+  }
+  node[parts.at(-1)] = value;
+}
+
+function deleteLeaf(root, path) {
+  const parts = path.split('.');
+  const chain = [root];
+  let node = root;
+  for (const part of parts.slice(0, -1)) {
+    node = node?.[part];
+    if (!node || typeof node !== 'object') return;
+    chain.push(node);
+  }
+  delete node[parts.at(-1)];
+  // Drop parents the deletion just emptied, so no `"proBanner": {}` husk is
+  // left behind for a future merge to refill.
+  for (let i = chain.length - 1; i > 0; i -= 1) {
+    if (Object.keys(chain[i]).length > 0) break;
+    delete chain[i - 1][parts[i - 1]];
+  }
+}
+
+function jsonReplay(path) {
+  const read = (stage) => {
+    const r = tryGit(['show', `:${stage}:${path}`]);
+    return r.ok ? r.stdout : null;
+  };
+  const [baseText, oursText, theirsText] = [read(1), read(2), read(3)];
+  if (!baseText || !oursText || !theirsText) return { ok: false, note: 'missing a conflict stage' };
+
+  let base;
+  let ours;
+  let theirs;
+  try {
+    [base, ours, theirs] = [JSON.parse(baseText), JSON.parse(oursText), JSON.parse(theirsText)];
+  } catch (err) {
+    return { ok: false, note: `not parseable JSON (${err.message})` };
+  }
+
+  const baseLeaves = leafMap(base);
+  const ourLeaves = leafMap(ours);
+  const removed = [...baseLeaves.keys()].filter((k) => !ourLeaves.has(k));
+  const rewritten = [...ourLeaves].filter(([k, v]) => baseLeaves.has(k)
+    && JSON.stringify(baseLeaves.get(k)) !== JSON.stringify(v));
+  const introduced = [...ourLeaves].filter(([k]) => !baseLeaves.has(k));
+
+  for (const key of removed) deleteLeaf(theirs, key);
+  for (const [key, value] of [...rewritten, ...introduced]) setLeaf(theirs, key, value);
+
+  const indent = /^\{\n(\s+)"/.exec(theirsText)?.[1].length ?? 2;
+  const trailingNewline = theirsText.endsWith('\n') ? '\n' : '';
+  writeFileSync(resolve(root, path), JSON.stringify(theirs, null, indent) + trailingNewline);
+  return { ok: true, removed: removed.length, rewritten: rewritten.length, introduced: introduced.length };
+}
+
 function autoResolve(manifest) {
   const rules = loadConflictPolicy(manifest);
   const allConflicts = conflictedPaths();
@@ -260,6 +348,17 @@ function autoResolve(manifest) {
       manual.push({ path, rule });
       continue;
     }
+    if (rule.strategy === 'json-replay') {
+      const res = jsonReplay(path);
+      if (!res.ok) {
+        manual.push({ path, rule, note: `json-replay failed: ${res.note}` });
+        continue;
+      }
+      tryGit(['add', '--', path]);
+      resolved.push({ path, rule, detail: res });
+      continue;
+    }
+
     const side = rule.strategy === 'theirs' || rule.strategy === 'regenerate-theirs' ? '--theirs' : '--ours';
     const r = tryGit(['checkout', side, '--', path]);
     if (!r.ok) {
@@ -285,9 +384,21 @@ function autoResolve(manifest) {
     const byRule = new Map();
     for (const r of resolved) {
       const key = `${r.rule.path} → ${r.rule.strategy}`;
-      byRule.set(key, (byRule.get(key) ?? 0) + 1);
+      if (!byRule.has(key)) byRule.set(key, { n: 0, removed: 0, rewritten: 0, introduced: 0 });
+      const agg = byRule.get(key);
+      agg.n += 1;
+      if (r.detail) {
+        agg.removed += r.detail.removed;
+        agg.rewritten += r.detail.rewritten;
+        agg.introduced += r.detail.introduced;
+      }
     }
-    for (const [key, n] of byRule) console.log(`  ${n.toString().padStart(4)}  ${key}`);
+    for (const [key, agg] of byRule) {
+      const delta = agg.removed || agg.rewritten || agg.introduced
+        ? `   (replayed -${agg.removed} / ~${agg.rewritten} / +${agg.introduced} keys)`
+        : '';
+      console.log(`  ${agg.n.toString().padStart(4)}  ${key}${delta}`);
+    }
   }
 
   if (manual.length > 0) {

@@ -854,11 +854,25 @@ conflict_policy:
     reason: "CSP sha256 hashes and content-corpus routing collide here; picking a side has twice discarded unconflicted upstream additions. Diff parsed JSON."
 
   - path: src/locales/*.json
-    strategy: manual
-    reason: "Upsell copy lives here. A new upstream locale arrives with the full pro/proBanner/premium branches that the other 25 had stripped."
+    strategy: json-replay
+    reason: >
+      Neither side is a superset: upstream ships new keys and retranslations we
+      want, this fork carries the removals that define it. Replaying the fork's
+      key-level delta (recomputed from the merge-base each sync, not hardcoded)
+      onto upstream's file is exact where picking a side is not. Currently
+      resolves to -28 keys (premium.*, components.proBanner.*,
+      components.exportGate.*, components.tabCap.*, the free-tier panel/source
+      limit strings, components.community.joinDiscussion), 6 rewrites and 11
+      additions (local-auth strings, the Data Sources / Log tabs).
+
+      NOTE: a locale upstream adds that has never existed here (uk.json in the
+      bc99aad53..ab798e628 sync) is not a conflict at all — it merges cleanly
+      carrying the full upsell set, and only the contamination scan catches it.
+      Check `upsell-copy` and `pro-banner` scan hits for new locale files after
+      every sync.
 
   - path: pro-test/src/locales/*.json
-    strategy: manual
+    strategy: json-replay
     reason: "Same as src/locales, for the marketing site."
 
   - path: index.html
