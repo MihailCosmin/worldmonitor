@@ -497,8 +497,13 @@ function audit(ctx) {
   ]);
 
   console.log(`\n${'-'.repeat(72)}\nB. Contamination — gating/branding this merge introduces\n${'-'.repeat(72)}`);
-  const base = ctx?.base ?? git(['merge-base', 'HEAD', 'upstream/main']);
-  const scanRes = node([resolve(__dirname, 'fork-sync-scan.mjs'), `--against=${base}`]);
+  // Diff against PRE-MERGE HEAD, not the merge-base. Scanning from the
+  // merge-base re-reports the fork's own commits — its guard tests quote every
+  // banned string as a regex, its docs describe the removals — which buries the
+  // handful of lines the merge actually added under ~80k lines of our own work.
+  const preMerge = tryGit(['rev-parse', '--verify', 'ORIG_HEAD']).stdout
+    || ctx?.base || git(['merge-base', 'HEAD', 'upstream/main']);
+  const scanRes = node([resolve(__dirname, 'fork-sync-scan.mjs'), `--against=${preMerge}`]);
 
   return { lockCode: lockRes.code, scanCode: scanRes.code };
 }

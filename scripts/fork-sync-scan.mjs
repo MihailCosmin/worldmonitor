@@ -165,6 +165,7 @@ const SKIP_PATHS = [
   'scripts/fork-sync-scan.mjs',
   'scripts/fork-sync-lock.mjs',
   'scripts/fork-sync-check.mjs',
+  'scripts/fork-sync-run.mjs',
   'docs/architecture/fork-sync-manifest.yaml',
   'docs/architecture/fork-divergence.lock.json',
   'docs/architecture/paid-capability-allowlist.md',

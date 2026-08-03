@@ -174,7 +174,7 @@ export class InsightsPanel extends Panel {
     this.setDataBadge('cached');
     this.setSafeContent(unsafeRawHtml(
       this.renderWorldBrief(this.cachedBrief, this.cachedBriefSources, '', this.cachedBriefProvider, this.cachedBriefModel),
-      'renderWorldBrief escapes the cached summary (#4890 early brief paint)',
+      'renderWorldBrief formats and links the cached summary via formatIntelBrief, which escapes internally (#4890 early brief paint)',
     ));
   }
 
@@ -701,18 +701,21 @@ export class InsightsPanel extends Panel {
     `;
   }
 
-  /** #4921: cited per-story lines + staleness footer for the World Brief. */
+  /** #4921: cited per-story lines behind a disclosure + staleness footer. */
   private renderBriefExtras(insights: ServerInsights): string {
     const lines = Array.isArray(insights.briefStoryLines) ? insights.briefStoryLines : [];
     const sources = insights.worldBriefSources ?? [];
     const linesHtml = lines.length > 0
-      ? `<ol class="insights-brief-lines">${lines
-          .map((line) => `<li>${formatIntelBrief(line.text, { sources })
-            .replace(/^<div class="brief-para">/, '')
-            .replace(/<\/div>$/, '')
-            .replace(/^<p>/, '')
-            .replace(/<\/p>$/, '')}</li>`)
-          .join('')}</ol>`
+      ? `<details class="insights-brief-details">
+          <summary>${escapeHtml(t('components.insights.briefStoryDetails', { count: String(lines.length) }))}</summary>
+          <ol class="insights-brief-lines">${lines
+            .map((line) => `<li>${formatIntelBrief(line.text, { sources })
+              .replace(/^<div class="brief-para">/, '')
+              .replace(/<\/div>$/, '')
+              .replace(/^<p>/, '')
+              .replace(/<\/p>$/, '')}</li>`)
+            .join('')}</ol>
+        </details>`
       : '';
     let footer = '';
     const generatedMs = new Date(insights.generatedAt).getTime();
@@ -748,7 +751,7 @@ export class InsightsPanel extends Panel {
         <div class="insights-section-title">
           ${heading}${sourceLabel ? ` <span class="insights-brief-source">- ${escapeHtml(sourceLabel)}</span>` : ''}
         </div>
-        <div class="insights-brief-text">${escapeHtml(brief)}</div>
+        <div class="insights-brief-text">${formatIntelBrief(brief, { sources })}</div>
         ${extrasHtml}
         ${renderBriefSourcesFooter(sources, { className: 'insights-brief-sources', maxSources: Math.max(6, sources.length) })}
       </div>

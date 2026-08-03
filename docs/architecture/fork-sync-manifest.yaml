@@ -80,8 +80,8 @@
 meta:
   upstream_remote: upstream
   upstream_repo: koala73/worldmonitor
-  last_sync_commit: "3e1d9a4e7"           # our merge commit for this sync
-  last_sync_upstream_head: "bc99aad53"    # upstream/main SHA merged as of last sync
+  last_sync_commit: "PENDING"             # our merge commit for this sync
+  last_sync_upstream_head: "ab798e628"    # upstream/main SHA merged as of last sync
   # `git log bc99aad53..upstream/main --oneline` shows how far upstream has moved
   # since.
   #
@@ -109,6 +109,14 @@ meta:
   #     silently reintroduced clearGlobalTenders() (Global Tenders is free on
   #     this fork). Both caught by running the FULL test suite, not just
   #     protected_invariant_tests — see that entry for the complete story.
+  #   - bc99aad53 -> ab798e628: a 113-commit sync, the first driven end-to-end
+  #     by `npm run fork-sync`. 69 conflicts, 39 auto-resolved by
+  #     conflict_policy plus 26 cleanly-merged files normalized (the new
+  #     uk.json locale among them). The divergence lock caught a PRO-lock
+  #     regression in CountryDeepDivePanel.ts that a `--theirs` on a
+  #     one-line import conflict had introduced with zero conflict markers
+  #     and a clean compile — the exact failure class the lock exists for.
+  #     See commit_ranges for the full account and its four lessons.
   categories: [pro-removal, discord-removal, owner-branding-removal, feature-ungate, upstream-sync, local-auth]
 
 # ---------------------------------------------------------------------------
@@ -484,6 +492,84 @@ commit_ranges:
       `componentId` field the Log-tab component-health work added to
       DeductionPanel.ts's premiumFetch call — unrelated to this sync).
 
+  - category: upstream-sync
+    range: "bc99aad53..ab798e628"           # 113 commits
+    summary: >
+      Synced 113 upstream commits (2026-08-03) — the first sync driven by
+      `npm run fork-sync`. 69 conflicts; the tooling auto-resolved 39 of them
+      (8 fork deletions kept, 24 locale bundles + 1 pro-test locale by
+      json-replay, 6 public/pro build artifacts, 1 generated OpenAPI doc) and
+      normalized 26 further files that merged cleanly but carried stripped
+      keys — including the brand-new uk.json locale, which is not a conflict
+      at all and which no previous sync's tooling could have caught.
+
+      The 30 remaining conflicts were hand-resolved. Upstream's monetization
+      layer moved house this cycle: the export gate this fork deleted
+      (src/services/export-gate.ts) reappeared as src/services/gates/
+      {export,export-resolver}.ts, joined by a new playback gate
+      (gates/playback*.ts) and a new premium MAP-LAYER gate
+      (src/components/premium-layer-gate.ts, #6045/#6049/#6050) that locks
+      CMD+K layer toggles and stamps a PRO badge on the Resilience layer.
+      All excluded; see the new evaluated_upstream_commits.exclude entries.
+      resilienceScore stays `premium: undefined` here, so all 56 map layers
+      remain free and the pricing copy saying so is correct — upstream's
+      #5387 "55 free of 56" correction is true upstream and false here.
+
+      Genuine upstream work adopted despite arriving inside gating hunks:
+      the #5871 derived news-panel-key collision fix (the hardcoded
+      markets/crypto/economic set silently omitted `commodities`; brought in
+      src/app/news-panel-keys.ts, the ctx.newsCategoryPanelKeys registry and
+      the boolean return from lazyPanel/lazyImportedPanel — taken WITHOUT the
+      `lockedFeatures` parameter upstream bundled into the same signature
+      change), the #5376 news-hydration invalidation on playback-replay exit,
+      the overlay-history back-button support in UnifiedSettings and
+      CountryDeepDivePanel, the entitlement watcher's unavailable-snapshot
+      preservation (`state === null ? null : isEntitlementActive(...)`
+      instead of collapsing to `isEntitled()`), formatIntelBrief source
+      linking in InsightsPanel, and upstream's provider-independent
+      summarize-article cache options (merged with this fork's Ollama
+      timeout rather than replacing it).
+
+      Three tests were rescoped to this fork's reality rather than deleted:
+      premium-denial's "three client-side desync decision sites" (two here —
+      LatestBriefPanel has no entitlement verdict to classify since
+      api/latest-brief.ts's pro_required 403 was removed), and the
+      elie-habib author-archive assertions in indexnow-submit and the new
+      seo-landing-metadata test (that page is deleted here).
+    lessons: >
+      1. `git checkout --theirs` on a file whose visible conflict looks
+      trivial is how gating gets in. CountryDeepDivePanel.ts conflicted only
+      on an import line; taking theirs silently pulled in makeProLocked() and
+      five "Upgrade to PRO" locks on bypass corridors, cost shock, debt,
+      sanctions and trade flows. The divergence lock caught it — nothing else
+      would have, since it compiled and no conflict marker survived.
+
+      2. Resolve conflict hunks by CONTENT match, never by index. Splicing
+      UnifiedSettings.ts's five hunks positionally interleaved two of them
+      and spliced `public close()` into the middle of renderUpgradeSection(),
+      dropping the method definition and an import. Regenerating the conflict
+      with `git merge-file` from the three stages and re-resolving by content
+      was the fix.
+
+      3. Taking `--ours` on a large file drops upstream's unrelated additions
+      inside the same hunks. App.ts lost the `uk: 'uk_UA'` OG-locale entry
+      that way; `tsc --noEmit` plus the guard suite found every instance, but
+      only because both were actually run.
+
+      4. public/pro must be REBUILT, not merged. Resolving its conflicts to
+      either side leaves the directory holding a mix of two builds — 66 files
+      / 7.7 MB, tripping the #5396 critical-path budget. `npm run build:pro`
+      brought it back to 38 files / 5.3 MB and fixed the welcome-prerender
+      and locale-registry tests at the same time.
+    verification: >
+      tsc --noEmit clean on both tsconfig.json and tsconfig.api.json (modulo
+      4 pre-existing unused-`ctx` warnings in handlers this fork ungated).
+      Contamination scan: 0 critical hits (from 50 in the incoming range).
+      Divergence lock: every violation traced to a deliberate resolution in
+      this sync, then re-snapshotted. Guard suite (every *premium*/*pro-*/
+      *gate*/*entitlement*/*ungate* file): 895 passed, 9 failed across 4
+      files, all 4 documented in known_pre_existing_gaps.
+
 # ---------------------------------------------------------------------------
 # 2. High-risk files — hand-review on every sync regardless of conflict markers.
 # ---------------------------------------------------------------------------
@@ -631,6 +717,56 @@ high_risk_files:
       shouldPrime/scheduleRefresh calls instead of reviving this helper.
     companion_test: tests/premium-loaders-fan-out-coverage.test.mts
 
+  - path: src/components/CountryDeepDivePanel.ts
+    risk: >
+      The most dangerous file of the bc99aad53..ab798e628 sync, precisely
+      because it looked safe: its only conflict was a single import line
+      (`getCSSColor` vs `getCSSColor, isMobileDevice, showToast`). Resolving
+      that with `git checkout --theirs` silently accepted upstream's whole
+      version of the file, which locks bypass corridors, the cost-shock
+      calculator, product imports, national debt, sanctions and trade flows
+      behind makeProLocked('Upgrade to PRO for …'). Nothing conflicted, it
+      compiled, and only the divergence lock caught it.
+
+      Upstream's genuinely-new work here is the overlay-history mobile
+      back-button support (hide(origin), historyRegistered, the
+      isMobileDevice() branch in show()) — port that onto this fork's
+      version rather than taking the file.
+
+  - path: src/app/event-handlers.ts
+    risk: >
+      Where upstream hangs each new gate's wiring: the export-gate control
+      and its lockedReason/isUnlocked state machine, the playback gate's
+      applyGate()/evaluatePlaybackGate() visibility toggle, and the
+      free-tier panel/source cap imports. All six of this sync's conflicts
+      here were gating, so `--ours` was right — but that also drops
+      upstream's non-gating changes from the same hunks. This sync had to
+      port back the #5376 invalidateNewsHydration() call in
+      restoreSnapshot() and LazyUnifiedSettings' close()/hasPendingChanges()
+      plus its history-aware open(). Typecheck after taking `--ours` here;
+      the dropped pieces surface as missing interface members.
+
+  - path: src/components/UnifiedSettings.ts
+    risk: >
+      Five interleaved conflicts mixing the fork's renderSettingsHelpSection
+      (which replaces every upsell branch) with upstream's overlay-history
+      close(origin) signature that the REST of the file already calls from
+      cleanly-merged regions. Resolve by content match, not hunk index — see
+      lesson 2 in the bc99aad53..ab798e628 commit_ranges entry.
+    also: [src/app/app-context.ts]
+
+  - path: public/pro/**
+    risk: >
+      Never merge; rebuild. Resolving these conflicts to either side leaves
+      the directory holding assets from two different Vite builds — after
+      this sync's merge it held 66 files / 7.7 MB against a 6 MB cap, failing
+      tests/pro-critical-path-budget.test.mts, tests/pro-welcome-prerender
+      and tests/pro-locale-registry at once. `npm run build:pro` (from the
+      reviewed pro-test/ sources) restored 38 files / 5.3 MB and fixed all
+      three. The conflict_policy rule takes upstream's side only so the tree
+      is parseable until the rebuild runs.
+    companion_tests: [tests/pro-critical-path-budget.test.mts, tests/pro-welcome-prerender.test.mjs, tests/pro-locale-registry.test.mjs, tests/pro-sentry-chunk.test.mjs]
+
 # ---------------------------------------------------------------------------
 # 3. Upstream commits/patterns already evaluated — the decision still applies
 #    if the same commit, a rebase of it, or a near-identical reimplementation
@@ -668,6 +804,42 @@ evaluated_upstream_commits:
       reason: "This fork's shared-dashboard-edition fallback already makes Latest Brief free."
     - pattern: "api/chat-analyst.ts resolvePremiumCallerIdentity / 403 Pro-gate"
       reason: "Keep the 401-only resolveAuthenticatedCallerIdentity gate instead."
+    - pattern: "src/services/gates/** (export.ts, export-resolver.ts, playback.ts, playback-resolver.ts)"
+      reason: >
+        Upstream's new home for the export gate this fork already deleted
+        (src/services/export-gate.ts), plus a new playback gate. Git reports
+        the modify/delete conflict under the NEW path, so match on the
+        merge-base blob rather than the filename — scripts/fork-sync-run.mjs
+        does this automatically. src/utils/export.ts must be kept at this
+        fork's version too: upstream's only change to it is the
+        availableFormats plumbing that hides formats behind the gate.
+    - pattern: "src/components/premium-layer-gate.ts / map-layer premium locking (#6045, #6049, #6050)"
+      reason: >
+        New paywall on MAP LAYERS — locks CMD+K layer toggles, disables the
+        checkbox, appends a 🔒 to the label and stamps a PRO badge on the
+        Resilience layer. This fork keeps resilienceScore at
+        `premium: undefined` in src/config/map-layer-definitions.ts, so all
+        56 layers are free. Touches DeckGLMap.ts, GlobeMap.ts,
+        MapContainer.ts and search-manager.ts; its dedicated tests
+        (map-svg-layer-gate, dom/globe-premium-layer-gate,
+        search-cmdk-premium-layer-gate, map-layer-initial-url-gate,
+        docs-stats-plan-layer-entitlement) come with it and go with it.
+    - pattern: "docs copy claiming '55 of 56 map layers free' / 'Resilience is Pro' (#5387)"
+      reason: >
+        True upstream, false here. Any pricing/accounts copy correction that
+        carves Resilience out of the free layer set contradicts this fork's
+        registry — keep "56 map layers" with no caveat.
+    - pattern: "cloud-prefs migrations 3-6 / regional-feed-rollout / source-cap fingerprinting"
+      reason: >
+        Upstream's schema-3..6 recovery migrations use FREE_MAX_SOURCES and
+        computeCapDisabledSources only as a FINGERPRINT of legacy cap state —
+        but this fork deleted src/services/source-cap.ts along with the caps
+        themselves, so they cannot compile here.
+        src/services/regional-feed-rollout.ts comes with them and is
+        unreachable from app code without them. Keeping the fork's retired
+        (empty) migration registry means this fork does not get upstream's
+        regional-default recovery; adopting it would mean resurrecting
+        source-cap.ts, which is a deliberate project, not a merge resolution.
 
 # ---------------------------------------------------------------------------
 # 4. Contamination patterns — read by scripts/fork-sync-scan.mjs.
@@ -737,9 +909,18 @@ contamination_patterns:
     severity: critical
     regex: 'Upgrade to Pro\b|Upgrade to PRO\b|Sign In to Unlock|Pro is launched|premium analytics|Unlock with Pro'
     reason: >
-      Upsell copy stripped from every locale bundle and component. New upstream
-      locales (uk.json etc.) arrive carrying the full set and need the same
-      treatment as the other 25.
+      Upsell copy stripped from every locale bundle and component in the
+      DASHBOARD. New upstream locales (uk.json etc.) arrive carrying the full
+      set and need the same treatment as the other 25.
+
+      pro-test/ is exempt: it is the /pro marketing site, whose entire purpose
+      is selling Pro. This fork's own pro-test/src/locales/en.json still
+      defines nav.upgradeToPro. What DOES matter there is the accuracy of the
+      claims (this fork trimmed proF7-proF9 and the WM-Analyst-led framing
+      because those capabilities are free here) — a correctness question the
+      `manual` conflict_policy on pro-test/index.html covers, not a
+      string-match one.
+    allow_paths: ['pro-test/**']
 
   - id: founder-branding
     severity: critical
@@ -920,11 +1101,20 @@ known_pre_existing_gaps:
       current reality), not a merge-conflict resolution.
   - test: tests/pro-locale-freshness.test.mjs
     issue: >
-      24 non-English pro-test locales carry English-fallback text for
-      pricing.tiers.free/pro.features, pending a real translation pass. Fix:
+      Non-English pro-test locales carry English-fallback text pending a real
+      translation pass. Fix:
       `ANTHROPIC_API_KEY=... node scripts/translate-locales.mjs --pro-test`
       (then rebuild pro-test and commit public/pro/). No key available when
       this gap was last confirmed.
+
+      The drift GROWS on every sync that changes pro-test/src/locales/en.json
+      — it was 24 locales at the aa74d8947..bc99aad53 sync and reports "50
+      English strings no longer match" after bc99aad53..ab798e628, which also
+      added a 26th locale (uk). Same untranslated-fallback cause, larger
+      count; not a sync regression. Note the json-replay conflict strategy
+      deliberately keeps this fork's rewritten English strings (it trimmed
+      proF7-proF9 and the WM-Analyst-led framing), so this gap cannot close
+      by merging upstream translations — it needs the translation pass.
   - test: tests/locale-staleness.test.mjs
     issue: >
       Depends on `Intl.PluralRules` category ordering, which is ICU-version-

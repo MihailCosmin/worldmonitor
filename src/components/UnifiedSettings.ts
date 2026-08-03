@@ -1,11 +1,12 @@
 import { CANONICAL_FEEDS, INTEL_SOURCES, SOURCE_REGION_MAP } from '@/config/feeds';
+import { THEATER_PRESETS, getTheaterPreset, getTheaterPresetEnableList, resolveTheaterPresetSources, type TheaterPreset } from '@/config/theater-presets';
 import {
   PANEL_CATEGORY_MAP,
   ALL_PANELS,
-  VARIANT_DEFAULTS,
   getEffectivePanelConfig,
   getVariantPanelCategories,
   isPanelEntitled,
+  isPanelInVariantDefaults,
 } from '@/config/panels';
 import { isProUser } from '@/services/widget-store';
 import { isSelfHostedRuntime } from '@/services/runtime';
@@ -29,7 +30,7 @@ import { renderNotificationsSettings, type NotificationsSettingsResult } from '@
 import { renderDataSourcesContent } from '@/services/data-sources-content';
 import { renderLogTabContent } from '@/services/log-tab-content';
 import { getAuthState, signIn, subscribeAuthState } from '@/services/auth-state';
-import { track } from '@/services/analytics';
+import { track, trackApiAction } from '@/services/analytics';
 import { isEntitled, hasFeature, onEntitlementChange, getEntitlementState } from '@/services/entitlements';
 import { hasPremiumAccess } from '@/services/panel-gating';
 import { getSubscription, onSubscriptionChange, openBillingPortal, prereserveBillingPortalTab } from '@/services/billing';
@@ -43,6 +44,12 @@ import {
   type ApiPlanLimitNotice,
 } from '@/services/api-plan-limit-notices';
 import { setTrustedHtml, trustedHtml } from '@/utils/dom-utils';
+import {
+  overlayHistory,
+  type OverlayCloseOrigin,
+  type OverlayId,
+} from '@/utils/overlay-history';
+import { isMobileDevice } from '@/utils';
 
 
 function showToast(msg: string): void {
@@ -89,6 +96,7 @@ export class UnifiedSettings {
   private panelsJustSaved = false;
   private savedTimeout: ReturnType<typeof setTimeout> | null = null;
   private confirmingClose = false;
+  private historyRegistered = false;
   private apiKeys: ApiKeyInfo[] = [];
   private apiKeysLoading = false;
   private apiKeysError = '';
@@ -279,6 +287,12 @@ export class UnifiedSettings {
         return;
       }
 
+      const presetChip = target.closest<HTMLElement>('.unified-settings-preset-chip');
+      if (presetChip?.dataset.presetId) {
+        this.applyCoveragePreset(presetChip.dataset.presetId);
+        return;
+      }
+
       if (target.closest('.sources-select-none')) {
         const visible = this.getVisibleSourceNames();
         this.config.setSourcesEnabled(visible, false);
@@ -408,7 +422,7 @@ export class UnifiedSettings {
       && request.userId === getAuthState().user?.id;
   }
 
-  public open(tab?: TabId): void {
+  public open(tab?: TabId, replaceOverlayId?: OverlayId): void {
     const requestedTab = tab ?? this.activeTab;
     this.activeTab = requestedTab === 'mcp-clients' && !hasFeature('mcpAccess')
       ? 'settings'
@@ -420,6 +434,12 @@ export class UnifiedSettings {
     this.entitlementReady = getEntitlementState() !== null;
     this.render();
     this.overlay.classList.add('active');
+    if (isMobileDevice()) {
+      this.historyRegistered = true;
+      const close = (origin: OverlayCloseOrigin) => this.close(origin);
+      if (replaceOverlayId) overlayHistory.replace(replaceOverlayId, 'settings', close);
+      else overlayHistory.open('settings', close);
+    }
     localStorage.setItem('wm-settings-open', '1');
     document.addEventListener('keydown', this.escapeHandler);
     (this.overlay.querySelector('.unified-settings-tabs') as HTMLElement)?.addEventListener('keydown', (e: KeyboardEvent) => this.handleKeyDown(e));
@@ -512,23 +532,36 @@ export class UnifiedSettings {
     `;
   }
 
-  public close(): void {
+  public close(origin: OverlayCloseOrigin = 'control'): void {
+    if (origin === 'history') this.historyRegistered = false;
     // Unsaved panel changes → confirm before tearing down. The confirm is a
     // non-blocking in-app dialog (#4559): close() stays synchronous (8 callers)
     // and defers teardown to the user's choice instead of a blocking confirm().
-    if (this.hasPendingPanelChanges()) {
+    if (origin !== 'replacement' && this.hasPendingPanelChanges()) {
+      if (origin === 'history' && !this.historyRegistered) {
+        this.historyRegistered = true;
+        overlayHistory.open('settings', (nextOrigin) => this.close(nextOrigin));
+      }
       if (this.confirmingClose) return; // a confirm is already on screen
       this.confirmingClose = true;
       void confirmDialog({ message: t('header.unsavedChanges') }).then((discard) => {
         this.confirmingClose = false;
-        if (discard) this.teardownSettings();
+        if (discard) this.teardownSettings('control');
       });
       return;
     }
-    this.teardownSettings();
+    this.teardownSettings(origin);
   }
 
-  private teardownSettings(): void {
+  public hasPendingChanges(): boolean {
+    return this.hasPendingPanelChanges();
+  }
+
+  private teardownSettings(origin: OverlayCloseOrigin = 'control'): void {
+    if (origin === 'control' && this.historyRegistered) {
+      overlayHistory.close('settings');
+    }
+    this.historyRegistered = false;
     this.overlay.classList.remove('active');
     this.prefsCleanup?.();
     this.prefsCleanup = null;
@@ -563,6 +596,8 @@ export class UnifiedSettings {
   }
 
   public destroy(): void {
+    if (this.historyRegistered) overlayHistory.close('settings');
+    this.historyRegistered = false;
     if (this.savedTimeout) clearTimeout(this.savedTimeout);
     this.prefsCleanup?.();
     this.prefsCleanup = null;
@@ -640,6 +675,7 @@ export class UnifiedSettings {
     const dataSources = showDataSourcesTab ? renderDataSourcesContent() : null;
     const availableTabs: TabId[] = [
       'settings',
+      ...(isSignedIn ? ['billing' as const] : []),
       'panels',
       'sources',
       ...(showNotificationsTab ? ['notifications' as const] : []),
@@ -650,6 +686,7 @@ export class UnifiedSettings {
     ];
     this.activeTab = normalizeSettingsTab(this.activeTab, availableTabs);
     const tabClass = (id: TabId) => `unified-settings-tab${this.activeTab === id ? ' active' : ''}`;
+    const applicablePresets = this.getApplicableTheaterPresets();
 
     setTrustedHtml(this.overlay, trustedHtml(`
       <div class="modal unified-settings-modal">
@@ -659,6 +696,7 @@ export class UnifiedSettings {
         </div>
         <div class="unified-settings-tabs" role="tablist" aria-label="Settings">
           <button class="${tabClass('settings')}" tabindex="${this.activeTab === 'settings' ? 0 : -1}" data-tab="settings" role="tab" aria-selected="${this.activeTab === 'settings'}" id="us-tab-settings" aria-controls="us-tab-panel-settings">${t('header.tabSettings')}</button>
+          ${isSignedIn ? `<button class="${tabClass('billing')}" tabindex="${this.activeTab === 'billing' ? 0 : -1}" data-tab="billing" role="tab" aria-selected="${this.activeTab === 'billing'}" id="us-tab-billing" aria-controls="us-tab-panel-billing">Plan &amp; billing</button>` : ''}
           <button class="${tabClass('panels')}" tabindex="${this.activeTab === 'panels' ? 0 : -1}" data-tab="panels" role="tab" aria-selected="${this.activeTab === 'panels'}" id="us-tab-panels" aria-controls="us-tab-panel-panels">${t('header.tabPanels')}</button>
           <button class="${tabClass('sources')}" tabindex="${this.activeTab === 'sources' ? 0 : -1}" data-tab="sources" role="tab" aria-selected="${this.activeTab === 'sources'}" id="us-tab-sources" aria-controls="us-tab-panel-sources">${t('header.tabSources')}</button>
           ${showNotificationsTab ? `<button class="${tabClass('notifications')}" tabindex="${this.activeTab === 'notifications' ? 0 : -1}" data-tab="notifications" role="tab" aria-selected="${this.activeTab === 'notifications'}" id="us-tab-notifications" aria-controls="us-tab-panel-notifications">${t('header.tabNotifications')}</button>` : ''}
@@ -669,8 +707,16 @@ export class UnifiedSettings {
         </div>
         <div class="unified-settings-tab-panel${this.activeTab === 'settings' ? ' active' : ''}" data-panel-id="settings" id="us-tab-panel-settings" role="tabpanel" aria-labelledby="us-tab-settings">
           ${prefs.html}
+        </div>
+        ${isSignedIn ? `
+        <div class="unified-settings-tab-panel${this.activeTab === 'billing' ? ' active' : ''}" data-panel-id="billing" id="us-tab-panel-billing" role="tabpanel" aria-labelledby="us-tab-billing">
+          <div class="billing-settings-intro">
+            <h2>Plan &amp; billing</h2>
+            <p>See your current plan and manage payment details, invoices, or cancellation.</p>
+          </div>
           ${this.renderUpgradeSection()}
         </div>
+        ` : ''}
         <div class="unified-settings-tab-panel${this.activeTab === 'panels' ? ' active' : ''}" data-panel-id="panels" id="us-tab-panel-panels" role="tabpanel" aria-labelledby="us-tab-panels">
           <div class="unified-settings-region-wrapper">
             <div class="unified-settings-region-bar" id="usPanelCatBar"></div>
@@ -689,6 +735,14 @@ export class UnifiedSettings {
           <div class="unified-settings-region-wrapper">
             <div class="unified-settings-region-bar" id="usRegionBar"></div>
           </div>
+          ${applicablePresets.length > 0 ? `
+          <div class="unified-settings-presets" id="usCoveragePresets">
+            <span class="unified-settings-presets-label">${t('theaterPresets.label')}</span>
+            ${applicablePresets.map(preset =>
+              `<button type="button" class="unified-settings-region-pill unified-settings-preset-chip" data-preset-id="${preset.id}" title="${escapeHtml(t(preset.descriptionKey))}">${escapeHtml(t(preset.labelKey))}</button>`
+            ).join('')}
+          </div>
+          ` : ''}
           <div class="sources-search">
             <input type="text" placeholder="${t('header.filterSources')}" value="${escapeHtml(this.sourceFilter)}" />
           </div>
@@ -852,14 +906,12 @@ export class UnifiedSettings {
     // during this window so we don't flash stale account copy before the
     // entitlement state settles.
     if (!this.entitlementReady && getAuthState().user && getEntitlementState() === null) {
-      // `hidden` so the browser's default `[hidden] { display: none }`
-      // suppresses the empty card — without it, the base `.upgrade-pro-
-      // section` styles (margin + padding + border + surface background
-      // in main.css:22833) paint a visibly empty bordered box during the
-      // Convex cold-load window, which is exactly the state we're trying
-      // to clean up. Element stays queryable for the replaceWith swap in
-      // open().
-      return '<div class="upgrade-pro-section upgrade-pro-loading" hidden aria-hidden="true"></div>';
+      return `
+        <div class="upgrade-pro-section upgrade-pro-loading" role="status" aria-live="polite">
+          <div class="upgrade-pro-title">Checking your plan…</div>
+          <div class="upgrade-pro-desc">This usually takes only a moment.</div>
+        </div>
+      `;
     }
     if (isEntitled()) {
       const sub = getSubscription();
@@ -893,6 +945,9 @@ export class UnifiedSettings {
       // billing surface remains owner-only. Show their plan status without
       // the Manage Billing CTA that would 404 against Dodo.
       const hasOwnSubscription = sub !== null;
+      if (!hasOwnSubscription) {
+        statusLine = 'Billing is managed by your plan owner.';
+      }
 
       return `
         <div class="upgrade-pro-section upgrade-pro-active" style="margin-top:16px;padding:14px 16px;border:1px solid ${statusBorderColor};border-radius:6px;background:${statusBgColor};">
@@ -986,7 +1041,7 @@ export class UnifiedSettings {
       const resolvedPanel = ALL_PANELS[key] ? getEffectivePanelConfig(key, SITE_VARIANT) : panel;
       const entitled = isPanelEntitled(key, resolvedPanel, pro);
       const locked = !entitled;
-      const changed = !locked && savedSettings[key]?.enabled !== panel.enabled;
+      const changed = !locked && this.getSavedPanelEnabled(key, savedSettings) !== panel.enabled;
       const displayName = this.config.getLocalizedPanelName(key, resolvedPanel.name ?? panel.name);
       const a11yState = getPanelToggleA11yState(locked, panel.enabled, displayName);
       return `
@@ -1004,10 +1059,9 @@ export class UnifiedSettings {
     const cloned: Record<string, PanelConfig> = Object.fromEntries(
       Object.entries(source).map(([key, panel]) => [key, { ...panel }]),
     );
-    const variantDefaults = new Set(VARIANT_DEFAULTS[SITE_VARIANT] ?? []);
     for (const key of Object.keys(ALL_PANELS)) {
       if (!(key in cloned)) {
-        cloned[key] = { ...getEffectivePanelConfig(key, SITE_VARIANT), enabled: variantDefaults.has(key) };
+        cloned[key] = { ...getEffectivePanelConfig(key, SITE_VARIANT), enabled: isPanelInVariantDefaults(key) };
       }
     }
     return cloned;
@@ -1018,9 +1072,17 @@ export class UnifiedSettings {
     this.panelsJustSaved = false;
   }
 
+  private getSavedPanelEnabled(key: string, savedSettings: Record<string, PanelConfig>): boolean {
+    const savedPanel = savedSettings[key];
+    if (savedPanel) return savedPanel.enabled;
+    return Boolean(ALL_PANELS[key]) && isPanelInVariantDefaults(key);
+  }
+
   private hasPendingPanelChanges(): boolean {
     const savedSettings = this.config.getPanelSettings();
-    return Object.entries(this.draftPanelSettings).some(([key, panel]) => savedSettings[key]?.enabled !== panel.enabled);
+    return Object.entries(this.draftPanelSettings).some(
+      ([key, panel]) => this.getSavedPanelEnabled(key, savedSettings) !== panel.enabled,
+    );
   }
 
   private toggleDraftPanel(key: string): void {
@@ -1173,6 +1235,56 @@ export class UnifiedSettings {
     const enabledTotal = allSources.length - disabled.size;
 
     counter.textContent = t('header.sourcesEnabled', { enabled: String(enabledTotal), total: String(allSources.length) });
+  }
+
+  /**
+   * Presets with at least one source that resolves in the runtime-known
+   * source set. Narrow variants (or disabled news panels) can leave a preset
+   * with nothing to enable — those chips are dead, so don't offer them.
+   */
+  private getApplicableTheaterPresets(): readonly TheaterPreset[] {
+    const known = new Set(this.config.getAllSourceNames());
+    return THEATER_PRESETS.filter((preset) => resolveTheaterPresetSources(preset, known).length > 0);
+  }
+
+  /**
+   * Theater coverage preset (#5956): additively enable the preset's sources.
+   * Uses the same bulk primitive as select-all, so persistence, the free
+   * source cap, and cloud sync behave identically; unrelated sources are
+   * never touched.
+   */
+  private applyCoveragePreset(presetId: string): void {
+    const preset = getTheaterPreset(presetId);
+    if (!preset) return;
+
+    const known = new Set(this.config.getAllSourceNames());
+    const resolvable = resolveTheaterPresetSources(preset, known);
+    const toEnable = getTheaterPresetEnableList(preset, this.config.getDisabledSources(), known);
+    const label = t(preset.labelKey);
+
+    // Zero resolvable sources (narrow variant or unloaded panels) is not the
+    // same as "already applied" — say so. Normally unreachable because the
+    // chips row only renders applicable presets; kept as a defensive guard.
+    if (resolvable.length === 0) {
+      showToast(t('theaterPresets.unavailable', { preset: label }));
+      return;
+    }
+
+    if (toEnable.length === 0) {
+      showToast(t('theaterPresets.alreadyApplied', { preset: label }));
+      return;
+    }
+
+    // setSourcesEnabled no-ops (with its own free-cap toast) when the free
+    // source cap would be exceeded — only re-render and claim success when
+    // state actually changed.
+    const disabledSizeBefore = this.config.getDisabledSources().size;
+    this.config.setSourcesEnabled(toEnable, true);
+    if (this.config.getDisabledSources().size !== disabledSizeBefore) {
+      this.renderSourcesGrid();
+      this.updateSourcesCounter();
+      showToast(t('theaterPresets.applied', { preset: label, count: String(toEnable.length) }));
+    }
   }
 
   private async loadPlanLimitNotices(): Promise<void> {
@@ -1413,6 +1525,7 @@ export class UnifiedSettings {
     try {
       const result = await createApiKey(name);
       if (!this.isAccountRequestCurrent(request)) return;
+      trackApiAction('key-created');
       this.newlyCreatedKey = result.key;
       input.value = '';
       this.showCreatedBanner(result.key);
@@ -1442,6 +1555,7 @@ export class UnifiedSettings {
     try {
       await revokeApiKey(keyId);
       if (!this.isAccountRequestCurrent(request)) return;
+      trackApiAction('key-revoked');
       await this.loadApiKeys();
     } catch (err) {
       if (!this.isAccountRequestCurrent(request)) return;

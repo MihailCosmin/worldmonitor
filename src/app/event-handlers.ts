@@ -82,6 +82,7 @@ import { AuthLauncher } from '@/components/AuthLauncher';
 import { AuthHeaderWidget } from '@/components/AuthHeaderWidget';
 import { t } from '@/services/i18n';
 import { TvModeController } from '@/services/tv-mode';
+import { overlayHistory, type OverlayId } from '@/utils/overlay-history';
 import { setTrustedHtml, trustedHtml } from '@/utils/dom-utils';
 import { scheduleAfterFirstPaint } from '@/utils/after-paint';
 import { escapeHtml } from '@/utils/sanitize';
@@ -119,6 +120,7 @@ class LazyUnifiedSettings implements UnifiedSettingsController {
   private instance: RealUnifiedSettings | null = null;
   private loadPromise: Promise<RealUnifiedSettings> | null = null;
   private destroyed = false;
+  private openEpoch = 0;
 
   constructor(private readonly config: UnifiedSettingsConfig) {
     this.button = createSettingsButton(() => this.open());
@@ -128,20 +130,39 @@ class LazyUnifiedSettings implements UnifiedSettingsController {
     return this.button;
   }
 
-  open(tab?: UnifiedSettingsTabId): void {
+  open(tab?: UnifiedSettingsTabId, replaceOverlayId?: OverlayId, historyPending = false): void {
+    const epoch = ++this.openEpoch;
+    const pendingId: OverlayId = 'settings-pending';
+    const pendingGate = historyPending
+      ? overlayHistory.beginPending(pendingId, replaceOverlayId, () => { this.openEpoch += 1; })
+      : null;
     void this.load().then((settings) => {
-      if (!this.destroyed) settings.open(tab);
+      if (this.destroyed || this.openEpoch !== epoch) return;
+      if (pendingGate && !pendingGate.isCurrent()) return;
+      settings.open(tab, pendingGate ? pendingId : replaceOverlayId);
     }).catch((error) => {
       // A rejection because the controller was torn down mid-load is a
       // deliberate unmount, not a failure the user should be toasted about.
-      if (this.destroyed) return;
+      // Back can cancel the pending history transition before the lazy chunk
+      // rejects; that cancellation is also an expected teardown path.
+      const actionWasCancelled = pendingGate !== null && !pendingGate.isCurrent();
+      if (this.destroyed || actionWasCancelled) return;
       console.warn('[settings] Failed to load settings window:', error);
+      pendingGate?.cancel();
       showToast(t('common.error'));
     });
   }
 
   refreshPanelToggles(): void {
     this.instance?.refreshPanelToggles();
+  }
+
+  close(): void {
+    this.instance?.close();
+  }
+
+  hasPendingChanges(): boolean {
+    return this.instance?.hasPendingChanges() ?? false;
   }
 
   destroy(): void {
@@ -181,6 +202,12 @@ export interface EventHandlerCallbacks {
   updateSearchIndex: () => void;
   updateFlightSource?: (adsb: PositionSample[], military: MilitaryFlight[]) => void;
   loadAllData: () => Promise<void>;
+  /**
+   * Tell the data loader that the rendered news no longer reflects the last
+   * load, so the next loadAllData() refetches it even though the category set
+   * is unchanged. See DataLoader.invalidateNewsHydration.
+   */
+  invalidateNewsHydration: () => void;
   flushStaleRefreshes: () => void;
   setHiddenSince: (ts: number) => void;
   loadDataForLayer: (layer: string) => void;
@@ -1853,6 +1880,11 @@ export class EventHandlerManager implements AppModule {
   }
 
   restoreSnapshot(snapshot: DashboardSnapshot): void {
+    // Replay parks every news panel on a loading state and never refills it —
+    // leaving playback calls loadAllData() to do that. Its news task is skipped
+    // when the category set is unchanged (#5376), which replay does not touch,
+    // so drop the record here and the exit reload happens.
+    this.callbacks.invalidateNewsHydration();
     for (const panel of Object.values(this.ctx.newsPanels)) {
       panel.showLoading();
     }
@@ -2182,7 +2214,7 @@ export class EventHandlerManager implements AppModule {
     const sources = new Set<string>();
     // Preset feeds + sources from any custom news panels the user added, so
     // the source manager stays in sync with what loadNews() actually fetches.
-    const categories = resolveNewsCategories(FEEDS, CANONICAL_FEEDS, enabledNewsCategoryKeys(this.ctx.newsPanels, this.ctx.panels, this.ctx.panelSettings, Object.keys(CANONICAL_FEEDS)));
+    const categories = resolveNewsCategories(FEEDS, CANONICAL_FEEDS, enabledNewsCategoryKeys(this.ctx.newsCategoryPanelKeys, this.ctx.panelSettings));
     categories.forEach(({ feeds }) => feeds.forEach(f => sources.add(f.name)));
     INTEL_SOURCES.forEach(f => sources.add(f.name));
     return Array.from(sources).sort((a, b) => a.localeCompare(b));
