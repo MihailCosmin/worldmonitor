@@ -11,6 +11,7 @@ import { trackLanguageChange } from '@/services/analytics';
 import { exportSettings, importSettings, type ImportResult } from '@/utils/settings-persistence';
 import { getSyncState, getLastSyncAt, syncNow, isCloudSyncEnabled } from '@/utils/cloud-prefs-sync';
 import { isSelfHostedRuntime } from '@/services/runtime';
+import { isFeatureEnabled, setFeatureToggle } from '@/services/runtime-config';
 
 const SYNC_STATE_LABELS: Record<string, string> = {
   synced: 'Synced', pending: 'Pending', syncing: 'Syncing\u2026',
@@ -227,13 +228,22 @@ export function renderPreferences(host: PreferencesHost): PreferencesResult {
     html += toggleRowHtml('us-cloud', t('components.insights.aiFlowCloudLabel'), t('components.insights.aiFlowCloudDesc'), settings.cloudLlm);
     html += toggleRowHtml('us-browser', t('components.insights.aiFlowBrowserLabel'), t('components.insights.aiFlowBrowserDesc'), settings.browserModel);
     html += `<div class="ai-flow-toggle-warn" style="display:${settings.browserModel ? 'block' : 'none'}">${t('components.insights.aiFlowBrowserWarn')}</div>`;
+    // Self-hosted-only: the same aiOllama feature toggle the Data Sources
+    // tab's checkbox already controls (setFeatureToggle/isFeatureEnabled,
+    // runtime-config.ts) — summarization.ts always tries Ollama first,
+    // independent of the Cloud AI / Browser Local Model toggles above, as
+    // long as isFeatureAvailable('aiOllama') is true (this toggle AND
+    // OLLAMA_API_URL/OLLAMA_MODEL configured in Data Sources). Surfacing a
+    // second control for the same state here — where the other two AI
+    // toggles live — beats a plain instructional CTA telling the user to go
+    // find it in a different tab.
     html += isSelfHostedRuntime()
-      ? `
-      <div class="ai-flow-cta">
-        <div class="ai-flow-cta-title">${t('components.insights.aiFlowOllamaCta')}</div>
-        <div class="ai-flow-cta-desc">${t('components.insights.aiFlowOllamaCtaDescSelfHosted')}</div>
-      </div>
-    `
+      ? toggleRowHtml(
+        'us-ollama',
+        t('components.insights.aiFlowOllamaCta'),
+        t('components.insights.aiFlowOllamaCtaDescSelfHosted'),
+        isFeatureEnabled('aiOllama'),
+      )
       : `
       <div class="ai-flow-cta">
         <div class="ai-flow-cta-title">${t('components.insights.aiFlowOllamaCta')}</div>
@@ -485,6 +495,8 @@ export function renderPreferences(host: PreferencesHost): PreferencesResult {
             hmSwitch?.classList.toggle('is-disabled', !target.checked);
           }
           updateAiStatus(container);
+        } else if (target.id === 'us-ollama') {
+          setFeatureToggle('aiOllama', target.checked);
         } else if (target.id === 'us-map-flash') {
           setAiFlowSetting('mapNewsFlash', target.checked);
         } else if (target.id === 'us-headline-memory') {
