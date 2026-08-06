@@ -124,7 +124,7 @@ meta:
   #     upstream's product rather than deleting them, and regenerate the
   #     source-attribution manifest because it records reference paths into
   #     files this fork deleted.
-  categories: [pro-removal, discord-removal, owner-branding-removal, feature-ungate, upstream-sync, local-auth, analytics-simplification]
+  categories: [pro-removal, discord-removal, owner-branding-removal, feature-ungate, upstream-sync, local-auth, analytics-simplification, self-hosted-ops]
 
 # ---------------------------------------------------------------------------
 # 1. Commit ranges by category — what we changed, and where to look for detail.
@@ -394,6 +394,48 @@ commit_ranges:
       cron, storage-capacity monitor) is untouched SERVER-side ops
       infrastructure, a different subsystem from this client-side module and
       explicitly NOT in scope of this removal.
+
+  - category: self-hosted-ops
+    range: "9ddbe2cdc, c5ab5ebf2 (Data Sources tab, 2026-07-29); 123efb79b (docker-compose secret wiring); runtime-config.ts plaintext-value-retention fix, both 2026-08-06"
+    summary: >
+      Docker/self-hosted-web-only features with ZERO upstream equivalent —
+      upstream is a hosted SaaS and will never grow either of these. Regressions
+      here come from this fork's own future edits, not from a sync, but they
+      belong in this manifest because they follow the exact same failure shape
+      documented elsewhere: something merges/compiles cleanly, nothing conflicts,
+      and it's still broken. Two found and fixed in the same session:
+
+      1. `docker-compose.yml` documented `WM_SESSION_SECRET` and
+      `RELAY_SHARED_SECRET` in SELF_HOSTING.md's required-vars table but never
+      actually passed either into a container's `environment:` block. Every
+      fresh Docker install got a 503 "Session service not configured" from
+      `/api/wm-session` (surfaced to users as "Anonymous data is temporarily
+      unavailable") and the ais-relay container fatally exited on boot
+      (scripts/ais-relay.cjs refuses to start without RELAY_SHARED_SECRET) —
+      both silently, since `restart: unless-stopped` just crash-loops it. Fixed
+      by wiring both through with the same fail-closed `${VAR:?msg}` guard
+      already used for REDIS_TOKEN/REDIS_PASSWORD.
+
+      2. Settings > Data Sources' `setSecretValue()` self-hosted branch
+      (runtime-config.ts) saved OLLAMA_API_URL correctly but stored only
+      `{ source: 'local-server' }` afterward — dropping the value it had just
+      written — while `loadSelfHostedSecretStatus()` a few functions away
+      correctly stores `{ source: 'local-server', value }` for PLAINTEXT_KEYS.
+      data-sources-content.ts's save handler papered over this by writing
+      `input.value = raw` directly into the DOM, so the bug was invisible until
+      the row re-rendered from the in-memory snapshot instead of the DOM
+      (reopening Settings, `rerenderList()` on auth change): the field went
+      blank, "Test Connection" had nothing to test (empty input = early
+      return), and the Ollama model dropdown never got the URL it needed to
+      probe. Fixed by making the self-hosted write path mirror the read
+      path — store `value` for PLAINTEXT_KEYS on save, not just presence.
+
+      No test currently covers either path end-to-end (docker-compose has
+      tests/docker-compose-no-default-secrets.test.mts for the *shape* of the
+      secret-guard syntax, but nothing that would have caught a documented-but-
+      unwired var; runtime-config.ts's self-hosted setSecretValue branch has no
+      test at all). Both are candidates for a regression test before the next
+      person touches these files.
 
       Trigger: analytics-collector-transport.ts is a real upstream file
       (landed via the bc99aad53..ab798e628 sync, 2026-08-03; absent at
@@ -939,6 +981,44 @@ high_risk_files:
       three. The conflict_policy rule takes upstream's side only so the tree
       is parseable until the rebuild runs.
     companion_tests: [tests/pro-critical-path-budget.test.mts, tests/pro-welcome-prerender.test.mjs, tests/pro-locale-registry.test.mjs, tests/pro-sentry-chunk.test.mjs]
+
+  - path: docker-compose.yml
+    risk: >
+      Self-hosted-only — upstream ships no Docker stack, so this file never
+      conflicts on a sync. The risk is purely local: every secret this fork
+      requires (REDIS_TOKEN, REDIS_PASSWORD, WM_SESSION_SECRET,
+      RELAY_SHARED_SECRET) MUST be wired into a service's `environment:` block
+      with the same fail-closed `${VAR:?message}` syntax, not just documented
+      in SELF_HOSTING.md's required-vars table. WM_SESSION_SECRET and
+      RELAY_SHARED_SECRET were both documented as required and both silently
+      absent from every `environment:` block for one full release — every
+      fresh install got "Anonymous data is temporarily unavailable" from a 503
+      on /api/wm-session, and ais-relay fatally exited on boot and
+      crash-looped under `restart: unless-stopped`, with nothing in `docker
+      compose up` output calling out which var was missing. When adding a new
+      required secret, grep this file for the var name after editing
+      SELF_HOSTING.md, not the other way around — the doc changing is not
+      evidence the compose file changed too.
+    companion_test: tests/docker-compose-no-default-secrets.test.mts
+
+  - path: src/services/runtime-config.ts
+    risk: >
+      Self-hosted-only — `setSecretValue()`'s self-hosted branch (~line 514)
+      and `loadSelfHostedSecretStatus()` (~line 639) both write into the same
+      `runtimeConfig.secrets[key]` map and MUST stay in sync on what they store
+      for PLAINTEXT_KEYS (settings-constants.ts): the load path already stores
+      `{ source: 'local-server', value }` so a saved OLLAMA_API_URL/OLLAMA_MODEL/
+      WS_RELAY_URL/VITE_OPENSKY_RELAY_URL survives a reopen of Settings, but the
+      save path drifted to storing presence only (`{ source: 'local-server' }`),
+      silently dropping the value the moment anything re-rendered the row from
+      this in-memory snapshot instead of the DOM. data-sources-content.ts's
+      immediate `input.value = raw` after a successful save hid the bug for the
+      rest of that same render, which is exactly why it shipped unnoticed — the
+      symptom only appears on the NEXT render (reopen Settings, or any
+      `rerenderList()` triggered by an auth-state change), by which point it
+      looks unrelated to the save that caused it. If either function's write
+      shape changes, check the other changed to match.
+    also: [src/services/data-sources-content.ts, src/services/settings-constants.ts]
 
 # ---------------------------------------------------------------------------
 # 3. Upstream commits/patterns already evaluated — the decision still applies
