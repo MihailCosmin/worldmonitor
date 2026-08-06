@@ -49,6 +49,7 @@ import type { GulfEconomiesPanel } from '@/components/GulfEconomiesPanel';
 import type { GroceryBasketPanel } from '@/components/GroceryBasketPanel';
 import type { BigMacPanel } from '@/components/BigMacPanel';
 import type { FuelPricesPanel } from '@/components/FuelPricesPanel';
+import type { FxPanel } from '@/components/FxPanel';
 import type { FaoFoodPriceIndexPanel } from '@/components/FaoFoodPriceIndexPanel';
 import type { OilInventoriesPanel } from '@/components/OilInventoriesPanel';
 import type { PipelineStatusPanel } from '@/components/PipelineStatusPanel';
@@ -85,7 +86,8 @@ import {
   waitForBootstrapSlowTier,
   type BootstrapHydrationState,
 } from '@/services/bootstrap';
-import { ensureWmSession, installWmSessionFetchInterceptor, WM_SESSION_DEGRADED_EVENT } from '@/services/wm-session';
+import { ensureWmSession, installWmSessionFetchInterceptor, WM_SESSION_DEGRADED_EVENT, type WmSessionDegradedDetail } from '@/services/wm-session';
+import { describeWmSessionDegradation, WM_SESSION_DEGRADED_FALLBACK_COPY } from '@/services/wm-session-copy';
 import { describeFreshness } from '@/services/persistent-cache';
 import { DesktopUpdater } from '@/app/desktop-updater';
 import { CountryIntelManager } from '@/app/country-intel';
@@ -137,6 +139,10 @@ import {
   getStoredAnonId,
 } from '@/services/anonymous-identity-storage';
 import { captureReferralFromUrl } from '@/services/referral-capture';
+import { nextPrimeRetryDelayMs } from '@/utils/prime-retry';
+
+/** Look-ahead margin for viewport-gated panel priming and refresh scheduling. */
+const DEFAULT_VIEWPORT_MARGIN_PX = 400;
 // CorrelationEngine + its 4 adapters are dynamic-imported at the post-loadAllData
 // run site (#4486) so the engine bytes stay off the eager boot graph. The TYPE is
 // referenced via the inline `import(...)` type in app-context.ts (erased at build).
@@ -188,12 +194,28 @@ export class App {
   // duplicate registrations.
   private webMcpController: AbortController | null = null;
   private visiblePanelPrimed = new Set<string>();
+  /**
+   * Per-pass viewport results, or null outside a pass. See
+   * {@link primeViewportNearCache}.
+   */
+  private viewportNearCache: Map<string, boolean> | null = null;
+  /** Consecutive prime failures per key, for the retry backoff. */
+  private visiblePanelPrimeFailures = new Map<string, number>();
+  /** Earliest `Date.now()` at which a failed prime key may be retried. */
+  private visiblePanelPrimeRetryAt = new Map<string, number>();
   private visiblePanelPrimeRaf: number | null = null;
   private bootstrapHydrationState: BootstrapHydrationState = getBootstrapHydrationState();
   private cachedModeBannerEl: HTMLElement | null = null;
-  private readonly handleWmSessionDegraded = (): void => {
+  private readonly handleWmSessionDegraded = (event?: Event): void => {
     if (!this.state.isDestroyed) {
-      showToast('Anonymous data is temporarily unavailable. Check your cookie settings, then reload.');
+      // Pre-#5674 bundles in long-lived tabs can still dispatch a plain Event
+      // with no detail; fall back to the cookie wording those users used to get.
+      const reason = (event as CustomEvent<WmSessionDegradedDetail> | undefined)?.detail?.reason;
+      showToast(
+        reason
+          ? describeWmSessionDegradation(reason)
+          : WM_SESSION_DEGRADED_FALLBACK_COPY,
+      );
     }
   };
   private readonly handleViewportPrime = (): void => {
@@ -277,12 +299,39 @@ export class App {
     }
   }
 
-  private isPanelNearViewport(panelId: string, marginPx = 400): boolean {
+  private isPanelNearViewport(panelId: string, marginPx = DEFAULT_VIEWPORT_MARGIN_PX): boolean {
+    if (marginPx === DEFAULT_VIEWPORT_MARGIN_PX && this.viewportNearCache) {
+      const cached = this.viewportNearCache.get(panelId);
+      if (cached !== undefined) return cached;
+    }
     const panel = this.state.panels[panelId] as { isNearViewport?: (marginPx?: number) => boolean } | undefined;
     return panel?.isNearViewport?.(marginPx) ?? false;
   }
 
-  private isAnyPanelNearViewport(panelIds: string[], marginPx = 400): boolean {
+  /**
+   * Read every mounted panel's viewport state in one uninterrupted pass (#4487).
+   *
+   * `Panel.isNearViewport` calls `getComputedStyle` AND `getBoundingClientRect`,
+   * both of which force style/layout. `primeVisiblePanelData` gates ~48 panels,
+   * and a passing gate synchronously enters the panel's loader, several of which
+   * write DOM before their first await (`showLoading` / `renderPanel`). That made
+   * the pass read → write → read → write, so each read re-flushed a layout the
+   * previous write had just invalidated — up to 48 forced layouts in one task,
+   * dispatched from a scroll handler's rAF.
+   *
+   * Reading everything first means one flush, then writes only. The results are
+   * valid for the whole synchronous pass: nothing scrolls or resizes mid-task.
+   */
+  private primeViewportNearCache(): void {
+    const cache = new Map<string, boolean>();
+    for (const [id, panel] of Object.entries(this.state.panels)) {
+      const near = panel as { isNearViewport?: (marginPx?: number) => boolean } | undefined;
+      cache.set(id, near?.isNearViewport?.(DEFAULT_VIEWPORT_MARGIN_PX) ?? false);
+    }
+    this.viewportNearCache = cache;
+  }
+
+  private isAnyPanelNearViewport(panelIds: string[], marginPx = DEFAULT_VIEWPORT_MARGIN_PX): boolean {
     return panelIds.some((panelId) => this.isPanelNearViewport(panelId, marginPx));
   }
 
@@ -391,13 +440,25 @@ export class App {
 
   private async primeVisiblePanelData(forceAll = false): Promise<void> {
     const tasks: Promise<unknown>[] = [];
+    const now = Date.now();
     const primeTask = (key: string, task: () => Promise<unknown>): void => {
       if (this.visiblePanelPrimed.has(key) || this.state.inFlight.has(key)) return;
+      // A failed prime is never recorded as primed, so without this a fast-failing
+      // endpoint re-enters on every scroll frame forever (#4487).
+      const retryAt = this.visiblePanelPrimeRetryAt.get(key);
+      if (retryAt !== undefined && now < retryAt) return;
       const wrapped = (async () => {
         this.state.inFlight.add(key);
         try {
           await task();
           this.visiblePanelPrimed.add(key);
+          this.visiblePanelPrimeFailures.delete(key);
+          this.visiblePanelPrimeRetryAt.delete(key);
+        } catch (err) {
+          const failures = (this.visiblePanelPrimeFailures.get(key) ?? 0) + 1;
+          this.visiblePanelPrimeFailures.set(key, failures);
+          this.visiblePanelPrimeRetryAt.set(key, Date.now() + nextPrimeRetryDelayMs(failures));
+          throw err;
         } finally {
           this.state.inFlight.delete(key);
         }
@@ -407,6 +468,11 @@ export class App {
 
     const shouldPrime = (id: string): boolean => forceAll || this.isPanelNearViewport(id);
     const shouldPrimeAny = (ids: string[]): boolean => forceAll || this.isAnyPanelNearViewport(ids);
+
+    // Every layout read for this pass happens here, before any gate can enter a
+    // loader that writes DOM. `forceAll` skips the gates entirely, so it needs no
+    // reads at all.
+    if (!forceAll) this.primeViewportNearCache();
 
     if (shouldPrime('service-status')) {
       const panel = this.state.panels['service-status'] as ServiceStatusPanel | undefined;
@@ -454,6 +520,10 @@ export class App {
     if (shouldPrime('fuel-prices')) {
       const panel = this.state.panels['fuel-prices'] as FuelPricesPanel | undefined;
       if (panel) primeTask('fuel-prices', () => panel.fetchData());
+    }
+    if (shouldPrime('fx')) {
+      const panel = this.state.panels['fx'] as FxPanel | undefined;
+      if (panel) primeTask('fx', () => panel.fetchData());
     }
     if (shouldPrime('fao-food-price-index')) {
       const panel = this.state.panels['fao-food-price-index'] as FaoFoodPriceIndexPanel | undefined;
@@ -597,6 +667,10 @@ export class App {
     if (shouldPrime('daily-market-brief')) {
       primeTask('dailyMarketBrief', () => this.dataLoader.loadDailyMarketBrief());
     }
+
+    // Gates are done; the cached geometry must not outlive the synchronous pass
+    // or a later scroll would be gated on a stale rect.
+    this.viewportNearCache = null;
 
     if (tasks.length > 0) {
       await Promise.allSettled(tasks);
@@ -967,6 +1041,7 @@ export class App {
       isPlaybackMode: false,
       isIdle: false,
       initialLoadComplete: false,
+      clustersSettled: false,
       resolvedLocation: 'global',
       activeChokepoint: initialUrlState.chokepoint ?? null,
       initialUrlState,
@@ -2088,6 +2163,13 @@ export class App {
       () => (this.state.panels['fuel-prices'] as FuelPricesPanel).fetchData(),
       REFRESH_INTERVALS.fuelPrices,
       () => this.isPanelNearViewport('fuel-prices')
+    );
+
+    this.refreshScheduler.scheduleRefresh(
+      'fx',
+      () => (this.state.panels['fx'] as FxPanel).fetchData(),
+      REFRESH_INTERVALS.fx,
+      () => this.isPanelNearViewport('fx')
     );
 
     this.refreshScheduler.scheduleRefresh(

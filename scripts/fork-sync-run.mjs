@@ -487,16 +487,36 @@ function merge(ctx) {
   return autoResolve(ctx.manifest);
 }
 
+// Cheapest possible check, and the one with the worst failure mode if skipped:
+// a single-line JSON file (docs/api/*Service.openapi.json) conflicts as one
+// enormous hunk, so a resolution that misses it leaves `<<<<<<< HEAD` as line 1
+// of a file nothing type-checks and no test parses. It shipped staged once
+// before this guard existed.
+function conflictMarkerSweep() {
+  const r = tryGit(['grep', '-l', '-e', '^<<<<<<< HEAD', '-e', '^>>>>>>> ', '--', '.']);
+  const files = r.stdout ? r.stdout.split('\n').filter(Boolean) : [];
+  if (files.length === 0) {
+    console.log('✓ No conflict markers anywhere in the tree.');
+    return 0;
+  }
+  console.log(`⚠ ${files.length} file(s) still contain conflict markers:`);
+  for (const f of files) console.log(`  ✗ ${f}`);
+  return 1;
+}
+
 function audit(ctx) {
   banner(5, 'Audit — did the merge undo our work, or add new gating?');
 
-  console.log('A. Divergence lock — lines this fork removed/added\n');
+  console.log('A. Conflict markers\n');
+  const markerCode = conflictMarkerSweep();
+
+  console.log(`\n${'-'.repeat(72)}\nB. Divergence lock — lines this fork removed/added\n${'-'.repeat(72)}`);
   const lockRes = node([
     resolve(__dirname, 'fork-sync-lock.mjs'), 'verify',
     `--lock=${baselinePath}`, '--against=worktree',
   ]);
 
-  console.log(`\n${'-'.repeat(72)}\nB. Contamination — gating/branding this merge introduces\n${'-'.repeat(72)}`);
+  console.log(`\n${'-'.repeat(72)}\nC. Contamination — gating/branding this merge introduces\n${'-'.repeat(72)}`);
   // Diff against PRE-MERGE HEAD, not the merge-base. Scanning from the
   // merge-base re-reports the fork's own commits — its guard tests quote every
   // banned string as a regex, its docs describe the removals — which buries the
@@ -505,7 +525,7 @@ function audit(ctx) {
     || ctx?.base || git(['merge-base', 'HEAD', 'upstream/main']);
   const scanRes = node([resolve(__dirname, 'fork-sync-scan.mjs'), `--against=${preMerge}`]);
 
-  return { lockCode: lockRes.code, scanCode: scanRes.code };
+  return { markerCode, lockCode: lockRes.code, scanCode: scanRes.code };
 }
 
 function tests() {
@@ -527,9 +547,9 @@ function main() {
       console.error('It is written by a normal run; without it an audit would compare the merged tree to itself.');
       return 2;
     }
-    const { lockCode, scanCode } = audit(null);
+    const { markerCode, lockCode, scanCode } = audit(null);
     const testCode = doTests ? tests() : 0;
-    return summary({ lockCode, scanCode, testCode, manual: [] });
+    return summary({ markerCode, lockCode, scanCode, testCode, manual: [] });
   }
 
   const ctx = preflight();
@@ -546,15 +566,16 @@ function main() {
   }
 
   const { manual } = merge(ctx);
-  const { lockCode, scanCode } = audit(ctx);
+  const { markerCode, lockCode, scanCode } = audit(ctx);
   const testCode = doTests ? tests() : 0;
-  return summary({ lockCode, scanCode, testCode, manual });
+  return summary({ markerCode, lockCode, scanCode, testCode, manual });
 }
 
-function summary({ lockCode, scanCode, testCode, manual }) {
+function summary({ markerCode, lockCode, scanCode, testCode, manual }) {
   banner('✓', 'Summary');
   const rows = [
     ['unresolved conflicts', manual.length === 0 ? 'none' : `${manual.length} need manual resolution`, manual.length === 0],
+    ['conflict markers', markerCode === 0 ? 'none in tree' : 'MARKERS LEFT IN FILES', markerCode === 0],
     ['divergence lock', lockCode === 0 ? 'intact' : 'VIOLATIONS — fork work undone', lockCode === 0],
     ['contamination scan', scanCode === 0 ? 'clean' : 'CRITICAL — new gating/branding merged in', scanCode === 0],
   ];

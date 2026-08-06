@@ -259,18 +259,40 @@ describe('entitlement reload controller', () => {
 
     assert.match(
       panelLayout,
-      /createEntitlementReloadController\(\{\s*returnedFromCheckout,/,
+      /createEntitlementReloadController\(\{\s*returnedFromCheckout:\s*returnedFromAccountCheckout,/,
       'checkout-return seeding must flow into the guarded controller',
     );
-    // No onSnapshot assertion here: upstream wires onSnapshot to its
-    // per-panel premium-lock refresh (updatePanelGating), but this fork
-    // removed that machinery entirely (see D13 in the pro-removal sync,
-    // guarded by tests/remove-pro-cleanup.test.mjs). There is nothing to
-    // refresh in place, so the reload itself remains the only user-visible
-    // effect of a real upgrade.
     assert.match(
       panelLayout,
-      /onEntitlementChange\(\(state\) => \{\s*entitlementReloadController\.handleSnapshot\(\s*state === null \? null : isEntitlementActive\(state, Date\.now\(\)\),\s*getAuthState\(\)\.user\?\.id \?\? null,/,
+      /const returnedFromOverlayFlag = consumePostCheckoutFlag\(\)[\s\S]*?resolveCheckoutReturnRouting\(returnResult, returnedFromOverlayFlag\)/,
+      'checkout routing must consume the overlay flag through the guarded return classifier',
+    );
+    assert.match(
+      panelLayout,
+      /if\s*\(returnedFromAccountCheckout\)\s*\{[\s\S]*?markProActivationPending\([\s\S]*?clearCheckoutAttempt\('success'\)/,
+      'desktop acknowledgements must not seed onboarding or clear browser-local state',
+    );
+    assert.match(
+      panelLayout,
+      /waitForEntitlement:\s*!returnedFromDesktopBrowser,[\s\S]*?accountAgnostic:\s*returnedFromDesktopBrowser,[\s\S]*?email:\s*returnedFromDesktopBrowser\s*\?\s*null\s*:/,
+      'desktop acknowledgements must not wait on or identify an arbitrary browser account',
+    );
+    assert.match(
+      panelLayout,
+      /const entitlementActive =\s*state === null \? null : isEntitlementActive\(state, Date\.now\(\)\)[\s\S]*?this\.ctx\.isDesktopApp[\s\S]*?entitlementActive === true[\s\S]*?loadCheckoutAttempt\(\)[\s\S]*?clearCheckoutAttempt\('success'\)/,
+      'the desktop app must retire its own attempt/referral state when entitlement activates',
+    );
+    // Upstream has a fifth assertion here, requiring an onSnapshot hook that
+    // refreshes per-panel premium locks in place. That wiring is deliberately
+    // absent on this fork: D13's pro-panel-gating removal deleted the refresh
+    // method outright, and tests/remove-pro-cleanup.test.mjs bans its name
+    // from panel-layout.ts even inside comments — which is why this note
+    // describes it rather than spelling it. Nothing is left to refresh, so the
+    // reload itself remains the only user-visible effect of a real upgrade.
+    // The four desktop checkout-routing assertions above DO apply and are kept.
+    assert.match(
+      panelLayout,
+      /onEntitlementChange\(\(state\) => \{[\s\S]*?const entitlementActive =\s*state === null \? null : isEntitlementActive\(state, Date\.now\(\)\)[\s\S]*?entitlementReloadController\.handleSnapshot\(\s*entitlementActive,\s*getAuthState\(\)\.user\?\.id \?\? null,/,
       'the live watcher must preserve unavailable snapshots and scope the guard to the authenticated account',
     );
   });

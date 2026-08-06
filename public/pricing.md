@@ -23,7 +23,7 @@ These subscription licenses cover the hosted Service and its outputs. They are s
 - Price: $0/month
 - Signup required: No
 - Best for: Public situational awareness, OSINT research, market/geopolitical context, news monitoring
-- Includes: 56 map layers, 500+ curated feeds, country briefs, hotspots, instability scores, chokepoints, cables, cascade analysis, breaking alert pipeline, watchlists, WM Analyst chat, Stock Analysis and Backtesting, the Scenario Engine, Route Explorer, and the Custom Widget Builder
+- Includes: 56 map layers, 500+ curated feeds backed by 530+ observed upstream hosts, country briefs, hotspots, instability scores, chokepoints, cables, cascade analysis, breaking alert pipeline, watchlists, WM Analyst chat, Stock Analysis and Backtesting, the Scenario Engine, Route Explorer, and the Custom Widget Builder
 - Limits: Free dashboard refresh cadence is typically 5-15 minutes; scheduled digest delivery, API and team workflows require paid plans
 
 ## Pro

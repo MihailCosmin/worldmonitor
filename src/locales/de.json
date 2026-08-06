@@ -365,7 +365,8 @@
     "consumerPrices": "Verbraucherpreise",
     "fearGreed": "Angst & Gier",
     "marketBreadth": "Marktbreite",
-    "climateNews": "Klimanachrichten"
+    "climateNews": "Klimanachrichten",
+    "fx": "Wechselkurse"
   },
   "commands": {
     "prefixes": {
@@ -976,7 +977,7 @@
         "ucdpEvents": "UCDP-Ereignisse",
         "displacementFlows": "Verdrängungsströme",
         "climateAnomalies": "Klimaanomalien",
-        "weatherAlerts": "Wetterwarnungen",
+        "weatherAlerts": "US-Wetterwarnungen (NWS)",
         "strategicWaterways": "Strategische Wasserstraßen",
         "economicCenters": "Wirtschaftszentren",
         "criticalMinerals": "Kritische Mineralien",
@@ -1064,7 +1065,7 @@
           "infraDatacenters": "KI-Rechencluster >=10.000 GPUs",
           "infraOutages": "Internetausfälle und Dienstunterbrechungen",
           "naturalEventsTech": "Erdbeben, Stürme, Brände (kann Rechenzentren beeinträchtigen)",
-          "weatherAlerts": "Unwetterwarnungen",
+          "weatherAlerts": "Unwetterwarnungen in den USA (NWS)",
           "economicCenters": "Börsen & Zentralbanken",
           "countriesOverlay": "Ländernamen-Overlays",
           "financeExchanges": "Wichtige globale Börsen nach Marktebene",
@@ -1076,7 +1077,7 @@
           "financeOutages": "Internetstörungen, die sich auf den Marktbetrieb auswirken können",
           "financeCyberThreats": "Sicherheitsereignisse rund um die Finanzinfrastruktur",
           "macroWaterways": "Strategische Engpässe für die Rohstoffschifffahrt",
-          "weatherAlertsMarket": "Unwetterereignisse mit Marktrelevanz",
+          "weatherAlertsMarket": "Marktrelevante Unwetterereignisse in den USA (NWS)",
           "naturalEventsMacro": "Erdbeben, Brände, Überschwemmungen und andere natürliche Störungen",
           "timeRecent": "Filtern Sie zeitbasierte Daten nach den letzten Stunden",
           "timeExtended": "Zeigen Sie Daten der letzten Woche, des letzten Monats oder aller Zeiten an",
@@ -2498,6 +2499,33 @@
     "exportGate": {
       "preparingPdf": "PDF wird vorbereitet…",
       "pdfFailed": "Der PDF-Bericht konnte nicht erstellt werden. Versuchen Sie es erneut oder verwenden Sie den JSON-Export."
+    },
+    "fx": {
+      "infoTooltip": "<strong>Wechselkurse</strong> Währungs-Stress und Kassakurse:<ul><li>FX Stress ordnet 45 Währungen nach ihrem größten Rückgang von Peak bis Trough in den letzten 24 Monaten, zusammen mit der 12-Monats-Veränderung</li><li>Die Abdeckung umfasst ARS, TRY, EGP, NGN, PKR und UAH — Währungen, die in den Referenzsätzen der BIS und EZB fehlen</li><li>Spot listet Kurse gegen den US-Dollar und die EZB-Euro-Referenzkurse separat auf, da diese von unterschiedlichen Grundlagen zitiert werden</li></ul>Quellen: Yahoo Finance und die Europäische Zentralbank.",
+      "tabs": {
+        "stress": "FX-Stress",
+        "spot": "Spot"
+      },
+      "currency": "Währung",
+      "pair": "Währungspaar",
+      "rate": "Kurs",
+      "yoy": "12M",
+      "drawdown": "24M-Rückgang",
+      "peakToTrough": "Peak → Trough",
+      "change1d": "1T",
+      "perUsd": "Pro 1 USD",
+      "usdPerUnit": "USD pro Einheit",
+      "usdBase": "Gegen den US-Dollar",
+      "eurBase": "EZB-Euro-Referenzkurse",
+      "stressedCount": "{{stressed}} von {{total}} Währungen unter {{threshold}}",
+      "sourceYahoo": "Quelle: Yahoo Finance",
+      "sourceEcb": "Quelle: EZB",
+      "degraded": "Momentan nicht verfügbar: {{sources}}. Wird in Kürze erneut versucht.",
+      "source": {
+        "stress": "FX-Belastung",
+        "usd": "USD-Wechselkurse",
+        "eur": "EZB-Eurokurse"
+      }
     }
   },
   "popups": {
@@ -2830,7 +2858,7 @@
       "heading": "KURS",
       "hexCode": "HEX-CODE",
       "squawk": "SQUAWK",
-      "attribution": "Quelle: OpenSky Network"
+      "attribution": "Quelle: adsb.lol (ODbL) · OpenSky Network"
     },
     "militaryVessel": {
       "aisDark": "AIS DUNKEL",

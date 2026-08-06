@@ -80,8 +80,8 @@
 meta:
   upstream_remote: upstream
   upstream_repo: koala73/worldmonitor
-  last_sync_commit: "a20c587fc"           # our merge commit for this sync
-  last_sync_upstream_head: "ab798e628"    # upstream/main SHA merged as of last sync
+  last_sync_commit: "PENDING"             # our merge commit for this sync
+  last_sync_upstream_head: "d8db1c357"    # upstream/main SHA merged as of last sync
   # `git log bc99aad53..upstream/main --oneline` shows how far upstream has moved
   # since.
   #
@@ -117,6 +117,13 @@ meta:
   #     one-line import conflict had introduced with zero conflict markers
   #     and a clean compile — the exact failure class the lock exists for.
   #     See commit_ranges for the full account and its four lessons.
+  #   - ab798e628 -> d8db1c357: an 86-commit sync. 59 conflicts, 35
+  #     auto-resolved. Mostly re-additions of already-excluded gating, plus
+  #     three new lessons: sweep the tree for conflict markers (a single-line
+  #     JSON conflict shipped staged), invert upstream guards that encode
+  #     upstream's product rather than deleting them, and regenerate the
+  #     source-attribution manifest because it records reference paths into
+  #     files this fork deleted.
   categories: [pro-removal, discord-removal, owner-branding-removal, feature-ungate, upstream-sync, local-auth]
 
 # ---------------------------------------------------------------------------
@@ -570,6 +577,83 @@ commit_ranges:
       *gate*/*entitlement*/*ungate* file): 895 passed, 9 failed across 4
       files, all 4 documented in known_pre_existing_gaps.
 
+  - category: upstream-sync
+    range: "ab798e628..d8db1c357"           # 86 commits
+    summary: >
+      Synced 86 upstream commits (2026-08-06). 59 conflicts, 35 auto-resolved
+      (3 fork deletions kept, 24 locale bundles + 7 public/pro artifacts +
+      1 generated OpenAPI doc by policy), 24 hand-resolved. The tooling's
+      share rose because this sync's new conflict classes were encoded as
+      conflict_policy rules as they were found, not after the fact.
+
+      Upstream's monetization work this cycle was mostly RE-additions of
+      machinery already excluded — Panel.showLocked(), panel-gating's
+      getPanelGateReason/resolveBillingAwareGateReason, a ResilienceWidget
+      upgrade flow, a RouteExplorer "Unlock route intelligence" gate, a
+      followed-country cap toast with an Upgrade CTA, and an
+      UnifiedSettings handleUpgradeClick. All kept out.
+
+      Genuine upstream work adopted: the desktop checkout-return source
+      (`wm_src=desktop`) — src/services/checkout.ts already emits it from a
+      clean merge, so checkout-return.ts had to learn to read it, taken minus
+      its pro-banner hint; the account-scoped `returnedFromAccountCheckout`
+      routing in panel-layout.ts (minus upstream's onSnapshot panel-gating
+      hook); `handleWmSessionDegraded(event?: Event)`, whose shared body
+      already read `event.detail.reason` (#5674); and four of upstream's five
+      new entitlement-reload-controller assertions.
+
+      New quota mechanic reviewed and accepted: productCatalog gained
+      `dashboardAiCallsPerDay` with `0` on the free tier. Not a regression —
+      resolveActiveDirectLlmLimit only consults it for an ACTIVE PAID
+      entitlement (tier >= 1); free callers still get
+      DIRECT_LLM_UNVERIFIED_DAILY_QUOTA_LIMIT (50/day).
+    lessons: >
+      1. A conflict-marker sweep belongs in the audit. docs/api/
+      SupplyChainService.openapi.json is single-line JSON, so its conflict is
+      one giant hunk; it ended up STAGED with `<<<<<<< HEAD` as line 1. No
+      typecheck or test reads that file, so nothing else would have caught it.
+      The audit now greps the whole tree and reports it as its own summary row.
+
+      2. Upstream guards can encode upstream's product, not ours.
+      scripts/docs-stats.mjs's #5387 validator asserts plan copy names
+      Resilience as the Pro-only layer; this fork locks no layers, so the
+      check was INVERTED rather than deleted — it now fails if the registry
+      ever re-locks a layer or if "all free except Resilience" copy merges
+      back in. It immediately found that carve-out in docs/accounts.mdx, the
+      category-explainer blog post and pro-test/src/locales/en.json, all of
+      which had merged cleanly.
+
+      3. Generated registries can carry fork divergence as stale DATA.
+      `npm run product:facts` failed with "manifest marks discord.gg observed
+      but scanner found no current reference" — the source-attribution
+      manifest still pointed at the CommunityWidget.ts this fork deleted.
+      Regenerating flips `observed` to false; the entry whose only reference
+      was that file was dropped outright, and its scripts/shared mirror
+      copied across by hand.
+
+      4. Not every gating-shaped string is a gate. Upstream added
+      analyze-stock / backtest-stock entries to server/_shared/rate-limit.ts;
+      those are abuse defence on a FREE endpoint, which is exactly what a
+      free LLM-backed route needs. Allowlisted with that reasoning rather
+      than stripped.
+    fork_local_changes: >
+      shared/company-monitoring-evaluation.ts's Stage-0 gate hardcoded
+      `approval.approverName !== 'Elie Habib'` — owner identity in shipped
+      logic, not a branding surface. Replaced with fork-owned
+      PRODUCT_OWNER_APPROVER_NAME/ROLE constants: the check keeps its full
+      meaning (a specific named owner must approve; any other name still
+      yields named_product_owner_approval_missing) and the fields stay pinned
+      to exact literals, which LITERAL_PINNED_KEYS depends on. `approval` is
+      DIGEST_EXEMPT, so no threshold digest moved. Fixture and the internal
+      viability doc updated to match; all 33 company-monitoring tests pass.
+    verification: >
+      tsc --noEmit clean on both projects. Conflict markers: none. Divergence
+      lock: every violation traced to a deliberate resolution here.
+      Contamination: 0 critical (from 16 in the incoming range).
+      PREMIUM_RPC_PATHS and ENDPOINT_ENTITLEMENTS byte-identical to pre-merge.
+      `npm run docs:check` green (150 claims). Guard suite: 897 passed, 9
+      failed across the same 4 files documented in known_pre_existing_gaps.
+
 # ---------------------------------------------------------------------------
 # 2. High-risk files — hand-review on every sync regardless of conflict markers.
 # ---------------------------------------------------------------------------
@@ -903,7 +987,14 @@ contamination_patterns:
       Endpoints this fork made free. A new occurrence only matters inside
       PREMIUM_RPC_PATHS / ENDPOINT_ENTITLEMENTS — hence the allow_paths for the
       call sites and tests that legitimately name them.
-    allow_paths: ['tests/**', 'docs/**', 'src/services/**', 'src/app/**']
+
+      server/_shared/rate-limit.ts is exempt for a different reason: a rate
+      limit is not an entitlement gate. "Free" means no plan is required, not
+      unmetered — an LLM-backed route like analyze-stock needs abuse defence
+      precisely BECAUSE anyone can call it. Upstream adding a
+      requests-per-minute budget there is compatible with this fork, and
+      indistinguishable from re-gating by string match alone.
+    allow_paths: ['tests/**', 'docs/**', 'src/services/**', 'src/app/**', 'server/_shared/rate-limit.ts']
 
   - id: upsell-copy
     severity: critical
@@ -1017,7 +1108,45 @@ conflict_policy:
   - path: docs/api/*.openapi.json
     strategy: theirs
     regenerate_with: make generate && npm run build:openapi
-    reason: "Generated from proto; upstream's copy has the newer schema. Regenerate rather than hand-merge."
+    reason: >
+      Generated from proto; upstream's copy has the newer schema. Regenerate
+      rather than hand-merge. NOTE these are single-line JSON, so a conflict is
+      one enormous hunk and an unresolved one leaves `<<<<<<< HEAD` as line 1 —
+      which is why the audit now sweeps the whole tree for markers.
+
+  - path: '**/product-catalog.generated.json'
+    strategy: theirs
+    regenerate_with: npm run product:facts
+    reason: "Generated from convex/config/productCatalog.ts. Review the SOURCE (it is in high_risk_files); the derived copies just get regenerated."
+  - path: '**/product-facts.generated.json'
+    strategy: theirs
+    regenerate_with: npm run product:facts
+    reason: "Same generator as product-catalog.generated.json."
+  - path: api/_product-catalog.generated.js
+    strategy: theirs
+    regenerate_with: npm run product:facts
+    reason: "Same generator, JS mirror for the edge runtime."
+  - path: public/product-facts.json
+    strategy: theirs
+    regenerate_with: npm run product:facts
+    reason: "Same generator, public copy."
+
+  - path: '**/source-attribution-manifest.json'
+    strategy: theirs
+    regenerate_with: node scripts/source-attribution.mjs --write
+    reason: >
+      Generated registry of every upstream data source and where it is
+      referenced. It needs regeneration on this fork specifically: it records
+      reference PATHS, and deleting a component (CommunityWidget.ts, with the
+      Discord pill) leaves a stale entry pointing at a file that no longer
+      exists — which then fails `npm run product:facts`'s validator with
+      "manifest marks discord.gg observed but scanner found no current
+      reference". `--write` flips observed to false; an entry whose only
+      reference was the deleted file should be dropped outright.
+
+      scripts/shared/source-attribution-manifest.json is a hand-maintained
+      MIRROR of shared/ (guarded by tests/scripts-shared-mirror.test.mjs) —
+      `--write` does not update it, so copy it across afterwards.
 
   # --- everything below is deliberately NOT automatable -------------------
   - path: docs/api/*.openapi.yaml
