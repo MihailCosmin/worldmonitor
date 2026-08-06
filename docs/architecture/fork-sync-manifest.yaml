@@ -403,7 +403,7 @@ commit_ranges:
       here come from this fork's own future edits, not from a sync, but they
       belong in this manifest because they follow the exact same failure shape
       documented elsewhere: something merges/compiles cleanly, nothing conflicts,
-      and it's still broken. Two found and fixed in the same session:
+      and it's still broken. Three found and fixed in the same session:
 
       1. `docker-compose.yml` documented `WM_SESSION_SECRET` and
       `RELAY_SHARED_SECRET` in SELF_HOSTING.md's required-vars table but never
@@ -430,12 +430,48 @@ commit_ranges:
       probe. Fixed by making the self-hosted write path mirror the read
       path — store `value` for PLAINTEXT_KEYS on save, not just presence.
 
-      No test currently covers either path end-to-end (docker-compose has
-      tests/docker-compose-no-default-secrets.test.mts for the *shape* of the
-      secret-guard syntax, but nothing that would have caught a documented-but-
-      unwired var; runtime-config.ts's self-hosted setSecretValue branch has no
-      test at all). Both are candidates for a regression test before the next
-      person touches these files.
+      3. Even with #2 fixed and the URL visibly saved, the OLLAMA_MODEL
+      dropdown STILL never populated for self-hosted Docker. Root cause:
+      `src/services/ollama-models.ts`'s `fetchOllamaModels()` is a DIRECT
+      client-side `fetch()` — it runs in the user's browser, not on the
+      server. Desktop's webview and its sidecar share one host, so
+      `http://127.0.0.1:11434` resolves fine from either side. Self-hosted
+      Docker does not: the browser runs on the user's host OS, the sidecar
+      runs inside the container, and OLLAMA_API_URL has to be
+      `http://host.docker.internal:11434` for the SIDECAR's probe to reach
+      the host's Ollama — a hostname Docker's internal DNS resolves for
+      containers only, never for the host's own browser. Every direct-fetch
+      attempt from the browser failed with a DNS error, silently swallowed by
+      `fetchOllamaModels()`'s catch block, so the dropdown just never
+      appeared, with zero console error to point at why. "Test Connection"
+      reporting Valid (a real signal — it goes through `/api/local-validate-
+      secret`, which runs server-side and therefore CAN resolve
+      host.docker.internal) made this look even more like a display glitch
+      than an addressing mismatch. Fixed by having the SAME server-side probe
+      that already fetches `/v1/models` or `/api/tags` to validate the URL
+      (`local-api-server.mjs`'s `OLLAMA_API_URL` case in
+      `validateSecretAgainstProvider`) also return the discovered model names
+      as `models` in its JSON response; `runtime-config.ts`'s
+      `SecretVerificationResult.models` and `parseSecretVerificationPayload`
+      carry that through `verifySecretWithApi()` (used by BOTH the desktop
+      Tauri-IPC path and the self-hosted `fetch` path); `data-sources-
+      content.ts`'s new `adoptOllamaModels()` helper is now called from all
+      three places the dropdown can refresh (Test Connection, the post-save
+      re-probe, the on-Settings-open re-probe), alongside the pre-existing
+      direct `fetchOllamaModels()` call rather than instead of it — the
+      direct fetch still works, and is still tried, for desktop.
+
+      docker-compose.yml's secret wiring (#1) now has full coverage via
+      tests/docker-compose-no-default-secrets.test.mts. #2 (plaintext-value
+      retention) still has no direct test. #3 (model-list plumbing) is now
+      covered by three strengthened assertions in
+      src-tauri/sidecar/local-api-server.test.mjs's OLLAMA_API_URL
+      validate-secret tests (`body.models`, including an embed-model-name
+      filter check) — but nothing exercises data-sources-content.ts's client
+      side of the contract (adoptOllamaModels, the three call sites). If this
+      breaks again, it will most likely be silent the same way #3 originally
+      was: a clean compile, a "Valid" Test Connection result, and a dropdown
+      that just doesn't show up.
 
       Trigger: analytics-collector-transport.ts is a real upstream file
       (landed via the bc99aad53..ab798e628 sync, 2026-08-03; absent at
@@ -1018,7 +1054,26 @@ high_risk_files:
       `rerenderList()` triggered by an auth-state change), by which point it
       looks unrelated to the save that caused it. If either function's write
       shape changes, check the other changed to match.
-    also: [src/services/data-sources-content.ts, src/services/settings-constants.ts]
+
+      Separately: `SecretVerificationResult.models` (~line 329) is the ONLY
+      way the OLLAMA_MODEL dropdown can populate on self-hosted Docker — see
+      the self-hosted-ops commit_ranges entry, item 3, for the full DNS-
+      namespace explanation (host.docker.internal resolves inside the sidecar
+      container, never from the browser, so the OTHER model-list source,
+      ollama-models.ts's direct client fetch, silently fails there every
+      time). `parseSecretVerificationPayload()` (~line 605) must keep reading
+      `models` off the validate-secret response and `verifySecretWithApi()`
+      must keep routing both the desktop (Tauri IPC) and self-hosted (fetch)
+      branches through it. Do not "simplify" this back down to just
+      `{valid, message}` — that field looks unused by anything critical
+      (auth/session/save all ignore it) right up until someone asks why the
+      dropdown is empty again.
+    also:
+      - src/services/data-sources-content.ts
+      - src/services/settings-constants.ts
+      - src/services/ollama-models.ts
+      - src-tauri/sidecar/local-api-server.mjs (the OLLAMA_API_URL case in validateSecretAgainstProvider)
+    companion_test: src-tauri/sidecar/local-api-server.test.mjs (OLLAMA_API_URL validate-secret tests assert on `body.models`)
 
 # ---------------------------------------------------------------------------
 # 3. Upstream commits/patterns already evaluated — the decision still applies
