@@ -511,6 +511,18 @@ function audit(ctx) {
   const markerCode = conflictMarkerSweep();
 
   console.log(`\n${'-'.repeat(72)}\nB. Divergence lock — lines this fork removed/added\n${'-'.repeat(72)}`);
+  // The baseline describes the fork as it was BEFORE the merge, which is
+  // exactly what a mid-merge audit needs and exactly what a post-commit one
+  // does not: once the merge is committed and the lock re-snapshotted, every
+  // deliberate resolution still reads as a violation against it. Say so rather
+  // than letting a stale ✗ row look like a real regression.
+  if (!existsSync(resolve(root, '.git/MERGE_HEAD'))) {
+    console.log(
+      'Note: no merge in progress, so this replays the PRE-merge baseline. Every resolution you made\n'
+      + 'will show as a violation here. After a sync is committed, `npm run fork-sync:lock:verify` (which\n'
+      + 'reads the committed lock) is the authoritative check.\n',
+    );
+  }
   const lockRes = node([
     resolve(__dirname, 'fork-sync-lock.mjs'), 'verify',
     `--lock=${baselinePath}`, '--against=worktree',
