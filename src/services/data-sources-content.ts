@@ -27,6 +27,7 @@ import {
 } from '@/services/runtime-config';
 import { subscribeAuthState, signIn } from '@/services/auth-state';
 import { fetchOllamaModels } from '@/services/ollama-models';
+import { notifyExternalAiProviderChange } from '@/services/ai-flow-settings';
 import { SIGNUP_URLS, PLAINTEXT_KEYS, MASKED_SENTINEL } from '@/services/settings-constants';
 import { escapeHtml } from '@/utils/sanitize';
 import { setTrustedHtml, trustedHtml } from '@/utils/dom-utils';
@@ -439,6 +440,11 @@ export function renderDataSourcesContent(): DataSourcesResult {
             setFeatureToggle(featureId, input.checked);
             const feature = RUNTIME_FEATURES.find((f) => f.id === featureId);
             if (feature) { updateFeatureStatus(feature); updateSummary(); }
+            // isAnyAiProviderEnabled() (ai-flow-settings.ts) factors this
+            // feature in specifically — without this, toggling Ollama here
+            // (rather than the Preferences "Want fully local AI?" mirror)
+            // wouldn't refresh InsightsPanel out of/into its disabled state.
+            if (featureId === 'aiOllama') notifyExternalAiProviderChange();
           }, { signal });
         });
 

@@ -1,5 +1,5 @@
 import { LANGUAGES, getCurrentLanguage, changeLanguage, t } from '@/services/i18n';
-import { getAiFlowSettings, setAiFlowSetting, getStreamQuality, setStreamQuality, STREAM_QUALITY_OPTIONS } from '@/services/ai-flow-settings';
+import { getAiFlowSettings, setAiFlowSetting, getStreamQuality, setStreamQuality, STREAM_QUALITY_OPTIONS, notifyExternalAiProviderChange } from '@/services/ai-flow-settings';
 import { getMapProvider, setMapProvider, MAP_PROVIDER_OPTIONS, MAP_THEME_OPTIONS, getMapTheme, setMapTheme, type MapProvider } from '@/config/basemap';
 import { getLiveStreamsAlwaysOn, setLiveStreamsAlwaysOn } from '@/services/live-stream-settings';
 import { getGlobeVisualPreset, setGlobeVisualPreset, GLOBE_VISUAL_PRESET_OPTIONS, type GlobeVisualPreset } from '@/services/globe-render-settings';
@@ -497,6 +497,12 @@ export function renderPreferences(host: PreferencesHost): PreferencesResult {
           updateAiStatus(container);
         } else if (target.id === 'us-ollama') {
           setFeatureToggle('aiOllama', target.checked);
+          // isAnyAiProviderEnabled() (ai-flow-settings.ts) now factors this
+          // toggle in, but InsightsPanel only subscribes to the ai-flow
+          // event — without this, flipping Ollama on/off (especially with
+          // Cloud AI and Browser Local Model both off) wouldn't refresh the
+          // panel out of/into its disabled state.
+          notifyExternalAiProviderChange();
         } else if (target.id === 'us-map-flash') {
           setAiFlowSetting('mapNewsFlash', target.checked);
         } else if (target.id === 'us-headline-memory') {

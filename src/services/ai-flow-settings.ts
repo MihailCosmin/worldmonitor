@@ -6,7 +6,8 @@
  *       settings hub once the UI is extended with additional sections.
  */
 
-import { isDesktopRuntime } from './runtime';
+import { isDesktopRuntime, isSelfHostedRuntime } from './runtime';
+import { isFeatureAvailable } from './runtime-config';
 
 const STORAGE_KEY_BROWSER_MODEL = 'wm-ai-flow-browser-model';
 const STORAGE_KEY_CLOUD_LLM = 'wm-ai-flow-cloud-llm';
@@ -97,9 +98,39 @@ export function setAiFlowSetting(key: keyof AiFlowSettings, value: boolean): voi
   window.dispatchEvent(new CustomEvent(EVENT_NAME, { detail: { key } }));
 }
 
+/**
+ * Fires the same event setAiFlowSetting dispatches, without writing any
+ * ai-flow-settings storage key — for state that affects
+ * isAnyAiProviderEnabled() but lives elsewhere (runtime-config.ts's aiOllama
+ * feature toggle, set via setFeatureToggle from the Data Sources tab or the
+ * Preferences "Want fully local AI?" switch). Without this, flipping Ollama
+ * on/off has no subscriber to tell InsightsPanel to re-check
+ * isAnyAiProviderEnabled() and leave/enter its disabled state — the panel
+ * would sit on a stale "AI analysis is disabled" (or stale live state) until
+ * some unrelated event happened to trigger a refresh.
+ */
+export function notifyExternalAiProviderChange(): void {
+  window.dispatchEvent(new CustomEvent(EVENT_NAME, { detail: {} }));
+}
+
+/**
+ * Ollama bypasses cloudLlm/browserModel entirely — summarization.ts always
+ * tries it first, regardless of either toggle (see the "Ollama is local
+ * infrastructure" comment there). This module's two toggles used to be the
+ * ONLY thing this function checked, so a self-hosted user who turns OFF both
+ * Cloud AI and Browser Local Model to run Ollama-only got told "AI analysis
+ * is disabled" by InsightsPanel.ts even though Ollama was exactly what would
+ * have run. isFeatureAvailable('aiOllama') is scoped to desktop/self-hosted
+ * on purpose — on hosted SaaS there's no Data Sources tab to configure
+ * OLLAMA_API_URL at all, and isFeatureAvailable's own hosted-web branch would
+ * otherwise report "available" from the feature-toggle default alone with
+ * nothing behind it.
+ */
 export function isAnyAiProviderEnabled(): boolean {
   const s = getAiFlowSettings();
-  return s.cloudLlm || s.browserModel;
+  if (s.cloudLlm || s.browserModel) return true;
+  if (!isDesktopRuntime() && !isSelfHostedRuntime()) return false;
+  return isFeatureAvailable('aiOllama');
 }
 
 export function subscribeAiFlowChange(cb: (changedKey?: keyof AiFlowSettings) => void): () => void {
