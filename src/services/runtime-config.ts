@@ -1,6 +1,7 @@
 import { isDesktopRuntime, isSelfHostedRuntime } from './runtime';
 import { invokeTauri } from './tauri-bridge';
 import { getAuthState } from './auth-state';
+import { PLAINTEXT_KEYS } from './settings-constants';
 
 export type RuntimeSecretKey =
   | 'GROQ_API_KEY'
@@ -528,7 +529,17 @@ export async function setSecretValue(key: RuntimeSecretKey, value: string): Prom
       throw new Error(message || `Failed to save ${key} (${resp.status})`);
     }
     if (sanitized) {
-      runtimeConfig.secrets[key] = { source: 'local-server' };
+      // Mirror loadSelfHostedSecretStatus(): PLAINTEXT_KEYS (a URL, a model
+      // tag — not secrets) keep their value in-memory after a save, not just
+      // presence. Without this, the in-memory snapshot went blank the moment
+      // anything re-rendered the row from scratch (reopening Settings,
+      // rerenderList() on auth change) even though the server still had the
+      // value — the field showed empty + "Saved — enter a new value to
+      // change it" with nothing to re-run Test Connection against, and the
+      // Ollama model dropdown never got the URL it needed to probe.
+      runtimeConfig.secrets[key] = PLAINTEXT_KEYS.has(key)
+        ? { source: 'local-server', value: sanitized }
+        : { source: 'local-server' };
     } else {
       delete runtimeConfig.secrets[key];
     }
