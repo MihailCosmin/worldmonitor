@@ -623,7 +623,13 @@ const GATEWAY_DIRECT_LLM_QUOTA_METHODS: Record<string, string> = {
   '/api/news/v1/summarize-article': 'POST',
 };
 
-async function shouldReserveGatewayDirectLlmQuota(request: Request, pathname: string): Promise<boolean> {
+// Exported for direct unit coverage (tests/summarize-article-ollama-gateway-exemption.test.mts)
+// — this decision has to be pinned on its OWN, not inferred from an
+// integration test's final response, because the failure mode it guards
+// against (self-hosted Ollama calls 401 "Pro authentication required" with
+// zero mention of Ollama anywhere in the error) has no other signal pointing
+// back to this specific function.
+export async function shouldReserveGatewayDirectLlmQuota(request: Request, pathname: string): Promise<boolean> {
   if (!DIRECT_LLM_GATEWAY_QUOTA_PATHS.has(pathname)) return false;
   if (GATEWAY_DIRECT_LLM_QUOTA_METHODS[pathname] !== request.method) return false;
   if (pathname !== '/api/news/v1/summarize-article') return true;
@@ -633,8 +639,18 @@ async function shouldReserveGatewayDirectLlmQuota(request: Request, pathname: st
     return true;
   }
   try {
-    const body = await request.clone().json() as { mode?: unknown };
-    return body.mode !== 'translate';
+    const body = await request.clone().json() as { mode?: unknown; provider?: unknown };
+    // Ollama is exempt from the SAME reasoning summarize-article.ts's own
+    // requiresPremium already applies (provider !== 'ollama'): it spends the
+    // operator's own local hardware, never WorldMonitor's Groq/OpenRouter
+    // credits, so there is nothing here to meter. Without this, this
+    // gateway-level check ran BEFORE the handler's exemption ever had a
+    // chance to apply — reserveDirectLlmQuota below requires a Clerk
+    // sessionUserId, which a self-hosted local-auth session (this fork's
+    // Clerk-free sign-in path, local-auth.ts) can never produce, so every
+    // Ollama summarize call 401'd "Pro authentication required" regardless
+    // of Ollama being fully configured and working.
+    return body.mode !== 'translate' && body.provider !== 'ollama';
   } catch {
     // Malformed summarize requests cannot reach provider spend; let the handler
     // return the established validation error without charging quota.
