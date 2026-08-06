@@ -96,6 +96,20 @@ const MAX_CONCURRENT_UPSTREAM = 6;
 // Mutable (not const) only so tests can shrink it -- production always runs
 // at the default.
 let _upstreamIdleTimeoutMs = 12000;
+// A local LLM server (Ollama, LM Studio) can legitimately sit silent for well
+// over 12s before its first response byte -- loading a large model's weights
+// from disk, or computing a long prompt's KV cache, produces zero socket
+// activity the whole time, which is indistinguishable from a hung peer to
+// req.setTimeout. summarize-article.ts already budgets a real 360s
+// (OLLAMA_TIMEOUT_MS) for the OVERALL call via its own AbortSignal; this only
+// needs to be long enough that the idle-detector doesn't kill a healthy-but-
+// slow-to-start local model before that signal ever gets a chance to. Scoped
+// to allowlisted-private-network requests only (registerSidecarAllowedPrivateFetchOrigins) —
+// arbitrary public internet APIs keep the tight 12s "peer went silent
+// forever" protection this mechanism exists for; the operator's own local
+// server, which they explicitly configured, does not fit that threat model.
+// Mutable for the same reason as _upstreamIdleTimeoutMs above -- tests only.
+let _upstreamPrivateNetworkIdleTimeoutMs = 300_000;
 function acquireUpstreamSlot() {
   if (_activeUpstream < MAX_CONCURRENT_UPSTREAM) {
     _activeUpstream++;
@@ -208,7 +222,14 @@ globalThis.fetch = async function ipv4Fetch(input, init) {
   try { url = new URL(typeof input === 'string' ? input : input.url); } catch { return _originalFetch(input, init); }
   if (url.protocol !== 'https:' && url.protocol !== 'http:') return _originalFetch(input, init);
   const allowPrivateNetwork = init?.[ALLOW_PRIVATE_NETWORK_FETCH] === true;
-  const safety = allowPrivateNetwork
+  // Registered-origin allowlist (OLLAMA_API_URL, LLM_API_URL, the Redis REST
+  // proxy) — distinct from the per-call ALLOW_PRIVATE_NETWORK_FETCH override
+  // above. Both mean "this target is trusted", but only this one identifies
+  // a SPECIFIC known local server rather than blanket-trusting whatever URL
+  // the caller passed, which is what makes it safe to also relax the idle
+  // timeout below for exactly this traffic and nothing else.
+  const isKnownPrivateOrigin = isAllowedPrivateSidecarFetch(url);
+  const safety = allowPrivateNetwork || isKnownPrivateOrigin
     ? { safe: true, resolvedAddresses: [url.hostname] }
     : await assertSafeSidecarFetchUrl(url);
   if (url.hostname.includes('finance.yahoo.com')) await sidecarYahooGate();
@@ -277,8 +298,10 @@ globalThis.fetch = async function ipv4Fetch(input, init) {
       req.on('close', () => settle(reject, new Error('request closed before completion')));
       // Catches a peer that accepts the connection and then goes silent
       // forever (no error, no close, no data) -- the only stall shape none
-      // of the listeners above ever observe.
-      req.setTimeout(_upstreamIdleTimeoutMs, () => {
+      // of the listeners above ever observe. A known-private-origin target
+      // (Ollama, LM Studio) gets the long budget: it can legitimately sit
+      // idle well past 12s loading a model before its first response byte.
+      req.setTimeout(isKnownPrivateOrigin ? _upstreamPrivateNetworkIdleTimeoutMs : _upstreamIdleTimeoutMs, () => {
         req.destroy();
         settle(reject, new Error('upstream request idle-timed out'));
       });
@@ -1947,6 +1970,9 @@ async function dispatch(requestUrl, req, routes, context) {
 export const __testing__ = {
   setUpstreamIdleTimeoutMs(ms) {
     _upstreamIdleTimeoutMs = ms;
+  },
+  setUpstreamPrivateNetworkIdleTimeoutMs(ms) {
+    _upstreamPrivateNetworkIdleTimeoutMs = ms;
   },
 };
 

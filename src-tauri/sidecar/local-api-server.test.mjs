@@ -2440,6 +2440,11 @@ test('releases the upstream fetch semaphore when a connection goes silent foreve
   const silentPort = await listen(silentServer);
 
   __testing__.setUpstreamIdleTimeoutMs(200);
+  // This target is registered via allowPrivateFetchOrigins below, so it
+  // takes the private-network idle timeout, not the generic one shrunk
+  // above — shrink this too or the silent stall would sit on the real 5-
+  // minute default and the 3s race below would report a false failure.
+  __testing__.setUpstreamPrivateNetworkIdleTimeoutMs(200);
 
   const localApi = await setupApiDir({
     'silent-proxy.js': `
@@ -2484,11 +2489,83 @@ test('releases the upstream fetch semaphore when a connection goes silent foreve
     for (const r of followUp) assert.equal(r.settled, 'rejected');
   } finally {
     __testing__.setUpstreamIdleTimeoutMs(12000);
+    __testing__.setUpstreamPrivateNetworkIdleTimeoutMs(300_000);
     await app.close();
     await localApi.cleanup();
     for (const socket of openSockets) socket.destroy();
     await new Promise((resolve, reject) => {
       silentServer.close((error) => (error ? reject(error) : resolve()));
+    });
+  }
+});
+
+test('a known-private-origin target (Ollama-shaped) survives the GENERIC idle timeout', async () => {
+  // Regression test: a local LLM server (Ollama, LM Studio) can legitimately
+  // produce zero socket activity for well over 12s loading a model before its
+  // first response byte — indistinguishable from a hung peer to the generic
+  // idle-timeout. Requests to a registered private origin (OLLAMA_API_URL,
+  // LLM_API_URL — see registerSidecarAllowedPrivateFetchOrigins) must use the
+  // longer private-network idle timeout instead, or every summarize call
+  // against a real, working, correctly configured Ollama server intermittently
+  // dies mid-flight with "upstream request idle-timed out" the moment the
+  // model takes more than a few seconds to start responding.
+  const responder = new Map();
+  const slowServer = net.createServer((socket) => {
+    responder.set(socket, socket);
+    socket.once('close', () => responder.delete(socket));
+    // Wait 400ms (well past the 100ms generic timeout below, well under the
+    // 5s private-network timeout below) before writing a real HTTP response —
+    // simulates a local model taking a beat before its first byte.
+    setTimeout(() => {
+      if (socket.destroyed) return;
+      socket.end('HTTP/1.1 200 OK\r\nContent-Length: 2\r\nContent-Type: application/json\r\n\r\n{}');
+    }, 400);
+  });
+  const slowPort = await listen(slowServer);
+
+  __testing__.setUpstreamIdleTimeoutMs(100);
+  __testing__.setUpstreamPrivateNetworkIdleTimeoutMs(5000);
+
+  const localApi = await setupApiDir({
+    'slow-private-proxy.js': `
+      export default async function handler() {
+        try {
+          const res = await fetch('http://127.0.0.1:${slowPort}/');
+          return new Response(JSON.stringify({ settled: 'resolved', status: res.status }), { status: 200 });
+        } catch (error) {
+          return new Response(JSON.stringify({ settled: 'rejected', message: error.message }), { status: 200 });
+        }
+      }
+    `,
+  });
+
+  const app = await createLocalApiServer({
+    port: 0,
+    apiDir: localApi.apiDir,
+    logger: { log() { }, warn() { }, error() { } },
+    allowPrivateFetchOrigins: [`http://127.0.0.1:${slowPort}`],
+  });
+  const { port } = await app.start();
+
+  try {
+    const result = await Promise.race([
+      getJsonViaHttp(`http://127.0.0.1:${port}/api/slow-private-proxy`).then((r) => r.json),
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('request never settled within the private-network budget')), 4000)
+      ),
+    ]);
+    // If the generic 100ms timeout had applied, this would be 'rejected' /
+    // 'idle-timed out' well before the 400ms response ever arrived.
+    assert.equal(result.settled, 'resolved');
+    assert.equal(result.status, 200);
+  } finally {
+    __testing__.setUpstreamIdleTimeoutMs(12000);
+    __testing__.setUpstreamPrivateNetworkIdleTimeoutMs(300_000);
+    await app.close();
+    await localApi.cleanup();
+    for (const socket of responder.values()) socket.destroy();
+    await new Promise((resolve, reject) => {
+      slowServer.close((error) => (error ? reject(error) : resolve()));
     });
   }
 });
