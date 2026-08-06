@@ -1332,6 +1332,16 @@ async function validateSecretAgainstProvider(key, rawValue, context = {}) {
       } catch {
         return fail('Invalid URL');
       }
+      // Model names ride along on a successful probe (mirrors
+      // src/services/ollama-models.ts's own filter) so callers behind a
+      // Docker/self-hosted install — where the browser and this sidecar sit
+      // on different network namespaces and OLLAMA_API_URL is typically
+      // host.docker.internal, unresolvable from the browser itself — can
+      // populate the OLLAMA_MODEL dropdown from a server-side probe instead
+      // of requiring a second, direct client-side fetch that would silently
+      // fail there. Desktop still tries the direct fetch too (harmless,
+      // same-host); self-hosted-web has no other way to get this list.
+      const modelNames = (list) => list.filter((n) => typeof n === 'string' && !n.includes('embed'));
       const response = await fetchWithTimeout(probeUrl, { method: 'GET', allowPrivateNetwork: true }, 8000);
       if (!response.ok) {
         // Fall back to native Ollama /api/tags endpoint
@@ -1339,12 +1349,22 @@ async function validateSecretAgainstProvider(key, rawValue, context = {}) {
           const tagsUrl = new URL('/api/tags', value).toString();
           const tagsResponse = await fetchWithTimeout(tagsUrl, { method: 'GET', allowPrivateNetwork: true }, 8000);
           if (!tagsResponse.ok) return fail(`Ollama probe failed (${tagsResponse.status})`);
-          return ok('Ollama endpoint verified (native API)');
+          let models = [];
+          try {
+            const data = await tagsResponse.json();
+            models = modelNames((data.models || []).map((m) => m.name));
+          } catch { /* verified either way; dropdown just won't populate */ }
+          return { ...ok('Ollama endpoint verified (native API)'), models };
         } catch {
           return fail(`Ollama probe failed (${response.status})`);
         }
       }
-      return ok('Ollama endpoint verified');
+      let models = [];
+      try {
+        const data = await response.json();
+        models = modelNames((data.data || []).map((m) => m.id));
+      } catch { /* verified either way; dropdown just won't populate */ }
+      return { ...ok('Ollama endpoint verified'), models };
     }
 
     case 'OLLAMA_MODEL':

@@ -274,6 +274,18 @@ export function renderDataSourcesContent(): DataSourcesResult {
         attachSecretRowListeners(row);
       }
 
+      /** Adopts a freshly discovered model list into the dropdown, if
+       * non-empty. Shared by every OLLAMA_API_URL probe path (Test
+       * Connection, post-save re-probe, on-open re-probe) so an empty/failed
+       * result from one source never wipes a good list a sibling source
+       * already found — see the two call sites this feeds for why there are
+       * two sources at all (server-side probe vs. direct client fetch). */
+      function adoptOllamaModels(models: string[] | undefined): void {
+        if (!models || models.length === 0) return;
+        ollamaModelCache = models;
+        refreshModelRow();
+      }
+
       function saveSecretFromInput(input: HTMLInputElement | HTMLSelectElement, button: HTMLButtonElement): void {
         const key = input.dataset.secret as RuntimeSecretKey | undefined;
         if (!key) return;
@@ -315,16 +327,18 @@ export function renderDataSourcesContent(): DataSourcesResult {
           // for the previous one — drop straight back to a text input, then
           // silently re-fetch in the background so a confirmed-good save
           // upgrades OLLAMA_MODEL to a dropdown without requiring a
-          // separate manual "Test Connection" click.
+          // separate manual "Test Connection" click. Two independent sources,
+          // same reasoning as testConnectionFromInput below: the server-side
+          // verify is the one that actually works for self-hosted Docker
+          // (host.docker.internal isn't resolvable from the browser), the
+          // direct client fetch is a same-host shortcut for desktop.
           if (key === 'OLLAMA_API_URL') {
             ollamaModelCache = null;
             refreshModelRow();
-            void fetchOllamaModels(raw).then((models) => {
-              if (models.length > 0) {
-                ollamaModelCache = models;
-                refreshModelRow();
-              }
-            }).catch(() => { /* silent — Test Connection remains available if this fails */ });
+            void verifySecretWithApi(key, raw).then((result) => adoptOllamaModels(result.models))
+              .catch(() => { /* silent — Test Connection remains available if this fails */ });
+            void fetchOllamaModels(raw).then(adoptOllamaModels)
+              .catch(() => { /* silent — Test Connection remains available if this fails */ });
           }
         }).catch((err: unknown) => {
           if (hint) {
@@ -358,18 +372,18 @@ export function renderDataSourcesContent(): DataSourcesResult {
             hint.classList.toggle('data-source-hint-ok', result.valid);
             hint.textContent = result.message;
           }
-          // Independent of the connectivity check above: a direct
-          // client-side fetch (same mechanism desktop's RuntimeConfigPanel
-          // uses), so the dropdown can still populate even in the rare case
-          // this succeeds while the proxied probe above doesn't, or vice
-          // versa (e.g. CORS blocks the direct fetch but not the sidecar).
+          // result.models comes from the SAME server-side probe that just
+          // produced result.valid — the only source that works for
+          // self-hosted Docker, where OLLAMA_API_URL is typically
+          // host.docker.internal and unresolvable from the browser itself.
+          // Also try a direct client-side fetch (same mechanism desktop's
+          // RuntimeConfigPanel uses): same-host on desktop, so it can
+          // succeed even in the rare case the proxied probe doesn't, or
+          // vice versa (e.g. CORS blocks the direct fetch but not the
+          // sidecar). Neither call overwrites a good list with an empty one.
           if (key === 'OLLAMA_API_URL') {
-            void fetchOllamaModels(raw).then((models) => {
-              if (models.length > 0) {
-                ollamaModelCache = models;
-                refreshModelRow();
-              }
-            });
+            adoptOllamaModels(result.models);
+            void fetchOllamaModels(raw).then(adoptOllamaModels);
           }
         }).catch((err: unknown) => {
           if (hint) {
@@ -444,12 +458,14 @@ export function renderDataSourcesContent(): DataSourcesResult {
         if (ollamaModelCache !== null) return;
         const url = getRuntimeConfigSnapshot().secrets.OLLAMA_API_URL?.value;
         if (!url) return;
-        void fetchOllamaModels(url).then((models) => {
-          if (models.length > 0) {
-            ollamaModelCache = models;
-            refreshModelRow();
-          }
-        });
+        // This path is self-hosted-only in practice (desktop's loadDesktopSecrets
+        // never populates .value, so `url` above is undefined there and this
+        // bails before reaching here) — which makes the server-side probe the
+        // ONLY source that can work: a direct client fetch would try to resolve
+        // host.docker.internal from the browser and silently fail every time.
+        void verifySecretWithApi('OLLAMA_API_URL', url).then((result) => adoptOllamaModels(result.models))
+          .catch(() => { /* silent — Test Connection remains available if this fails */ });
+        void fetchOllamaModels(url).then(adoptOllamaModels);
       });
 
       // Deliberately NOT subscribed to subscribeRuntimeConfig here: both

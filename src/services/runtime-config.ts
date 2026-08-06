@@ -329,6 +329,14 @@ const URL_SECRET_KEYS = new Set<RuntimeSecretKey>([
 export interface SecretVerificationResult {
   valid: boolean;
   message: string;
+  /** OLLAMA_API_URL only — model names discovered by the SERVER-side probe
+   * (local-api-server.mjs), not a direct client fetch. Self-hosted Docker
+   * installs need this: the browser and the sidecar sit in different network
+   * namespaces, so OLLAMA_API_URL is typically host.docker.internal, which
+   * only the sidecar can resolve. See src/services/ollama-models.ts for the
+   * client-side fetch this supplements (works standalone on desktop, where
+   * the webview and Ollama share a host). */
+  models?: string[];
 }
 
 export function validateSecret(key: RuntimeSecretKey, value: string): { valid: boolean; hint?: string } {
@@ -612,7 +620,9 @@ function parseSecretVerificationPayload(status: number, payload: unknown): Secre
 
   const valid = Boolean((payload as Record<string, unknown>).valid);
   const message = String((payload as Record<string, unknown>).message || (valid ? 'Verified' : 'Verification failed'));
-  return { valid, message };
+  const rawModels = (payload as Record<string, unknown>).models;
+  const models = Array.isArray(rawModels) ? rawModels.filter((m): m is string => typeof m === 'string') : undefined;
+  return models && models.length > 0 ? { valid, message, models } : { valid, message };
 }
 
 export async function loadDesktopSecrets(): Promise<void> {

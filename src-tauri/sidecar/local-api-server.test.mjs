@@ -1512,10 +1512,13 @@ test('rejects unknown key via /api/local-env-update', async () => {
 
 test('validates OLLAMA_API_URL via /api/local-validate-secret (reachable endpoint)', async () => {
   // Stand up a mock Ollama server that responds to /v1/models
+  // A second, embedding-only model proves the server-side probe applies the
+  // same "no embed models in the dropdown" filter as the client-side
+  // src/services/ollama-models.ts fetch.
   const mockOllama = createServer((req, res) => {
     if (req.url === '/v1/models') {
       res.writeHead(200, { 'content-type': 'application/json' });
-      res.end(JSON.stringify({ data: [{ id: 'llama3.1:8b' }] }));
+      res.end(JSON.stringify({ data: [{ id: 'llama3.1:8b' }, { id: 'nomic-embed-text' }] }));
     } else {
       res.writeHead(404);
       res.end('not found');
@@ -1541,6 +1544,13 @@ test('validates OLLAMA_API_URL via /api/local-validate-secret (reachable endpoin
     const body = await response.json();
     assert.equal(body.valid, true);
     assert.equal(body.message, 'Ollama endpoint verified');
+    // The model list rides along on the SERVER-side probe response — this is
+    // what lets a self-hosted Docker install (where OLLAMA_API_URL is
+    // typically host.docker.internal, unresolvable from the browser) populate
+    // the OLLAMA_MODEL dropdown at all. See runtime-config.ts's
+    // SecretVerificationResult.models and data-sources-content.ts's
+    // adoptOllamaModels(). A regression here silently blanks that dropdown.
+    assert.deepEqual(body.models, ['llama3.1:8b']);
   } finally {
     await app.close();
     await localApi.cleanup();
@@ -1580,6 +1590,7 @@ test('validates LM Studio style /v1 base URL via /api/local-validate-secret', as
     const body = await response.json();
     assert.equal(body.valid, true);
     assert.equal(body.message, 'Ollama endpoint verified');
+    assert.deepEqual(body.models, ['qwen2.5-7b-instruct']);
   } finally {
     await app.close();
     await localApi.cleanup();
@@ -1594,7 +1605,7 @@ test('validates OLLAMA_API_URL via native /api/tags fallback', async () => {
   const mockOllama = createServer((req, res) => {
     if (req.url === '/api/tags') {
       res.writeHead(200, { 'content-type': 'application/json' });
-      res.end(JSON.stringify({ models: [{ name: 'llama3.1:8b' }] }));
+      res.end(JSON.stringify({ models: [{ name: 'llama3.1:8b' }, { name: 'mxbai-embed-large' }] }));
     } else {
       res.writeHead(404);
       res.end('not found');
@@ -1620,6 +1631,7 @@ test('validates OLLAMA_API_URL via native /api/tags fallback', async () => {
     const body = await response.json();
     assert.equal(body.valid, true);
     assert.equal(body.message, 'Ollama endpoint verified (native API)');
+    assert.deepEqual(body.models, ['llama3.1:8b']);
   } finally {
     await app.close();
     await localApi.cleanup();
