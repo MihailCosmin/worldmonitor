@@ -3,6 +3,14 @@
  *
  * Dashboard analytics load after first paint; calls made before the script
  * arrives are kept in a small bounded queue and replayed on script load.
+ *
+ * Deliberately fire-and-forget, on purpose (fork-sync-manifest.yaml,
+ * analytics-simplification): every call here is best-effort. There is no
+ * client-side delivery-confirmation gate, no write serialization, and no
+ * retry-with-backoff — a rejected or blocked tracker call is caught and
+ * dropped. Umami's own known session_data concurrent-write race
+ * (umami-software/umami#4183) is handled server-side by the patched image
+ * (Dockerfile.umami), not re-guarded here.
  */
 
 import { scheduleAfterFirstPaint } from '@/utils/after-paint';
@@ -12,23 +20,12 @@ import { getClerkUserCreatedAt } from './clerk';
 import { DODO_PRODUCT_IDS } from '@/config/product-ids.generated';
 import type { ActivationEventName, ActivationStepId } from './pro-activation-state';
 import {
-  collectorFailureFromError,
-  configureCollectorTransport,
-  installCollectorFetchGate,
-  isRetryableCollectorFailure,
-  isRetryableIdentityFailure,
-  observeCollectorDelivery,
-  resetCollectorTransportForTesting,
-  type CollectorOutcome,
-} from './analytics-collector-transport';
-import {
   getContentAttributionAnalyticsFields,
   getContentAttributionForAnalytics,
   withContentAttribution,
 } from '../../shared/content-attribution';
 
 const UMAMI_SCRIPT_SRC = 'https://abacus.worldmonitor.app/script.js';
-const UMAMI_COLLECTOR_ENDPOINT = new URL('/api/send', UMAMI_SCRIPT_SRC).href;
 const UMAMI_WEBSITE_ID = 'e8800335-c853-46a8-8497-c993ed2f58bc';
 // data-domains is temporarily reduced to the worldmonitor.app hosts + happy
 // while upstream Umami issue #4183 (https://github.com/umami-software/umami/issues/4183)
@@ -47,35 +44,15 @@ const UMAMI_DOMAINS = 'worldmonitor.app,www.worldmonitor.app,happy.worldmonitor.
 const UMAMI_QUEUE_LIMIT = 50;
 const UMAMI_LOAD_ATTEMPT_LIMIT = 2;
 const UMAMI_LOAD_RETRY_DELAY_MS = 5_000;
-const UMAMI_IDENTIFY_RETRY_LIMIT = 2;
-const UMAMI_IDENTIFY_RETRY_BASE_DELAY_MS = 1_000;
-const UMAMI_TRACK_RETRY_LIMIT = 2;
-const CRITICAL_TRACK_EVENTS = new Set<UmamiEvent>([
-  'checkout-start',
-  'checkout-success',
-  'checkout-failed',
-]);
 
 type QueuedUmamiCall =
-  | { kind: 'track'; event: UmamiEvent; data?: Record<string, unknown>; retryAttempt?: number }
-  | {
-      kind: 'identify';
-      data: Record<string, unknown>;
-      revision: number;
-      retryAttempt: number;
-    };
-type IdentifyCall = Extract<QueuedUmamiCall, { kind: 'identify' }>;
+  | { kind: 'track'; event: UmamiEvent; data?: Record<string, unknown> }
+  | { kind: 'identify'; data: Record<string, unknown> };
 
 const pendingUmamiCalls: QueuedUmamiCall[] = [];
 let umamiLoadScheduled = false;
 let umamiLoadStarted = false;
 let umamiLoadAttempts = 0;
-let latestIdentityRevision = 0;
-let identifyRetryTimer: ReturnType<typeof setTimeout> | null = null;
-let identifyInFlight = false;
-let pendingIdentityCall: IdentifyCall | null = null;
-let identifyDeliveryGeneration = 0;
-let trackRetryGeneration = 0;
 
 // ---------------------------------------------------------------------------
 // Type-safe event catalog — every event name lives here.
@@ -173,95 +150,45 @@ const EVENTS = {
 export type UmamiEvent = keyof typeof EVENTS;
 
 /**
- * Durable-delivery contract for the terminal funnel events.
+ * Durable-marker clearing for the terminal funnel events.
  *
- * #4934 round-2 F2: the marker written by trackCheckoutSuccess clears only once
- * the event actually reached the collector, so a page reload that races the
- * deferred queue replays instead of dropping it.
- * #4934 round-6: the /pro handoff marker clears only for a REPLAYED
- * checkout-start — a live dashboard checkout-start proves nothing about queued
- * replays.
+ * #4934 round-2 F2: trackCheckoutSuccess's marker exists so a page reload
+ * that races the deferred queue REPLAYS the event instead of dropping it.
+ * #4934 round-6: the /pro handoff marker's replay-note only fires for a
+ * REPLAYED checkout-start — a live dashboard checkout-start proves nothing
+ * about queued replays.
  *
- * Both invariants now key off a confirmed collector receipt rather than "track()
- * returned without throwing".
+ * Both markers clear OPTIMISTICALLY here, the moment a matching call is
+ * handed to the tracker — not on a confirmed collector receipt. This fork
+ * deliberately does not run a client-side delivery-confirmation gate (see
+ * fork-sync-manifest.yaml, analytics-simplification): Umami's own tracker
+ * swallows its fetch/JSON failures, so there is no signal to condition on
+ * without reintroducing that machinery. The trade-off is a marker that can
+ * clear even though the underlying write silently failed (blocked by a
+ * privacy extension, Umami briefly down, ...) — for a single-operator
+ * deployment's own conversion counter, an occasional missed replay is an
+ * acceptable cost for not maintaining a fetch-wrapping queue, a retry
+ * scheduler, and Sentry-alerting health telemetry for a third-party
+ * analytics vendor. The #4934 bug this exists for — an event lost outright
+ * across the hard navigation to Dodo checkout — is still fixed: the marker
+ * is written BEFORE the redirect and survives to be replayed on the very
+ * next boot regardless of what happens to that first attempt.
  */
-/**
- * Whether a completed write settles a durable checkout marker.
- *
- * The question is only ever "could this have committed a row?", because that is
- * what makes a boot replay a DUPLICATE rather than a recovery:
- *
- * - delivered (no failure)        -> settled.
- * - an HTTP failure we will not retry (500/502/504, and #4183's P2002) -> the
- *   origin engaged the request and may have written the event row before
- *   failing. The in-page retry already refuses to re-send it for exactly that
- *   reason; leaving the marker armed would let the next boot re-send it anyway.
- * - queue-overflow / missing-receipt / network / timeout -> no row can exist
- *   (never dispatched, or accepted-and-discarded, or never answered), so the
- *   marker must survive and replay. These are recoveries, not duplicates.
- */
-function isDurableMarkerResolved(failure: CollectorOutcome['failure']): boolean {
-  if (failure === null) return true;
-  if (failure.kind !== 'http') return false;
-  return !isRetryableCollectorFailure(failure);
-}
-
-function handleCollectorOutcome(outcome: CollectorOutcome): void {
-  if (outcome.requestType !== 'event') return;
-
-  // A session_data uniqueness conflict is NOT a lost event. Umami writes the
-  // event row in saveEvent() and only then upserts session_data, so #4183's
-  // P2002 means the event committed and the follow-up metadata write lost a
-  // race. Treating it as undelivered would replay the conversion on every boot
-  // for the life of the tab — the duplicate the no-retry policy exists to stop.
-  //
-  // The same reasoning generalises to the rest of the HTTP failures the retry
-  // policy refuses to re-send in-page: a 502/504 (or a 500 whose body carried no
-  // Prisma metadata to recognise) reached the origin and may have committed the
-  // row, so leaving the marker armed would let the boot replay smuggle the event
-  // back in and duplicate the conversion isRetryableCollectorFailure declined to
-  // risk.
-  //
-  // It does NOT generalise past that, which is why isDurableMarkerResolved keys
-  // off `kind === 'http'` and not off retryability. A queue-overflow, a network
-  // error, a timeout, and a receiptless 200 (including a bot-filtered one) all
-  // leave no row behind — never dispatched, never answered, or accepted and
-  // discarded — so for those the marker must SURVIVE and replay. That replay is
-  // a recovery, not a duplicate.
-  if (!isDurableMarkerResolved(outcome.failure)) return;
-
-  if (outcome.eventName === 'checkout-success') clearPendingCheckoutSuccessMarker();
-  if (outcome.eventName === 'checkout-start' && isReplayedCheckoutStart(outcome.requestBody)) {
+function clearAttemptedConversionMarkers(call: Extract<QueuedUmamiCall, { kind: 'track' }>): void {
+  if (call.event === 'checkout-success') clearPendingCheckoutSuccessMarker();
+  if (call.event === 'checkout-start' && call.data?.replayed === true) {
     noteProFunnelReplayDelivered();
   }
-  if (outcome.eventName === 'checkout-start' || outcome.eventName === 'checkout-failed') {
-    forgetPendingConversion(outcome.eventName);
-  }
-}
-
-configureCollectorTransport({
-  endpoint: UMAMI_COLLECTOR_ENDPOINT,
-  healthEndpoint: '/api/analytics-health',
-  isCriticalEvent: (name) => CRITICAL_TRACK_EVENTS.has(name as UmamiEvent),
-  onOutcome: handleCollectorOutcome,
-});
-
-function isReplayedCheckoutStart(requestBody: string | undefined): boolean {
-  if (typeof requestBody !== 'string') return false;
-  try {
-    const body = JSON.parse(requestBody) as { payload?: { data?: { replayed?: unknown } } };
-    return body?.payload?.data?.replayed === true;
-  } catch {
-    // A malformed tracker body cannot be a confirmed replay.
-    return false;
+  if (call.event === 'checkout-start' || call.event === 'checkout-failed') {
+    forgetPendingConversion(call.event);
   }
 }
 
 function queueUmamiCall(call: QueuedUmamiCall): void {
   // Identity is a latest-snapshot write, not an append-only event. Auth and
-  // billing can both publish before the deferred tracker loads; replaying every
-  // intermediate snapshot concurrently is both wasteful and the trigger for
-  // Umami #4183's sessionData race. Keep only the newest queued identity.
+  // billing can both publish before the deferred tracker loads; replaying
+  // every intermediate snapshot is wasteful. Keep only the newest queued
+  // identity.
   if (call.kind === 'identify') {
     for (let index = pendingUmamiCalls.length - 1; index >= 0; index -= 1) {
       if (pendingUmamiCalls[index]?.kind === 'identify') {
@@ -275,185 +202,26 @@ function queueUmamiCall(call: QueuedUmamiCall): void {
   pendingUmamiCalls.push(call);
 }
 
-function clearScheduledIdentityRetry(): void {
-  if (identifyRetryTimer !== null) {
-    clearTimeout(identifyRetryTimer);
-    identifyRetryTimer = null;
-  }
-}
-
-function createIdentifyCall(data: Record<string, unknown>): QueuedUmamiCall {
-  latestIdentityRevision += 1;
-  clearScheduledIdentityRetry();
-  return {
-    kind: 'identify',
-    data,
-    revision: latestIdentityRevision,
-    retryAttempt: 0,
-  };
-}
-
-function scheduleIdentityRetry(call: IdentifyCall): void {
-  if (call.revision !== latestIdentityRevision) return;
-  if (call.retryAttempt >= UMAMI_IDENTIFY_RETRY_LIMIT) return;
-
-  clearScheduledIdentityRetry();
-  const generation = identifyDeliveryGeneration;
-  const retryCall = {
-    ...call,
-    retryAttempt: call.retryAttempt + 1,
-  };
-  const delay = UMAMI_IDENTIFY_RETRY_BASE_DELAY_MS * (2 ** call.retryAttempt);
-  identifyRetryTimer = setTimeout(() => {
-    identifyRetryTimer = null;
-    if (generation !== identifyDeliveryGeneration) return;
-    if (retryCall.revision !== latestIdentityRevision) return;
-    if (!sendUmamiCall(retryCall)) {
-      queueUmamiCall(retryCall);
-    }
-  }, delay);
-}
-
 /**
- * Umami v3.1.0 swallows its own fetch and JSON failures, including HTTP 500s,
- * so its public tracker promises do not tell us whether the collector accepted
- * a write. The installed transport gate reports the real outcome of the beacon
- * the tracker issues; `observeCollectorDelivery` attributes that outcome to
- * this call WITHOUT wrapping `window.fetch` a second time.
- *
- * `observed: false` means no collector write was attributed — the gate is not
- * installed, or the tracker deferred its beacon past the synchronous window.
- * That is an ABSENCE of signal, never a success.
+ * Fire-and-forget dispatch. Umami's own tracker promise resolves even on a
+ * failed write (see the module header), so there is nothing meaningful to
+ * await here — this only guards against an outright THROW (non-writable
+ * `window.fetch`, a hostile test double, ...) and an unhandled promise
+ * rejection (the original WORLDMONITOR-WW/WX/WY bug this file was written to
+ * fix: a rejected tracker call leaking to `onunhandledrejection`).
  */
-function invokeWithDelivery(
-  invoke: () => unknown,
-  requestType: 'event' | 'identify',
-): { observed: boolean; result: unknown } {
-  return observeCollectorDelivery(invoke, requestType);
-}
-
-function finishIdentityDelivery(call: IdentifyCall, generation: number, error?: unknown): void {
-  if (generation !== identifyDeliveryGeneration) return;
-
-  identifyInFlight = false;
-  const nextCall = pendingIdentityCall;
-  pendingIdentityCall = null;
-  if (nextCall) {
-    if (!sendUmamiCall(nextCall)) {
-      queueUmamiCall(nextCall);
-    }
-    return;
-  }
-  // Identity is an idempotent latest-snapshot write, so it uses the broader
-  // retry policy that still covers HTTP 500 — the failure #5715 was opened for.
-  // The narrow conversion policy (which excludes 500) exists to avoid
-  // double-counting an append-only event and does not apply here.
-  if (error && isRetryableIdentityFailure(collectorFailureFromError(error))) {
-    scheduleIdentityRetry(call);
-  }
-}
-
-function sendIdentityCall(
-  call: IdentifyCall,
-  umami: NonNullable<Window['umami']>,
-): boolean {
-  // Umami stores each identity field independently with an update-then-create
-  // sequence. Keep a single collector write active and retain only the latest
-  // snapshot received during that write so auth and billing cannot race the
-  // same sessionData key.
-  if (identifyInFlight) {
-    pendingIdentityCall = call;
-    return true;
-  }
-
-  identifyInFlight = true;
-  const generation = identifyDeliveryGeneration;
-  try {
-    const { result } = invokeWithDelivery(() => umami.identify(call.data), 'identify');
-    if (result && typeof (result as { then?: unknown }).then === 'function') {
-      void Promise.resolve(result).then(
-        () => finishIdentityDelivery(call, generation),
-        (error) => finishIdentityDelivery(call, generation, error),
-      );
-    } else {
-      finishIdentityDelivery(call, generation);
-    }
-  } catch (error) {
-    finishIdentityDelivery(call, generation, error);
-  }
-  return true;
-}
-
-function scheduleTrackRetry(call: Extract<QueuedUmamiCall, { kind: 'track' }>, error: unknown): void {
-  const failure = collectorFailureFromError(error);
-  if (!isRetryableCollectorFailure(failure)) return;
-  const retryAttempt = call.retryAttempt ?? 0;
-  if (retryAttempt >= UMAMI_TRACK_RETRY_LIMIT) return;
-
-  const generation = trackRetryGeneration;
-  const retryCall = { ...call, retryAttempt: retryAttempt + 1 };
-  const delay = UMAMI_IDENTIFY_RETRY_BASE_DELAY_MS * (2 ** retryAttempt);
-  setTimeout(() => {
-    if (generation !== trackRetryGeneration) return;
-    if (!sendUmamiCall(retryCall)) queueUmamiCall(retryCall);
-  }, delay);
-}
-
-/**
- * Fallback for when no delivery signal exists for a critical event — the gate
- * could not be installed (non-writable `window.fetch`), or a test double /
- * alternate tracker issued no observable beacon. Without this the durable
- * marker would never clear and the conversion would replay on every reload for
- * the life of the tab.
- *
- * This deliberately preserves the pre-gate contract rather than claiming a
- * richer one: #4934 round-6's rule that only a REPLAYED checkout-start clears
- * the /pro handoff still holds here.
- */
-function clearUnobservableCriticalMarker(call: Extract<QueuedUmamiCall, { kind: 'track' }>): void {
-  if (call.event === 'checkout-success') clearPendingCheckoutSuccessMarker();
-  if (call.event === 'checkout-start' && call.data?.replayed === true) {
-    noteProFunnelReplayDelivered();
-  }
-}
-
 function sendUmamiCall(call: QueuedUmamiCall): boolean {
   if (typeof window === 'undefined') return false;
   const umami = window.umami;
   if (!umami) return false;
-  installCollectorFetchGate();
-  if (call.kind === 'identify') {
-    return sendIdentityCall(call, umami);
-  }
   try {
-    const critical = CRITICAL_TRACK_EVENTS.has(call.event);
-    if (!critical) {
-      const result: unknown = umami.track(call.event, call.data);
-      if (result && typeof (result as { catch?: unknown }).catch === 'function') {
-        void (result as Promise<unknown>).catch(() => {});
-      }
-      return true;
-    }
-
-    const { observed, result } = invokeWithDelivery(
-      () => umami.track(call.event, call.data),
-      'event',
-    );
-    if (observed) {
-      // The gate owns marker clearing for observed writes (handleCollectorOutcome).
-      void Promise.resolve(result).then(
-        () => {},
-        (error) => scheduleTrackRetry(call, error),
-      );
-      return true;
-    }
-
-    // No delivery signal for a critical event. Drain any tracker promise so it
-    // cannot surface as an unhandled rejection, then fall back.
+    const result: unknown = call.kind === 'identify'
+      ? umami.identify(call.data)
+      : umami.track(call.event, call.data);
     if (result && typeof (result as { catch?: unknown }).catch === 'function') {
       void (result as Promise<unknown>).catch(() => {});
     }
-    clearUnobservableCriticalMarker(call);
+    if (call.kind === 'track') clearAttemptedConversionMarkers(call);
     return true;
   } catch {
     return false;
@@ -463,14 +231,12 @@ function sendUmamiCall(call: QueuedUmamiCall): boolean {
 function flushPendingUmamiCalls(): void {
   if (pendingUmamiCalls.length === 0) return;
   if (typeof window === 'undefined' || !window.umami) return;
-  installCollectorFetchGate();
   const calls = pendingUmamiCalls.splice(0, pendingUmamiCalls.length);
   for (const call of calls) sendUmamiCall(call);
 }
 
 function loadUmamiScript(): void {
   if (umamiLoadStarted || typeof document === 'undefined') return;
-  installCollectorFetchGate();
   const existing = document.querySelector<HTMLScriptElement>(`script[src="${UMAMI_SCRIPT_SRC}"]`);
   if (existing) {
     // A script tag already exists (e.g. re-entry after a soft navigation).
@@ -543,14 +309,14 @@ export function identifyUser(
     ...(subStatus != null && { subStatus }),
     ...(planKey != null && { planKey }),
   };
-  const call = createIdentifyCall(data);
+  const call: QueuedUmamiCall = { kind: 'identify', data };
   if (!sendUmamiCall(call)) {
     queueUmamiCall(call);
   }
 }
 
 export function clearIdentity(): void {
-  const call = createIdentifyCall({});
+  const call: QueuedUmamiCall = { kind: 'identify', data: {} };
   if (!sendUmamiCall(call)) {
     queueUmamiCall(call);
   }
@@ -739,17 +505,10 @@ export function trackSignOut(): void {
  * across the shared module import in tests/secondary-startup.test.mts.
  */
 export function resetAnalyticsForTesting(): void {
-  resetCollectorTransportForTesting();
-  clearScheduledIdentityRetry();
-  identifyDeliveryGeneration += 1;
-  trackRetryGeneration += 1;
-  identifyInFlight = false;
-  pendingIdentityCall = null;
   pendingUmamiCalls.length = 0;
   umamiLoadScheduled = false;
   umamiLoadStarted = false;
   umamiLoadAttempts = 0;
-  latestIdentityRevision = 0;
   proFunnelReplaysAwaitingDelivery = 0;
 }
 

@@ -115,5 +115,4 @@ A third-order effect worth knowing: `413` is **not** in `PERMANENT_4XX_STATUSES`
 ## Related Issues
 
 - PR #6033 — the fix (paging, TTL 30d → 14d, cap 100,000 → 20,000)
-- [`umami-answers-http-200-when-it-drops-a-bot-write.md`](umami-answers-http-200-when-it-drops-a-bot-write.md) — the same failure class at a different vendor boundary: a 200 that means "rejected", and an alarm built on the wrong success signal
 - [`seeder-auxiliary-redis-writes-timeout.md`](../database-issues/seeder-auxiliary-redis-writes-timeout.md) — adjacent Upstash write-path failure mode

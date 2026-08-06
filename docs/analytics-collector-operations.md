@@ -27,11 +27,13 @@ health signal: a healthy deployment can still return HTTP 500 from `POST
 - Acceptance after a server upgrade is two consecutive scheduled runs with
   `12/12` accepted writes and zero `P2002` failures. Attach the exact deployed
   image/digest and the bounded production log query to the issue.
-- During normal queue draining, browser writes are serialized through one
-  in-flight transport slot. `pagehide` deliberately dispatches queued writes
-  concurrently so keepalive delivery gets a chance to finish. The client does
-  not blindly retry append-only conversion events after an ambiguous 5xx;
-  identity snapshots may use their idempotent retry policy.
+- The browser client (`src/services/analytics.ts`) is deliberately
+  fire-and-forget: no delivery-confirmation gate, no write serialization, no
+  retry-with-backoff (fork-sync-manifest.yaml, analytics-simplification).
+  The session_data concurrent-write race this once guarded against
+  client-side is the same one the patched runtime image below fixes at the
+  database layer — the client-side workaround was redundant defense-in-depth
+  once that fix landed, not the primary mitigation.
 
 ## Patched runtime image
 

@@ -124,7 +124,7 @@ meta:
   #     upstream's product rather than deleting them, and regenerate the
   #     source-attribution manifest because it records reference paths into
   #     files this fork deleted.
-  categories: [pro-removal, discord-removal, owner-branding-removal, feature-ungate, upstream-sync, local-auth]
+  categories: [pro-removal, discord-removal, owner-branding-removal, feature-ungate, upstream-sync, local-auth, analytics-simplification]
 
 # ---------------------------------------------------------------------------
 # 1. Commit ranges by category — what we changed, and where to look for detail.
@@ -374,6 +374,95 @@ commit_ranges:
       - src/services/local-auth.ts
       - src/services/clerk.ts
       - convex/lib/auth.ts
+
+  - category: analytics-simplification
+    range: "(uncommitted at time of writing — update to the real commit SHA once this lands)"
+    summary: >
+      Deleted src/services/analytics-collector-transport.ts and every place
+      that used it: the import in src/services/analytics.ts (rewritten to
+      call window.umami.track()/.identify() directly, fire-and-forget), the
+      server-side health-report receiver (api/analytics-health.js + its test
+      + its api-route-exceptions.json entry), and the two test files scoped
+      entirely to the deleted module's behavior
+      (tests/analytics-queue-capacity.test.mjs,
+      tests/analytics-beacon-rejection.test.mts). Also deleted
+      docs/solutions/integration-issues/umami-answers-http-200-when-it-drops-a-bot-write.md
+      (a postmortem entirely about the deleted module's alert logic) and
+      trimmed docs/analytics-collector-operations.md's one paragraph that
+      described client-side write serialization — the rest of that doc
+      (the patched Umami Docker image, Postgres migration runbook, retention
+      cron, storage-capacity monitor) is untouched SERVER-side ops
+      infrastructure, a different subsystem from this client-side module and
+      explicitly NOT in scope of this removal.
+
+      Trigger: analytics-collector-transport.ts is a real upstream file
+      (landed via the bc99aad53..ab798e628 sync, 2026-08-03; absent at
+      bc99aad53, present at ab798e628 — it did not exist in this fork before
+      that sync) that broke `npm run dev` for any user running a
+      privacy-blocking browser extension. In Vite's dev server, every source
+      file is served as its own unbundled ES-module request, so
+      `/src/services/analytics-collector-transport.ts` is a literal,
+      first-party network URL — and its filename alone was enough for a
+      generic ad-blocker filter rule to block it. Because
+      `src/main.ts` STATICALLY imports `analytics.ts`, which STATICALLY
+      imported this module, a single blocked request poisoned the whole
+      synchronous import graph: `analytics.ts` failed to evaluate,
+      `main.ts` — the actual entry point — never ran a single line, and
+      `new App('app').init()` never started. The dashboard's static
+      loading-skeleton HTML sat frozen forever with no further console
+      errors, because nothing downstream ever got the chance to throw one.
+      Reproduced directly: blocking exactly that one URL in a headless
+      browser against a clean checkout produced the identical symptom.
+      Production is immune (Vite's build hashes/minifies chunk names, so
+      "analytics" never appears in a request URL there) — this was a
+      dev-server-only failure mode, but a real one, and the user's call was
+      that the whole subsystem was not worth carrying for what it bought.
+    what_it_was: >
+      A client-side `window.fetch` wrapping "gate" that serialized every
+      Umami collector write through one in-flight slot (to route around
+      Umami's own concurrent-write session_data race,
+      umami-software/umami#4183), attributed the tracker's true delivery
+      outcome (Umami's public promise resolves even on a failed write —
+      #4913), retried retryable failures with backoff, and reported
+      aggregated delivery-failure health to Sentry with alert-fatigue
+      suppression (minimum-sample and minimum-rate floors, once-per-window
+      latching). Genuinely sophisticated SaaS-observability engineering —
+      and genuinely disproportionate for a self-hosted, single-operator
+      fork's third-party analytics vendor. The SAME server-side race
+      (#4183) is independently fixed at the database layer by the patched
+      Umami image this fork KEEPS (Dockerfile.umami, docker/umami/
+      v320-compat.patch — untouched, see docs/analytics-collector-operations.md)
+      — once that real fix exists, the client-side workaround was
+      redundant defense-in-depth for an already-fixed bug, not the
+      primary mitigation.
+    what_changed_in_analytics_ts: >
+      track()/identifyUser()/clearIdentity() now call window.umami directly
+      and catch/drop any rejection — no delivery confirmation, no retry,
+      no write serialization. The durable sessionStorage markers that
+      survive a checkout's hard redirect to Dodo
+      (wm-checkout-success-pending, wm-pro-funnel-pending,
+      wm-conversion-pending) still exist and still replay on the next boot
+      — that mechanism solves a real problem (event loss across a
+      navigation that destroys any in-flight beacon) unrelated to delivery
+      confirmation. They now clear OPTIMISTICALLY, the moment a matching
+      call is handed to the tracker, instead of waiting for a confirmed
+      collector receipt. Trade-off: a marker can clear even though the
+      underlying write silently failed (blocked, Umami briefly down),
+      which was already this codebase's own designed fallback behavior for
+      "no delivery signal available" (`clearUnobservableCriticalMarker`)
+      — this sync just made that the only path instead of the
+      exceptional one. The pending-call queue (buffers track()/identify()
+      calls made before the Umami <script> tag loads) and the script-tag
+      load-with-retry logic are UNRELATED to collector-transport.ts and
+      were kept as-is.
+    do_not_reintroduce: >
+      If a future upstream sync re-adds analytics-collector-transport.ts
+      (or a renamed/restructured equivalent — watch for
+      `observeCollectorDelivery`, `installCollectorFetchGate`,
+      `configureCollectorTransport`, `CollectorDeliveryError`, or a new
+      `/api/analytics-health`-shaped endpoint), do not re-wire it into
+      analytics.ts. See evaluated_upstream_commits.exclude below.
+    high_risk_files: [src/services/analytics.ts]
 
   - category: upstream-sync
     range: "df8467a2d..aa74d8947"          # 5 commits
@@ -924,6 +1013,26 @@ evaluated_upstream_commits:
         (empty) migration registry means this fork does not get upstream's
         regional-default recovery; adopting it would mean resurrecting
         source-cap.ts, which is a deliberate project, not a merge resolution.
+    - pattern: "src/services/analytics-collector-transport.ts / the client-side collector delivery-confirmation gate"
+      reason: >
+        Deleted outright, not merely excluded from one sync — see the
+        analytics-simplification commit_ranges entry above for the full
+        story. This fork runs analytics fire-and-forget: no fetch-wrapping
+        serialization queue, no delivery-confirmation observation, no
+        retry-with-backoff, no Sentry health-alerting for a third-party
+        analytics vendor's write failures. Watch for ANY of these re-landing
+        in src/services/analytics.ts even under new names:
+        `observeCollectorDelivery`, `installCollectorFetchGate`,
+        `configureCollectorTransport`, `CollectorDeliveryError`, a
+        `collector-transport`-shaped new file, or a new
+        `/api/*-health`-shaped endpoint whose payload is collector
+        write-failure counters. If upstream re-adds it, delete it again the
+        same way — do not re-wire it. The underlying Umami session_data race
+        (#4183) this was defending against client-side is independently
+        fixed server-side by the patched image this fork KEEPS
+        (Dockerfile.umami, docker/umami/v320-compat.patch — do not confuse
+        that server-ops infrastructure, which stays, with this client-side
+        module, which does not).
 
 # ---------------------------------------------------------------------------
 # 4. Contamination patterns — read by scripts/fork-sync-scan.mjs.
@@ -1059,6 +1168,21 @@ contamination_patterns:
       "endpoint-not-in-PREMIUM_RPC_PATHS dedicated tests" gap cluster below —
       that cluster is existing debt these registries should be shrinking
       toward, not growing away from.
+
+  - id: analytics-collector-delivery-gate
+    severity: critical
+    regex: '\bobserveCollectorDelivery\b|\binstallCollectorFetchGate\b|\bconfigureCollectorTransport\b|\bCollectorDeliveryError\b|analytics-collector-transport'
+    reason: >
+      The client-side analytics delivery-confirmation/retry/write-serialization
+      machinery this fork deleted outright (analytics-simplification —
+      see commit_ranges and evaluated_upstream_commits.exclude above). It
+      broke `npm run dev` under any ad-blocking browser extension: Vite's
+      dev server serves every source file as its own unbundled request, so
+      a filename containing "analytics" is real ad-blocker-filter bait, and
+      because src/main.ts imports it STATICALLY, one blocked request failed
+      the entire module graph and the dashboard never booted. If this
+      reappears (upstream keeps developing it), delete it again — do not
+      re-wire it into src/services/analytics.ts.
 
 # ---------------------------------------------------------------------------
 # 5. Conflict policy — read by scripts/fork-sync-run.mjs --merge.
