@@ -23,10 +23,17 @@ services:
     environment:
       UPSTASH_REDIS_REST_URL: "http://redis-rest:80"
       UPSTASH_REDIS_REST_TOKEN: "${REDIS_TOKEN:?REDIS_TOKEN required — generate with: openssl rand -hex 32}"
+      # Signs the anonymous browser session cookie (api/wm-session.js). Without
+      # it, /api/wm-session 503s on every mint and the dashboard shows
+      # "Anonymous data is temporarily unavailable" even for signed-in local users.
+      WM_SESSION_SECRET: "${WM_SESSION_SECRET:?WM_SESSION_SECRET required — generate with: openssl rand -hex 32}"
       LOCAL_API_PORT: "46123"
       LOCAL_API_MODE: "docker"
       LOCAL_API_CLOUD_FALLBACK: "false"
       WS_RELAY_URL: "http://ais-relay:3004"
+      # Authenticates the app's outbound calls to ais-relay (server/_shared/relay.ts).
+      # Must match the ais-relay service's own RELAY_SHARED_SECRET below.
+      RELAY_SHARED_SECRET: "${RELAY_SHARED_SECRET:?RELAY_SHARED_SECRET required — generate with: openssl rand -hex 32}"
       # LLM provider (any OpenAI-compatible endpoint)
       LLM_API_URL: "${LLM_API_URL:-}"
       LLM_API_KEY: "${LLM_API_KEY:-}"
@@ -77,6 +84,9 @@ services:
       UPSTASH_ALLOW_INSECURE_HTTP: "true"
       UCDP_ACCESS_TOKEN: "${UCDP_ACCESS_TOKEN:-}"
       PORT: "3004"
+      # The relay exits fatally at boot without this (scripts/ais-relay.cjs).
+      # Must match the worldmonitor service's RELAY_SHARED_SECRET above.
+      RELAY_SHARED_SECRET: "${RELAY_SHARED_SECRET:?RELAY_SHARED_SECRET required — generate with: openssl rand -hex 32}"
     depends_on:
       redis-rest:
         condition: service_started
